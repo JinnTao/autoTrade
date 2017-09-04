@@ -3,7 +3,7 @@
 
 #include <cString.h>
 #include <ThostFtdcUserApiDataType.h>
-
+#include <Windows.h>
 struct sInstrumentInfo
 {
 	char InstrumentID[32];
@@ -39,6 +39,6 @@ struct sTradingAccountInfo
 enum  DIRECTION{buy,sell};
 enum  OFFSETFLAG{open,close};
 
-typedef	shared_ptr< map<string, CThostFtdcInstrumentField*> > cInstMessageMapPtr;//保存合约信息的map
+
 #endif
 

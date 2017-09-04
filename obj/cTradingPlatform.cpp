@@ -49,7 +49,9 @@ cTradingPlatform::cTradingPlatform()
 	m_pTrades = make_shared< cTradeCollection >();
 	m_pSignals = make_shared< cSignalCollection >();
 
-	m_pInstMessageMap = make_shared<map<string,CThostFtdcInstrumentField*>>();
+	m_pInstMessageMap = new map<string, CThostFtdcInstrumentField*>();
+
+//	m_pInstMessageMap = make_shared<map<string,CThostFtdcInstrumentField*>>();
 }
 
 cTradingPlatform::~cTradingPlatform()
@@ -308,14 +310,20 @@ DWORD cTradingPlatform::AutoTrading()
 {
 
 	string str;
-
+	char dire[50];
+	char offset[50];
+	char inst[50];
+	int vol;
+	double price = 0;
+	int mark = 0;
 	int a;
 	cerr<<"--------------------Human-computer interaction function Start--------------------------------"<<endl;
 	cerr<<endl<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º";
 
 	while(1)
 	{
-		std::cin>>str;
+		//std::cin>>str;
+		getline(cin,str);
 		if(str == "show")
 			a = 0;	
 		else if(str == "close")
@@ -324,9 +332,13 @@ DWORD cTradingPlatform::AutoTrading()
 			a = 2;
 		else if(str == "stop")
 			a = 3;
-		else 
-			a = 4;
-
+		else {
+			if(str.length() >10){
+				sscanf(str.c_str(),"%s %s %s %d %f",dire,offset,inst,&vol,&price);
+				this->insertOrder(string(inst),string(dire),string(offset),vol,price);
+				a = 4;
+			}
+		}
 		switch(a){
 		case 0:
 			{		
@@ -547,37 +559,60 @@ void cTradingPlatform::WakeUp()
 void cTradingPlatform::ClearPlatform()
 {
 //	/*m_instrumentIDs.clear();*/
-//	m_runAutoTrade = false;
-//	m_nRequestID = 0;
-//	m_pTraderSpi = NULL;
-//
-//	/*if( m_pMarketDataEngine.get() )
-//		m_pMarketDataEngine.reset();
-//
-//	if( m_pStrategy.get() )
-//		m_pStrategy.reset();*/
-//
-//	if( m_pPositions.get() )
-//	{
-////		m_pPositions->Clear();
-//		m_pPositions.reset();
-//	}
-//
-//	if( m_pOrders.get() )
-//	{
-//		m_pOrders->Clear();
-//		m_pOrders.reset();
-//	}
-//
-//	if( m_pTrades.get() )
-//	{
-//		m_pTrades->Clear();
-//		m_pTrades.reset();
-//	}
-//
-//	if( m_pSignals.get() )
-//	{
-//		m_pSignals->Clear();
-//		m_pSignals.reset();
-//	}
+	m_runAutoTrade = false;
+	m_nRequestID = 0;
+	m_pTraderSpi = NULL;
+
+	/*if( m_pMarketDataEngine.get() )
+		m_pMarketDataEngine.reset();
+
+	if( m_pStrategy.get() )
+		m_pStrategy.reset();*/
+
+	if( m_pPositions.get() )
+	{
+//		m_pPositions->Clear();
+		m_pPositions.reset();
+	}
+
+	if( m_pOrders.get() )
+	{
+		m_pOrders->Clear();
+		m_pOrders.reset();
+	}
+
+	if( m_pTrades.get() )
+	{
+		m_pTrades->Clear();
+		m_pTrades.reset();
+	}
+
+	if( m_pSignals.get() )
+	{
+		m_pSignals->Clear();
+		m_pSignals.reset();
+	}
+}
+
+void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,double orderPrice){
+	DIRECTION eDire;
+	OFFSETFLAG eFlag;
+	if(dire == "buy"){
+		eDire = DIRECTION::buy;
+	}
+	if(dire == "sell"){
+		eDire =	DIRECTION::sell;
+	}
+	if(flag == "open"){
+		eFlag = OFFSETFLAG::open;
+	}
+	if(flag == "close"){
+		eFlag = OFFSETFLAG::close;;
+	}
+	//if(orderPrice >)
+	if(vol != 0 ){
+		
+		this->m_pTraderSpi->insertOrder(inst,eDire,eFlag,vol,orderPrice);
+	}
+	//Sleep(500);
 }

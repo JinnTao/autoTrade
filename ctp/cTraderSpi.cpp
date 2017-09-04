@@ -28,6 +28,8 @@ cTraderSpi::cTraderSpi( CThostFtdcTraderApi* pUserTraderApi,CThostFtdcMdApi* pUs
 	m_OpenProfit = 0.0;//浮动盈亏
 
 	m_accountMargin = 0.0;
+
+	m_InstMeassageMap = NULL;
 }
 
 cTraderSpi::~cTraderSpi()
@@ -812,8 +814,8 @@ void cTraderSpi::ReqOrderInsert(TThostFtdcInstrumentIDType instId,
 		req.TimeCondition = THOST_FTDC_TC_GFD;  //有效期类型:当日有效
 	}
 
-	req.Direction = MapDirection(dir,true);  //买卖方向	
-	req.CombOffsetFlag[0] = MapOffset(kpp[0],true); //组合开平标志:开仓
+	req.Direction = this->MapDirection(dir,true);  //买卖方向	
+	req.CombOffsetFlag[0] = this->MapOffset(kpp[0],true); //组合开平标志:开仓
 
 	//这样也可以
 	/*
@@ -1086,10 +1088,10 @@ void cTraderSpi::RegisterTradeCollection( cTradeCollectionPtr p )
 	m_tradeCollection = p; 
 }
 
-void cTraderSpi::RegisterInstMessageMap( cInstMessageMapPtr p )
+void cTraderSpi::RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>* p )
 { 
-	if( m_InstMeassageMap.get() )
-		m_InstMeassageMap.reset();
+	if( m_InstMeassageMap )
+		m_InstMeassageMap = NULL;
 
 	m_InstMeassageMap = p; 
 }
@@ -1099,7 +1101,6 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 	TThostFtdcDirectionType       dir;//方向,'0'买，'1'卖
 	TThostFtdcCombOffsetFlagType  kpp;//开平，"0"开，"1"平,"3"平今
 	TThostFtdcPriceType           price;//价格，0是市价,上期所不支持
-	TThostFtdcVolumeType          vol;//数量
 	strcpy(instId,inst.c_str());
 
 	//double miniChangeTick = m_instMessage_map[inst.c_str()]->PriceTick * 3; // 对手盘 最小变动价格 保证成交
@@ -1247,8 +1248,7 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirecti
 	}
 
 }
-
-char MapDirection(char src, bool toOrig=true){
+char cTraderSpi::MapDirection(char src, bool toOrig=true){
 	if(toOrig){
 		if('b'==src||'B'==src){src='0';}else if('s'==src||'S'==src){src='1';}
 	}else{
@@ -1258,7 +1258,7 @@ char MapDirection(char src, bool toOrig=true){
 }
 
 
-char MapOffset(char src, bool toOrig=true){
+char cTraderSpi::MapOffset(char src, bool toOrig=true){
 	if(toOrig){
 		if('o'==src||'O'==src){src='0';}
 		else if('c'==src||'C'==src){src='1';}
@@ -1270,3 +1270,4 @@ char MapOffset(char src, bool toOrig=true){
 	}
 	return src;
 }
+

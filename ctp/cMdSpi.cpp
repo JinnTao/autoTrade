@@ -70,17 +70,6 @@ void cMdSpi::OnHeartBeatWarning(int nTimeLapse)
 	sprintf( message, "%s:called cMdSpi::OnHeartBeatWarning. nTimerLapse = %d", cSystem::GetCurrentTimeBuffer().c_str(), nTimeLapse );
 	cout << message << endl;
 
-	// log info
-	if( m_genLog )
-	{
-		if( m_outputDirectory.IsBlankString() )
-			cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-		else
-		{
-			cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
-			cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
-		}
-	}
 
 }
 
@@ -90,18 +79,6 @@ void cMdSpi::OnFrontConnected()
 	char message[256];
 	sprintf( message, "%s:called cMdSpi::OnFrontConnected.", cSystem::GetCurrentTimeBuffer().c_str() );
 	cout << message << endl;
-
-	// log info
-	if( m_genLog )
-	{
-		if( m_outputDirectory.IsBlankString() )
-			cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-		else
-		{
-			cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
-			cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
-		}
-	}
 
 	// request user login
 	ReqUserLogin();

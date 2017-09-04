@@ -2,7 +2,7 @@
 #define __CTRADINGPLATFORM_H__
 
 #include <yr_structs.h>
-#include <Windows.h>
+
 
 class cString;
 class cTraderSpi;
@@ -13,7 +13,6 @@ class cTraderSpi;
 #include <cOrderCollection.h>
 #include <cTradeCollection.h>
 #include <cPositionCollection.h>
-
 
 
 class cTradingPlatform
@@ -71,7 +70,8 @@ public:
 
 	void SetAutoTradeFlag( bool flag ) { m_runAutoTrade = flag; }
 	void ClearPlatform();
-
+	
+	void insertOrder(string inst,string dire,string flag, int vol,double orderPrice);
 
 
 private:
@@ -85,8 +85,8 @@ private:
 	cOrderCollectionPtr m_pOrders;
 	cTradeCollectionPtr m_pTrades;
 	cSignalCollectionPtr m_pSignals;
-
-	cInstMessageMapPtr m_pInstMessageMap;
+	
+	map<string, CThostFtdcInstrumentField*>* m_pInstMessageMap;
 
 	int m_nRequestID;
 	bool m_runAutoTrade;
