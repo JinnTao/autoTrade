@@ -39,6 +39,6 @@ struct sTradingAccountInfo
 enum  DIRECTION{buy,sell};
 enum  OFFSETFLAG{open,close};
 
-typedef	shared_ptr<map<string, CThostFtdcInstrumentField*>> cInstMessageMapPtr;//保存合约信息的map
+typedef	shared_ptr< map<string, CThostFtdcInstrumentField*> > cInstMessageMapPtr;//保存合约信息的map
 #endif
 

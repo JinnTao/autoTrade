@@ -10,11 +10,11 @@
 
 void ListFileNamesInDirectory( const cString& directoryName, cArray< cString >& fileNameList )
 {
-//	HANDLE hFind;
+	HANDLE hFind;
 
-//	wchar_t* file = CharToWchar( directoryName.c_str() );
+	wchar_t* file = CharToWchar( directoryName.c_str() );
 
-//	WIN32_FIND_DATA FindFileData;
+	WIN32_FIND_DATA FindFileData;
 
 	//hFind = FindFirstFile( file, &FindFileData );
 
