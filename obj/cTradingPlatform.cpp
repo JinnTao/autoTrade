@@ -357,14 +357,14 @@ DWORD cTradingPlatform::AutoTrading()
 			{
 				cerr<<"close Position:"<<endl;
 				//g_pUserSpi_tradeAll->ForceClose();
-				cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
+				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
 				break;
 			}
 		case 2:
 			{
 				cerr<<"run:"<<endl;
 				//g_strategy->set_allow_open(true);
-				cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
+				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
 				break;
 
 			}
@@ -372,25 +372,25 @@ DWORD cTradingPlatform::AutoTrading()
 			{
 				cerr<<"stop:"<<endl;
 				//g_strategy->set_allow_open(false);
-				cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
+				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
 				break;
 
 			}
 		case 4:
 			{
-				cerr<<endl<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
+				//cerr<<endl<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
 				break;
 			}
 		case 5:
 			{
 				this->m_pOrders->PrintPendingOrders();
-				cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
+				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
 				break;
 			}
 		case 6:
 			{
 				this->m_pTrades->PrintAll();
-				cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
+				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
 				break;
 			}
 

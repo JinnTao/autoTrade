@@ -239,11 +239,13 @@ void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoFi
 			cerr<<"--------------------------------------------------------------------trade start"<<endl;
 			this->m_tradeCollection->PrintAll();
 			cerr<<"--------------------------------------------------------------------trade start"<<endl;
+			Sleep(1000);
 			ReqQryInvestorPositionDetail();
 			SetEvent(g_hEvent);
 		}
 	}else{
 		cerr<<"Error or no trade"<<endl;
+		Sleep(1000);
 		ReqQryInvestorPositionDetail();
 	}
 
@@ -945,8 +947,8 @@ void cTraderSpi::OnRtnOrder( CThostFtdcOrderField* pOrder )
 	if( !IsMyOrder( pOrder ) )
 		return;
 	if(pOrder){
-
 		m_orderCollection->Add( pOrder );
+		cerr <<"  OrderRef: " <<pOrder->OrderRef <<"  Status:" << pOrder->OrderStatus << pOrder->StatusMsg << endl;
 	}
 
 }
@@ -979,10 +981,8 @@ void cTraderSpi::OnRtnTrade( CThostFtdcTradeField* pTrade )
 
 	//
 	///* update of m_positionDetail */
-	if( pTrade->OffsetFlag == '0' )
-		m_positionCollection->update( pTrade );
-	else
-		m_positionCollection->Remove( pTrade );
+
+	m_positionCollection->update( pTrade );
 
 	//if( _DEBUG )
 	//{
@@ -1049,7 +1049,7 @@ bool cTraderSpi::IsErrorRspInfo( CThostFtdcRspInfoField* pRspInfo )
 {
 	bool bResult = ( ( pRspInfo ) && ( pRspInfo->ErrorID != 0 ) );
 	if (bResult)
-		printf( "ErrorCode = [%d], ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg );
+		printf( "  ErrorCode = [%d], ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg );
 	return bResult;
 }
 
@@ -1059,7 +1059,7 @@ bool cTraderSpi::IsMyOrder( CThostFtdcOrderField* pOrder )
 
 	int orderRef = atoi( pOrder->OrderRef );
 
-	for( int i = 0; i < m_allOrderRef.size(); ++i )
+	for( size_t i = 0; i < m_allOrderRef.size(); ++i )
 	{
 		if( orderRef == m_allOrderRef[i] )
 		{
@@ -1132,8 +1132,6 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 	
 	BuyPrice = orderPrice;
 	SellPrice = orderPrice;
-
-	int longHold,shortHold;
 	
 	//¿ª²Ö
 	if(flag == OFFSETFLAG::open){

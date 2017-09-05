@@ -23,7 +23,7 @@ struct ci_char_traits : public char_traits<char>
 	static bool compare(const char* s1, const char* s2, size_t n)
 	{
 #ifdef WIN32  
-		return memicmp(s1, s2, n) != 0;  //实现不区分大小写的串比较  
+		return _memicmp(s1, s2, n) != 0;  //实现不区分大小写的串比较  
 #else  
 		//linux不支持memicmp，自定义版本  
 		char *tmps1 = new char[n];

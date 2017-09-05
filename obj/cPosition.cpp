@@ -83,9 +83,9 @@ void cPositionDetail::update( CThostFtdcTradeField* pTrade )
 
 	if(strcmp(pTrade->InstrumentID,this->m_instrumentID.c_str()) == 0)
 	{
-		if(pTrade->OffsetFlag == '0')//开仓
+		if (pTrade->OffsetFlag == THOST_FTDC_OF_Open)//开仓
 		{
-			if(pTrade->Direction == '0')//多单
+			if (pTrade->Direction == THOST_FTDC_D_Buy)//多单
 			{
 
 				//多单持仓量
@@ -93,7 +93,7 @@ void cPositionDetail::update( CThostFtdcTradeField* pTrade )
 				//多单今日持仓
 				this->m_TodayPosition_long = this->m_TodayPosition_long + pTrade->Volume;
 			}
-			else if(pTrade->Direction == '1')//空单
+			else if (pTrade->Direction == THOST_FTDC_D_Sell)//空单
 			{									
 
 				//空单持仓量
@@ -104,57 +104,51 @@ void cPositionDetail::update( CThostFtdcTradeField* pTrade )
 		}
 		else 
 		{
-			if(pTrade->Direction == '1')//卖，表示平多,有昨仓和今仓时，按时间顺序，先平昨仓
+			if (pTrade->Direction == THOST_FTDC_D_Sell)//卖，表示平多,有昨仓和今仓时，按时间顺序，先平昨仓
 			{
 
 
 				//多单持仓量
-				m_trade_message_map[trade_account->InstrumentID]->holding_long = m_trade_message_map[trade_account->InstrumentID]->holding_long - trade_account->Volume;
+				this->m_holding_long =this->m_holding_long - pTrade->Volume;
 				//今仓持仓量和昨仓量，要分上期所和非上期所
 
 
 				//今仓量和昨仓量，只对上期所有效
-				if(trade_account->OffsetFlag == '1' || trade_account->OffsetFlag == '4'  || trade_account->OffsetFlag == '2')
-					m_trade_message_map[trade_account->InstrumentID]->YdPosition_long = m_trade_message_map[trade_account->InstrumentID]->YdPosition_long - trade_account->Volume;//昨仓
-				else if(trade_account->OffsetFlag == '3')
-					m_trade_message_map[trade_account->InstrumentID]->TodayPosition_long = m_trade_message_map[trade_account->InstrumentID]->TodayPosition_long - trade_account->Volume;//今仓
+				if (pTrade->OffsetFlag == THOST_FTDC_OF_Close || pTrade->OffsetFlag == THOST_FTDC_OF_CloseYesterday || pTrade->OffsetFlag == THOST_FTDC_OF_ForceClose)
+					this->m_YdPosition_long =this->m_YdPosition_long - pTrade->Volume;//昨仓
+				else if (pTrade->OffsetFlag == THOST_FTDC_OF_CloseToday)
+					this->m_TodayPosition_long =this->m_TodayPosition_long - pTrade->Volume;//今仓
 
 
 				//假设今仓5手，昨仓1，平仓都是发'1'，假设平仓2手，导致昨仓是-1，今仓还是5手，实际应该是今仓5-1，昨仓0
 				//3手昨仓，5手今仓，，'1'平仓了4手,导致昨仓是-1，今仓还是5手，实际应该是今仓5-1，昨仓0
 
-				if(m_trade_message_map[trade_account->InstrumentID]->YdPosition_long < 0)
+				if(this->m_YdPosition_long < 0)
 				{
-					m_trade_message_map[trade_account->InstrumentID]->TodayPosition_long = m_trade_message_map[trade_account->InstrumentID]->TodayPosition_long + m_trade_message_map[trade_account->InstrumentID]->YdPosition_long;
-					m_trade_message_map[trade_account->InstrumentID]->YdPosition_long = 0;
+					this->m_TodayPosition_long =this->m_TodayPosition_long + this->m_YdPosition_long;
+					this->m_YdPosition_long = 0;
 
 				}
-
-
-
 			}
-			else if(trade_account->Direction == '0')//平空
+			else if (pTrade->Direction == THOST_FTDC_D_Buy)//平空
 			{
 
 				//空单持仓量
-				m_trade_message_map[trade_account->InstrumentID]->holding_short = m_trade_message_map[trade_account->InstrumentID]->holding_short - trade_account->Volume;
+				this->m_holding_short = this->m_holding_short - pTrade->Volume;
 
 				//空单今日持仓
-				//m_trade_message_map[trade_account->InstrumentID]->TodayPosition_short = m_trade_message_map[trade_account->InstrumentID]->TodayPosition_short - trade_account->Volume;
-
-
+				//this->TodayPosition_short = this->TodayPosition_short - pTrade->Volume;
 
 				//今仓量和昨仓量，只对上期所有效
-				if(trade_account->OffsetFlag == '1' ||  trade_account->OffsetFlag == '2' || trade_account->OffsetFlag == '4')
-					m_trade_message_map[trade_account->InstrumentID]->YdPosition_short = m_trade_message_map[trade_account->InstrumentID]->YdPosition_short - trade_account->Volume;//昨仓
-				else if(trade_account->OffsetFlag == '3')
-					m_trade_message_map[trade_account->InstrumentID]->TodayPosition_short = m_trade_message_map[trade_account->InstrumentID]->TodayPosition_short - trade_account->Volume;//今仓
+				if (pTrade->OffsetFlag == THOST_FTDC_OF_Close || pTrade->OffsetFlag == THOST_FTDC_OF_ForceClose || pTrade->OffsetFlag == THOST_FTDC_OF_CloseYesterday)
+					this->m_YdPosition_short = this->m_YdPosition_short - pTrade->Volume;//昨仓
+				else if (pTrade->OffsetFlag == THOST_FTDC_OF_CloseToday)
+					this->m_TodayPosition_short = this->m_TodayPosition_short - pTrade->Volume;//今仓
 
-
-				if(m_trade_message_map[trade_account->InstrumentID]->YdPosition_short < 0)
+				if(this->m_YdPosition_short < 0)
 				{
-					m_trade_message_map[trade_account->InstrumentID]->TodayPosition_short = m_trade_message_map[trade_account->InstrumentID]->TodayPosition_short + m_trade_message_map[trade_account->InstrumentID]->YdPosition_short;
-					m_trade_message_map[trade_account->InstrumentID]->YdPosition_short = 0;
+					this->m_TodayPosition_short = this->m_TodayPosition_short + this->m_YdPosition_short;
+					this->m_YdPosition_short = 0;
 
 				}
 			}

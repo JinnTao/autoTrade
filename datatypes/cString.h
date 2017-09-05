@@ -358,6 +358,11 @@ inline int IsSpace( const char& c )
 {
 	return( c == 0x20 || c == NBSP || ( c >= 0x09 && c <= 0x0D ) );
 }
+#if _MSC_VER
+#define strcasecmp _stricmp  //strcasecmp 找不到标识符
+#define strncasecmp _strnicmp
+
+#endif
 
 #ifndef WIN32
 #define stricmp strcasecmp
