@@ -8,10 +8,9 @@
 #include <stl_ctp.h>
 
 
-cMarketData::cMarketData()
-:m_id( theString )
-
+cMarketData::cMarketData(string id)
 {
+	this->m_id = id;
 }
 
 

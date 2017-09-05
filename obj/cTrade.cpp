@@ -27,6 +27,18 @@ cTrade::cTrade( CThostFtdcTradeField* pTrade )
 	m_tradeTime = cTickTime( pTrade->TradeDate, pTrade->TradeTime );
 }
 
+cTrade::cTrade( CThostFtdcOrderField* pOrder )
+{
+	//m_tradeID = atoi( pOrder->TradeID );
+	//m_orderID = atoi( pOrder->OrderSysID );
+	//m_instrumentID = cString( pOrder->InstrumentID );
+	//m_accountID = cString( pOrder->InvestorID );
+	//m_direction = pOrder->Direction;
+	//m_offsetFlag = pOrder->CombOffsetFlag;
+	//m_price = pOrder->Price;
+	//m_volume = pOrder->Volume;
+	//m_tradeTime = cTickTime( pOrder->TradeDate, pOrder->TradeTime );
+}
 //cTrade::cTrade( cOrder* pOrder, int id )
 //{
 //	m_tradeID = id;

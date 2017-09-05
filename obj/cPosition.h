@@ -1,10 +1,10 @@
 #ifndef __CPOSITION_H__
 #define __CPOSITION_H__
+#include <iostream>
 
-#include <cString.h>
-#include <cDate.h>
-#include <stl.h>
+#include <memory>
 #include <ThostFtdcUserApiStruct.h>
+using namespace std;
 
 class cTrade;
 
@@ -13,7 +13,7 @@ class cPositionDetail
 public:
 	cPositionDetail(string inst);
 	void update( CThostFtdcInvestorPositionField* pInvestorPositionDetail );
-
+	void update( CThostFtdcTradeField* pTrade );
 	~cPositionDetail() {}
 	//
 	/* Get Method */
@@ -52,7 +52,6 @@ public:
 private:
 	int m_tradeID;
 
-	cDate m_openDate;
 
 	string m_instrumentID;//ºÏÔ¼´úÂë
 

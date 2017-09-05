@@ -10,17 +10,15 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <windows.h>
-#include <memory.h>
-#include <cSharedPtr.h>
-#include "ThostFtdcUserApiDataType.h"
+#include <memory>
 #include "ThostFtdcUserApiStruct.h"
+
 using namespace std;
 
 class cMarketData
 {
 public:
-	cMarketData();
+	cMarketData(string);
 	cMarketData( const cMarketData& );
 	~cMarketData();
 	// get methods

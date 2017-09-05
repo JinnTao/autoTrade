@@ -5,7 +5,9 @@
 #include <map>
 #include <cSignal.h>
 #include <Windows.h>
-
+#include <cVector.h>
+#include <cTick.h>
+#include <cCandle.h>
 #include <cMarketDataCollection.h>
 #include <cSignalCollection.h>
 

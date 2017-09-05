@@ -100,7 +100,7 @@ void cTradingPlatform::RegisterMarketDataEngine( cMarketDataCollectionPtr pMarke
 		m_pMarketDataEngine.reset();
 
 	m_pMarketDataEngine = pMarketDataEngine;
-
+/*
 	cArray< cString > instrumentIDs;
 	pMarketDataEngine->GetInstrumentIDs( instrumentIDs );
 
@@ -124,7 +124,7 @@ void cTradingPlatform::RegisterMarketDataEngine( cMarketDataCollectionPtr pMarke
 			m_closedPnL.insert( map< cString, double >::value_type( m_instrumentIDs[i], 0.0 ) );
 		}
 	}
-
+*/
 }
 
 void cTradingPlatform::RegisterStrategy( cStrategyPtr pStrategy )
@@ -314,7 +314,7 @@ DWORD cTradingPlatform::AutoTrading()
 	char offset[50];
 	char inst[50];
 	int vol;
-	double price = 0;
+	char price[50];
 	int mark = 0;
 	int a;
 	cerr<<"--------------------Human-computer interaction function Start--------------------------------"<<endl;
@@ -332,12 +332,17 @@ DWORD cTradingPlatform::AutoTrading()
 			a = 2;
 		else if(str == "stop")
 			a = 3;
-		else {
-			if(str.length() >10){
-				sscanf(str.c_str(),"%s %s %s %d %f",dire,offset,inst,&vol,&price);
-				this->insertOrder(string(inst),string(dire),string(offset),vol,price);
+		else if(str.length() >10){
+				sscanf(str.c_str(),"%s %s %s %d %s",dire,offset,inst,&vol,price);
+				double dPrice = atof(price);
+				this->insertOrder(string(inst),string(dire),string(offset),vol,dPrice);
 				a = 4;
 			}
+		else if(str == "order"){
+			a = 5;
+		}
+		else if(str == "trade"){
+			a = 6;
 		}
 		switch(a){
 		case 0:
@@ -374,6 +379,18 @@ DWORD cTradingPlatform::AutoTrading()
 		case 4:
 			{
 				cerr<<endl<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
+				break;
+			}
+		case 5:
+			{
+				this->m_pOrders->PrintPendingOrders();
+				cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
+				break;
+			}
+		case 6:
+			{
+				this->m_pTrades->PrintAll();
+				cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
 				break;
 			}
 
@@ -477,15 +494,17 @@ DWORD cTradingPlatform::ProcessOrderTest()
 
 DWORD cTradingPlatform::IOProcess()
 {
-	return m_pMarketDataEngine->IOProcess();
+//	return m_pMarketDataEngine->IOProcess();
+	return 0;
 }
 
 DWORD cTradingPlatform::SimulationIOProcess()
 {
-	if( m_pMarketDataEngine.get() )
-		return m_pMarketDataEngine->SimulationIOProcess();
-	else
-		return 0;
+	//if( m_pMarketDataEngine.get() )
+	//	return m_pMarketDataEngine->SimulationIOProcess();
+	//else
+	//	return 0;
+	return 0;
 }
 
 
@@ -518,12 +537,13 @@ void cTradingPlatform::PrintClosePnL() const
 
 bool cTradingPlatform::SimulationUpdate( const cTick& tick )
 {
-	if( m_pTraderSpi )
-		return false;
+	//if( m_pTraderSpi )
+	//	return false;
 
-	m_pMarketDataEngine->SimulationUpdate( tick );
-	bool flag = m_pStrategy->SimTimeIndicatorSignalUpdate( tick );
-	return flag;
+	//m_pMarketDataEngine->SimulationUpdate( tick );
+	//bool flag = m_pStrategy->SimTimeIndicatorSignalUpdate( tick );
+	//return flag;
+	return true;
 }
 
 void cTradingPlatform::Sleep()

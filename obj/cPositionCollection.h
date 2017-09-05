@@ -45,7 +45,9 @@ public:
 	void PrintDetail() ;
 	/*update position*/
 	void update( CThostFtdcInvestorPositionField* pInvestorPositionDetail);
-	typedef map< int, cPositionDetailPtr > mapType;
+
+	void update( CThostFtdcTradeField* pTrade);
+
 	int getHolding_long(string instID);
 	int getHolding_short(string instID);
 

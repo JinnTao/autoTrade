@@ -66,6 +66,10 @@ public:
 
 	virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
+
+	///请求查询成交响应
+	virtual void OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+
 	// order insertion return
 	virtual void OnRtnOrder( CThostFtdcOrderField* pOrder );
 
@@ -135,7 +139,7 @@ private:
 	/*cOrderCollection* m_orderCollection;*/
 	cOrderCollectionPtr m_orderCollection;
 
-	cIvector m_allOrderRef;											// list of all orderRef
+	vector<int> m_allOrderRef;											// list of all orderRef
 	//
 	/* trades */
 	/*cTradeCollection* m_tradeCollection;*/

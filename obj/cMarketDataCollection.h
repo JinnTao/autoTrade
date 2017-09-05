@@ -2,7 +2,8 @@
 #define __CMARKETDATACOLLECTION_H__
 
 #include <cMarketData.h>
-#include <Windows.h>
+#include <map>
+using std::map;
 
 
 // underlying string versus array of cMarketData, i.e. IF vs. IF1601 and IF1603

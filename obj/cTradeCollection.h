@@ -19,7 +19,7 @@ public:
 
 	void Add( CThostFtdcTradeField* pTrade );
 	void Add( cTradePtr p_element );
-
+	void Add(CThostFtdcOrderField* pOrder);
 	int Count() const;
 	void GetInstrumentIDs( cArray< cString >& instrumentIDs ) const;
 	void GetOrderIDs( cIvector& orderIDs ) const;

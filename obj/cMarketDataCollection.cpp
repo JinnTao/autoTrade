@@ -44,7 +44,7 @@ void cMarketDataCollection::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField
 
 	if( !md ){
 		// create new CmarketData
-		shared_ptr< cMarketData > ptr = make_shared< cMarketData >( pDepthMarketData->InstrumentID);
+		shared_ptr< cMarketData > ptr = make_shared< cMarketData >( id);
 		ptr->OnRtnDepthMarketData(pDepthMarketData);
 	}else{
 		md->OnRtnDepthMarketData( pDepthMarketData );

@@ -115,81 +115,81 @@ void cStrategyMovAvg::Init( const cArray< cString >& instrumentIDs )
 
 void cStrategyMovAvg::Train( const cArray< cTickTime>& startdts, const cArray< cTickTime>& enddts )
 {
-	// optimize the parameters
-	if( m_instrumentIDs.getSize() == 0 )
-		return;
-	yr_assert( m_instrumentIDs.getSize() == startdts.getSize() && m_instrumentIDs.getSize() == enddts.getSize() );
+	//// optimize the parameters
+	//if( m_instrumentIDs.getSize() == 0 )
+	//	return;
+	//yr_assert( m_instrumentIDs.getSize() == startdts.getSize() && m_instrumentIDs.getSize() == enddts.getSize() );
 
-	// for multiple contracts
-	int i,j,k;
-	for( i = 0; i < m_instrumentIDs.getSize(); ++i )
-	{
-		cString id( m_instrumentIDs[i] );
-		double nLead = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_MAXLEAD ) );
-		double nLag = GetParameter(	StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_MAXLAG ) );
-		double alpha = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_ALPHA ) );
-		double isEMA = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_EMAFLAG ) );
+	//// for multiple contracts
+	//int i,j,k;
+	//for( i = 0; i < m_instrumentIDs.getSize(); ++i )
+	//{
+	//	cString id( m_instrumentIDs[i] );
+	//	double nLead = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_MAXLEAD ) );
+	//	double nLag = GetParameter(	StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_MAXLAG ) );
+	//	double alpha = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_ALPHA ) );
+	//	double isEMA = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_EMAFLAG ) );
 
-		cVector leadVec( 1.0, (int)nLead );
-		cVector lagVec( 1.0, (int)nLag );
-		for( j = 1; j < (int)nLead; ++j )
-			leadVec[j] = leadVec[j-1] + 1.0;
-		for( j = 1; j < (int)nLag; ++j )
-			lagVec[j] = lagVec[j-1] + 1.0;
+	//	cVector leadVec( 1.0, (int)nLead );
+	//	cVector lagVec( 1.0, (int)nLag );
+	//	for( j = 1; j < (int)nLead; ++j )
+	//		leadVec[j] = leadVec[j-1] + 1.0;
+	//	for( j = 1; j < (int)nLag; ++j )
+	//		lagVec[j] = lagVec[j-1] + 1.0;
 
-		
-		yr_assert( startdts[i].TickTimeToDouble() <= enddts[i].TickTimeToDouble() );
-		
-		double maxSharpRatio = -99.99;
-		double leadCalibrated, lagCalibrated, totalpnl;
-		cMarketData* md_i = m_mc->GetMarketDataHandle( id );
-		cVector time, open, high, low, close, px;
+	//	
+	//	yr_assert( startdts[i].TickTimeToDouble() <= enddts[i].TickTimeToDouble() );
+	//	
+	//	double maxSharpRatio = -99.99;
+	//	double leadCalibrated, lagCalibrated, totalpnl;
+	//	cMarketData* md_i = m_mc->GetMarketDataHandle( id );
+	//	cVector time, open, high, low, close, px;
 
-		//@todo: incorporate with sample frequency
-		md_i->GetCandleStick( time, open, high, low, close );
-		
-		datawindow( time, close, startdts[i], enddts[i], px );
-		
-		for( j = 0; j < leadVec.getSize(); ++j )
-		{
-			double lead = leadVec[j];
-			for( k = 0; k < lagVec.getSize(); ++k )
-			{
-				double lag = lagVec[k];
-				if( lag > lead )
-				{
-					cVector pnl;
-					calcPnL( lead, lag, alpha, isEMA, px, pnl );
-					double sr = sharpratio( pnl );
-					if( equal( maxSharpRatio, -99.99 ) )
-					{
-						maxSharpRatio = sr;
-						SetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LEAD ), lead );
-						SetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LAG ), lag );
-						leadCalibrated = lead;
-						lagCalibrated = lag;
-						totalpnl = pnl.Sum();
-					}
-					if( sr > maxSharpRatio )
-					{
-						maxSharpRatio = sr;
-						SetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LEAD ), lead );
-						SetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LAG ), lag );
-						leadCalibrated = lead;
-						lagCalibrated = lag;
-						totalpnl = pnl.Sum();
-					}
-				}
-			}
-		}
-		// debug
-		cout << "contract: " << m_instrumentIDs[i].c_str() << endl;
-		cout << "maximum sharp ratio: " << maxSharpRatio << endl;
-		cout << "total pnl: " << totalpnl << endl;
-		cout << "parameter lead " << leadCalibrated << endl;
-		cout << "parameter lag " << lagCalibrated << endl;
-		cout << endl;
-	}
+	//	//@todo: incorporate with sample frequency
+	//	md_i->GetCandleStick( time, open, high, low, close );
+	//	
+	//	datawindow( time, close, startdts[i], enddts[i], px );
+	//	
+	//	for( j = 0; j < leadVec.getSize(); ++j )
+	//	{
+	//		double lead = leadVec[j];
+	//		for( k = 0; k < lagVec.getSize(); ++k )
+	//		{
+	//			double lag = lagVec[k];
+	//			if( lag > lead )
+	//			{
+	//				cVector pnl;
+	//				calcPnL( lead, lag, alpha, isEMA, px, pnl );
+	//				double sr = sharpratio( pnl );
+	//				if( equal( maxSharpRatio, -99.99 ) )
+	//				{
+	//					maxSharpRatio = sr;
+	//					SetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LEAD ), lead );
+	//					SetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LAG ), lag );
+	//					leadCalibrated = lead;
+	//					lagCalibrated = lag;
+	//					totalpnl = pnl.Sum();
+	//				}
+	//				if( sr > maxSharpRatio )
+	//				{
+	//					maxSharpRatio = sr;
+	//					SetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LEAD ), lead );
+	//					SetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LAG ), lag );
+	//					leadCalibrated = lead;
+	//					lagCalibrated = lag;
+	//					totalpnl = pnl.Sum();
+	//				}
+	//			}
+	//		}
+	//	}
+	//	// debug
+	//	cout << "contract: " << m_instrumentIDs[i].c_str() << endl;
+	//	cout << "maximum sharp ratio: " << maxSharpRatio << endl;
+	//	cout << "total pnl: " << totalpnl << endl;
+	//	cout << "parameter lead " << leadCalibrated << endl;
+	//	cout << "parameter lag " << lagCalibrated << endl;
+	//	cout << endl;
+	//}
 
 }
 
@@ -259,245 +259,247 @@ void cStrategyMovAvg::calcPnL( double lead, double lag, double alpha, double isE
 
 bool cStrategyMovAvg::RealTimeIndicatorSignalUpdate( const cString& instrumentID )
 {
-	bool updateFlag = false;
-	
-	cMarketData* md = m_mc->GetMarketDataHandle( instrumentID );
-	if( !md )
-		return false;
+	//bool updateFlag = false;
+	//
+	//cMarketData* md = m_mc->GetMarketDataHandle( instrumentID );
+	//if( !md )
+	//	return false;
 
-	cString underlying; 
-	InstrumentToUnderlying( instrumentID, underlying );
-	bool displaySignal = GetDisplaySignalFlag( underlying );
+	//cString underlying; 
+	//InstrumentToUnderlying( instrumentID, underlying );
+	//bool displaySignal = GetDisplaySignalFlag( underlying );
 
-	const cArray< cCandle >* candles = md->GetCandleStick();
-	//@todo: incorporate with sample frequency
-	int nCandle = candles->getSize();
-	if( nCandle < 1 )
-	{
-		int idx = GetPXLastUsedIndex();
-		if( idx >= 0 )
-			SetPXLastUsedIndex( -1 );
+	//const cArray< cCandle >* candles = md->GetCandleStick();
+	////@todo: incorporate with sample frequency
+	//int nCandle = candles->getSize();
+	//if( nCandle < 1 )
+	//{
+	//	int idx = GetPXLastUsedIndex();
+	//	if( idx >= 0 )
+	//		SetPXLastUsedIndex( -1 );
 
 
-		return false;
-	}
+	//	return false;
+	//}
 
-	double maLead = GetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ) );
-	double maLag = GetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ) );
-	double isEMA = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_EMAFLAG ) );
-	double lead = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LEAD ) );
-	double lag = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LAG ) );
-	
-	if( equal( isEMA, 1.0 ) )
-	{
-		//EMA is used
-		int idx = GetPXLastUsedIndex();
-		if( idx < 0 && equal( maLead, -9.99 ) && equal( maLag, -9.99 ) )
-		{	
-			double dClose = (*candles)[0].Close();
-			maLead = dClose;
-			maLag = dClose;
-			SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ), maLead );
-			SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ), maLag );
-			SetPXLastUsedIndex( 0 );
+	//double maLead = GetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ) );
+	//double maLag = GetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ) );
+	//double isEMA = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_EMAFLAG ) );
+	//double lead = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LEAD ) );
+	//double lag = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LAG ) );
+	//
+	//if( equal( isEMA, 1.0 ) )
+	//{
+	//	//EMA is used
+	//	int idx = GetPXLastUsedIndex();
+	//	if( idx < 0 && equal( maLead, -9.99 ) && equal( maLag, -9.99 ) )
+	//	{	
+	//		double dClose = (*candles)[0].Close();
+	//		maLead = dClose;
+	//		maLag = dClose;
+	//		SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ), maLead );
+	//		SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ), maLag );
+	//		SetPXLastUsedIndex( 0 );
 
-			int direction = -1;
-			if( maLead > maLag )
-				direction = (int)SWSIGNALDIRECTION_BUY;
-			else if( maLead < maLag )
-				direction = (int)SWSIGNALDIRECTION_SELL;
-			if( !IsValidOrderDirection( direction ) )
-				return false;
+	//		int direction = -1;
+	//		if( maLead > maLag )
+	//			direction = (int)SWSIGNALDIRECTION_BUY;
+	//		else if( maLead < maLag )
+	//			direction = (int)SWSIGNALDIRECTION_SELL;
+	//		if( !IsValidOrderDirection( direction ) )
+	//			return false;
 
-			double px = md->GetLastTick().Last();
-			cTickTime dt = md->GetLastTick().TickTime();
-			
-			shared_ptr< cSignal > signal = make_shared< cSignal >();
-			signal->SetDirection( direction );
-			signal->SetInstrumentID( instrumentID );
-			signal->SetPrice( px );
-			signal->SetTime( dt );
-			signal->SetVolume( 1 );
-			SetSignal( signal );
-			if( displaySignal )
-			{
-				cout << dt.DateString().c_str() << " " << dt.TimeString().c_str() << ":";
-				cout << instrumentID.c_str() << " >>> MA("<< lead << "): " << maLead << ":MA("<< lag << "): " << maLag;
-				cout << " signal: " << SignalDirectionToString( SwSignalDirection( direction ) ).c_str() << " at " << px << endl;
-			}
-			updateFlag = true;
-		}
-		else
-		{
-			if( idx < nCandle - 1 )
-			{
-				double lastClose = candles->getLast().Close();
-				double alpha_lead = 2.0 / ( 1.0 + lead );
-				double alpha_lag = 2.0 / ( 1.0 + lag );
-				maLead = maLead + alpha_lead * ( lastClose - maLead );
-				maLag = maLag + alpha_lag * ( lastClose - maLag );
-				SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ), maLead );
-				SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ), maLag );
-				SetPXLastUsedIndex( nCandle-1 );
+	//		double px = md->GetLastTick().Last();
+	//		cTickTime dt = md->GetLastTick().TickTime();
+	//		
+	//		shared_ptr< cSignal > signal = make_shared< cSignal >();
+	//		signal->SetDirection( direction );
+	//		signal->SetInstrumentID( instrumentID );
+	//		signal->SetPrice( px );
+	//		signal->SetTime( dt );
+	//		signal->SetVolume( 1 );
+	//		SetSignal( signal );
+	//		if( displaySignal )
+	//		{
+	//			cout << dt.DateString().c_str() << " " << dt.TimeString().c_str() << ":";
+	//			cout << instrumentID.c_str() << " >>> MA("<< lead << "): " << maLead << ":MA("<< lag << "): " << maLag;
+	//			cout << " signal: " << SignalDirectionToString( SwSignalDirection( direction ) ).c_str() << " at " << px << endl;
+	//		}
+	//		updateFlag = true;
+	//	}
+	//	else
+	//	{
+	//		if( idx < nCandle - 1 )
+	//		{
+	//			double lastClose = candles->getLast().Close();
+	//			double alpha_lead = 2.0 / ( 1.0 + lead );
+	//			double alpha_lag = 2.0 / ( 1.0 + lag );
+	//			maLead = maLead + alpha_lead * ( lastClose - maLead );
+	//			maLag = maLag + alpha_lag * ( lastClose - maLag );
+	//			SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ), maLead );
+	//			SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ), maLag );
+	//			SetPXLastUsedIndex( nCandle-1 );
 
-				int direction = -1;
-				if( maLead > maLag )
-					direction = (int)SWSIGNALDIRECTION_BUY;
-				else if( maLead < maLag )
-					direction = (int)SWSIGNALDIRECTION_SELL;
-				
-				if( !IsValidOrderDirection( direction ) )
-					return false;
+	//			int direction = -1;
+	//			if( maLead > maLag )
+	//				direction = (int)SWSIGNALDIRECTION_BUY;
+	//			else if( maLead < maLag )
+	//				direction = (int)SWSIGNALDIRECTION_SELL;
+	//			
+	//			if( !IsValidOrderDirection( direction ) )
+	//				return false;
 
-				double px = md->GetLastTick().Last();
-				cTickTime dt = md->GetLastTick().TickTime();
-					
-				shared_ptr< cSignal > signal = make_shared< cSignal >();
-				signal->SetDirection( direction );
-				signal->SetInstrumentID( instrumentID );
-				signal->SetPrice( px );
-				signal->SetTime( dt );
-				signal->SetVolume( 1 );
-				SetSignal( signal );
+	//			double px = md->GetLastTick().Last();
+	//			cTickTime dt = md->GetLastTick().TickTime();
+	//				
+	//			shared_ptr< cSignal > signal = make_shared< cSignal >();
+	//			signal->SetDirection( direction );
+	//			signal->SetInstrumentID( instrumentID );
+	//			signal->SetPrice( px );
+	//			signal->SetTime( dt );
+	//			signal->SetVolume( 1 );
+	//			SetSignal( signal );
 
-				if( displaySignal )
-				{
-					cout << dt.DateString().c_str() << " " << dt.TimeString().c_str() << ":";
-					cout << instrumentID.c_str() << " >>> MA("<< lead << "): " << maLead << ":MA("<< lag << "): " << maLag;
-					cout << " signal: " << SignalDirectionToString( SwSignalDirection( direction ) ).c_str() << " at " << px << endl;
-				}
-				updateFlag = true;
-			}
-		}
-	}
-	else
-	{
-		// non-exponential moving average
-		// @todo
-	}
-	return updateFlag;
+	//			if( displaySignal )
+	//			{
+	//				cout << dt.DateString().c_str() << " " << dt.TimeString().c_str() << ":";
+	//				cout << instrumentID.c_str() << " >>> MA("<< lead << "): " << maLead << ":MA("<< lag << "): " << maLag;
+	//				cout << " signal: " << SignalDirectionToString( SwSignalDirection( direction ) ).c_str() << " at " << px << endl;
+	//			}
+	//			updateFlag = true;
+	//		}
+	//	}
+	//}
+	//else
+	//{
+	//	// non-exponential moving average
+	//	// @todo
+	//}
+	//return updateFlag;
+	return true;
 }
 
 bool cStrategyMovAvg::SimTimeIndicatorSignalUpdate( const cTick& tick )
 {
-	cString id = tick.InstrumentID();
-	cString underlying; 
-	InstrumentToUnderlying( id, underlying );
-	cMarketData* md = m_mc->GetMarketDataHandle( id );
-	if( !md )
-		return false;
-
-	bool displaySignal = GetDisplaySignalFlag( underlying );
-
-	const cArray< cCandle >* candles = md->GetCandleStick();
-	//@todo: incorporate with sample frequency
-	int nCandle = candles->getSize();
-	if( nCandle < 1 )
-	{
-		int idx = GetPXLastUsedIndex();
-		if( idx >= 0 )
-		SetPXLastUsedIndex( -1 );
-		return false;
-	}
-
-	double maLead = GetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ) );
-	double maLag = GetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ) );
-	double isEMA = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_EMAFLAG ) );
-	double lead = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LEAD ) );
-	double lag = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LAG ) );
-	
-	if( equal( isEMA, 1.0 ) )
-	{
-			//EMA is used
-		int idx = GetPXLastUsedIndex();
-		if( idx < 0 && equal( maLead, -9.99 ) && equal( maLag, -9.99 ) )
-		{	
-			double dClose = (*candles)[0].Close();
-			maLead = dClose;
-			maLag = dClose;
-			SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ), maLead );
-			SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ), maLag );
-			SetPXLastUsedIndex( 0 );
-
-			int direction = -1;
-			if( maLead > maLag )
-				direction = (int)SWSIGNALDIRECTION_BUY;
-			else if( maLead < maLag )
-				direction = (int)SWSIGNALDIRECTION_SELL;
-
-			if( !IsValidOrderDirection( direction ) )
-				return false;
-
-			double px = md->GetLastTick().Last();
-			cTickTime dt = md->GetLastTick().TickTime();
-
-			shared_ptr< cSignal > signal = make_shared< cSignal >();
-			signal->SetDirection( direction );
-			signal->SetInstrumentID( id );
-			signal->SetPrice( px );
-			signal->SetTime( dt );
-			signal->SetVolume( 1 );
-			SetSignal( signal );
-
-			if( displaySignal )
-			{
-				cout << dt.DateString().c_str() << " " << dt.TimeString().c_str() << ":";
-				cout << id.c_str() << " >>> MA("<< lead << "): " << maLead << ":MA("<< lag << "): " << maLag;
-				cout << " signal: " << SignalDirectionToString( SwSignalDirection( direction ) ).c_str() << " at " << px << endl;
-			}
-			return true;
-		}
-		else
-		{
-			if( idx < nCandle - 1 )
-			{
-				double lastClose = candles->getLast().Close();
-				double alpha_lead = 2.0 / ( 1.0 + lead );
-				double alpha_lag = 2.0 / ( 1.0 + lag );
-				maLead = maLead + alpha_lead * ( lastClose - maLead );
-				maLag = maLag + alpha_lag * ( lastClose - maLag );
-				SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ), maLead );
-				SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ), maLag );
-				SetPXLastUsedIndex( nCandle-1 );
-
-				int direction = -1;
-				if( maLead > maLag )
-					direction = (int)SWSIGNALDIRECTION_BUY;
-				else if( maLead < maLag )
-					direction = (int)SWSIGNALDIRECTION_SELL;
-
-				if( !IsValidOrderDirection( direction ) )
-					return false;
-
-				double px = md->GetLastTick().Last();
-				cTickTime dt = md->GetLastTick().TickTime();
-
-				shared_ptr< cSignal > signal = make_shared< cSignal >();
-				signal->SetDirection( direction );
-				signal->SetInstrumentID( id );
-				signal->SetPrice( px );
-				signal->SetTime( dt );	
-				signal->SetVolume( 1 );
-				SetSignal( signal );
-
-				if( displaySignal )
-				{
-					cout << dt.DateString().c_str() << " " << dt.TimeString().c_str() << ":";
-					cout << id.c_str() << " >>> MA("<< lead << "): " << maLead << ":MA("<< lag << "): " << maLag;
-					cout << " signal: " << SignalDirectionToString( SwSignalDirection( direction ) ).c_str() << " at " << px << endl;
-				}
-
-				return true;
-			}
-		}
-		return false;
-	}
-	else
-	{
-		// non-exponential moving average
-		// @todo
-		return false;
-	}
+//	cString id = tick.InstrumentID();
+//	cString underlying; 
+//	InstrumentToUnderlying( id, underlying );
+//	cMarketData* md = m_mc->GetMarketDataHandle( id );
+//	if( !md )
+//		return false;
+//
+//	bool displaySignal = GetDisplaySignalFlag( underlying );
+//
+//	const cArray< cCandle >* candles = md->GetCandleStick();
+//	//@todo: incorporate with sample frequency
+//	int nCandle = candles->getSize();
+//	if( nCandle < 1 )
+//	{
+//		int idx = GetPXLastUsedIndex();
+//		if( idx >= 0 )
+//		SetPXLastUsedIndex( -1 );
+//		return false;
+//	}
+//
+//	double maLead = GetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ) );
+//	double maLag = GetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ) );
+//	double isEMA = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_EMAFLAG ) );
+//	double lead = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LEAD ) );
+//	double lag = GetParameter( StrategyMovAvgParameterToString( SwStrategyMovAvgParameter::SWSTRATEGYMOVAVGPARAMETER_LAG ) );
+//	
+//	if( equal( isEMA, 1.0 ) )
+//	{
+//			//EMA is used
+//		int idx = GetPXLastUsedIndex();
+//		if( idx < 0 && equal( maLead, -9.99 ) && equal( maLag, -9.99 ) )
+//		{	
+//			double dClose = (*candles)[0].Close();
+//			maLead = dClose;
+//			maLag = dClose;
+//			SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ), maLead );
+//			SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ), maLag );
+//			SetPXLastUsedIndex( 0 );
+//
+//			int direction = -1;
+//			if( maLead > maLag )
+//				direction = (int)SWSIGNALDIRECTION_BUY;
+//			else if( maLead < maLag )
+//				direction = (int)SWSIGNALDIRECTION_SELL;
+//
+//			if( !IsValidOrderDirection( direction ) )
+//				return false;
+//
+//			double px = md->GetLastTick().Last();
+//			cTickTime dt = md->GetLastTick().TickTime();
+//
+//			shared_ptr< cSignal > signal = make_shared< cSignal >();
+//			signal->SetDirection( direction );
+//			signal->SetInstrumentID( id );
+//			signal->SetPrice( px );
+//			signal->SetTime( dt );
+//			signal->SetVolume( 1 );
+//			SetSignal( signal );
+//
+//			if( displaySignal )
+//			{
+//				cout << dt.DateString().c_str() << " " << dt.TimeString().c_str() << ":";
+//				cout << id.c_str() << " >>> MA("<< lead << "): " << maLead << ":MA("<< lag << "): " << maLag;
+//				cout << " signal: " << SignalDirectionToString( SwSignalDirection( direction ) ).c_str() << " at " << px << endl;
+//			}
+//			return true;
+//		}
+//		else
+//		{
+//			if( idx < nCandle - 1 )
+//			{
+//				double lastClose = candles->getLast().Close();
+//				double alpha_lead = 2.0 / ( 1.0 + lead );
+//				double alpha_lag = 2.0 / ( 1.0 + lag );
+//				maLead = maLead + alpha_lead * ( lastClose - maLead );
+//				maLag = maLag + alpha_lag * ( lastClose - maLag );
+//				SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALEAD ), maLead );
+//				SetIndicator( StrategyMovAvgIndicatorToString( SwStrategyMovAvgIndicator::SWSTRATEGYMOVAVGINDICATOR_MALAG ), maLag );
+//				SetPXLastUsedIndex( nCandle-1 );
+//
+//				int direction = -1;
+//				if( maLead > maLag )
+//					direction = (int)SWSIGNALDIRECTION_BUY;
+//				else if( maLead < maLag )
+//					direction = (int)SWSIGNALDIRECTION_SELL;
+//
+//				if( !IsValidOrderDirection( direction ) )
+//					return false;
+//
+//				double px = md->GetLastTick().Last();
+//				cTickTime dt = md->GetLastTick().TickTime();
+//
+//				shared_ptr< cSignal > signal = make_shared< cSignal >();
+//				signal->SetDirection( direction );
+//				signal->SetInstrumentID( id );
+//				signal->SetPrice( px );
+//				signal->SetTime( dt );	
+//				signal->SetVolume( 1 );
+//				SetSignal( signal );
+//
+//				if( displaySignal )
+//				{
+//					cout << dt.DateString().c_str() << " " << dt.TimeString().c_str() << ":";
+//					cout << id.c_str() << " >>> MA("<< lead << "): " << maLead << ":MA("<< lag << "): " << maLag;
+//					cout << " signal: " << SignalDirectionToString( SwSignalDirection( direction ) ).c_str() << " at " << px << endl;
+//				}
+//
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
+//	else
+//	{
+//		// non-exponential moving average
+//		// @todo
+//		return false;
+//	}
+	return 0;
 }
 
 cArray< cOrder* > cStrategyMovAvg::GenNewOrders( const cString& instrumentID, cPositionCollection* positions )
