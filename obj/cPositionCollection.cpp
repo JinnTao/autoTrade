@@ -66,6 +66,32 @@ void cPositionCollection::update(CThostFtdcInvestorPositionField* pInvestorPosit
 			m_positionMap[pInvestorPosition->InstrumentID]->update(pInvestorPosition);
 		}
 }
+void cPositionCollection::update(CThostFtdcTradeField* pTrade){
+		bool find_trade_message_map = false;
+		// new open 
+		if(pTrade->OffsetFlag == 0){
+			
+			for(map<string, cPositionDetailPtr>::iterator iter = m_positionMap.begin(); iter!= m_positionMap.end();iter++)
+			{
+				if(strcmp( (iter->first).c_str(), pTrade->InstrumentID)==0)//合约已存在
+				{
+					find_trade_message_map = true;
+					break;
+				}
+			}
+			// create new postion Detail
+			if(!find_trade_message_map )
+			{
+
+				cPositionDetailPtr trade_message_p(new cPositionDetail(pTrade->InstrumentID));
+
+				m_positionMap.insert(pair<string, cPositionDetailPtr> (pTrade->InstrumentID, trade_message_p));
+			}
+			
+		}
+		//update position
+		m_positionMap[pTrade->InstrumentID]->update(pTrade);
+}
 
 
 

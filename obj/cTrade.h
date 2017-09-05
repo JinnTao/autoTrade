@@ -14,6 +14,7 @@ class cTrade
 public:
 	cTrade();
 	cTrade( CThostFtdcTradeField* );
+	cTrade(CThostFtdcOrderField *);
 	cTrade( const cTrade& );
 	cTrade& operator = ( const cTrade& );
 

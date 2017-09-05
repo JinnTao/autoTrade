@@ -28,6 +28,8 @@ cTraderSpi::cTraderSpi( CThostFtdcTraderApi* pUserTraderApi,CThostFtdcMdApi* pUs
 	m_OpenProfit = 0.0;//浮动盈亏
 
 	m_accountMargin = 0.0;
+
+	m_InstMeassageMap = NULL;
 }
 
 cTraderSpi::~cTraderSpi()
@@ -157,40 +159,42 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 
 		if(m_first_inquiry_order == true)
 		{
-			CThostFtdcOrderField* order = new CThostFtdcOrderField();
-			memcpy(order,  pOrder, sizeof(CThostFtdcOrderField));
-			m_orderList.push_back(order);
+			//CThostFtdcOrderField* order = new CThostFtdcOrderField();
+			//memcpy(order,  pOrder, sizeof(CThostFtdcOrderField));
+			//m_orderList.push_back(order);
 
-			if(pOrder->OrderStatus == '1'  || pOrder->OrderStatus == '3'){
-				CThostFtdcOrderField* pendOrder = new CThostFtdcOrderField();
-				memcpy(pendOrder,  pOrder, sizeof(CThostFtdcOrderField));
-				this->m_pendOrderList.push_back(pendOrder);
-			}
+			//if(pOrder->OrderStatus == '1'  || pOrder->OrderStatus == '3'){
+			//	CThostFtdcOrderField* pendOrder = new CThostFtdcOrderField();
+			//	memcpy(pendOrder,  pOrder, sizeof(CThostFtdcOrderField));
+			//	this->m_pendOrderList.push_back(pendOrder);
+			//}
 
+			this->m_orderCollection->Add(pOrder);
+			
 			if(bIsLast) 
 			{
 				m_first_inquiry_order = false;
 				char message[256];
 				sprintf( message, "%s:called cTraderSpi::OnRspQryOrder success.", cSystem::GetCurrentTimeBuffer().c_str());
 				cout << message << endl;
-				cerr<<"All order：" << m_orderList.size()<<endl;
 
 				cerr<<"--------------------------------------------------------------------order start"<<endl;
-				for(vector<CThostFtdcOrderField*>::iterator iter = m_orderList.begin(); iter != m_orderList.end(); iter++)
-					//cerr<<"BrokerId:"<<(*iter)->BrokerID<<endl<<" InvestorId:"<<(*iter)->InvestorID<<endl<<" 用户代码:"<<(*iter)->UserID<<endl<<" 合约代码:"<<(*iter)->InstrumentID<<endl<<" 买卖方向:"<<(*iter)->Direction<<endl
-					//<<" 组合开平标志:"<<(*iter)->CombOffsetFlag<<endl<<" 价格:"<<(*iter)->LimitPrice<<endl<<" 数量:"<<(*iter)->VolumeTotalOriginal<<endl<<" 报单引用:"<< (*iter)->OrderRef<<endl<<" 客户代码:"<<(*iter)->ClientID<<endl
-					//<<" 报单状态:"<<(*iter)->OrderStatus<<endl<<" 委托时间:"<<(*iter)->InsertTime<<endl<<" 报单编号:"<<(*iter)->OrderSysID<<endl<<" GTD日期:"<<(*iter)->GTDDate<<endl<<" 交易日:"<<(*iter)->TradingDay<<endl
-					//<<" 报单日期:"<<(*iter)->InsertDate<<endl
-					//<<endl;
-					cerr<<" UserId:"<<(*iter)->UserID<<" Inst:"<<(*iter)->InstrumentID<<" Dire:"<<(*iter)->Direction<<" price:"<<(*iter)->LimitPrice<<" lots:"<<(*iter)->VolumeTotalOriginal<<
-					" status:"<<(*iter)->OrderStatus<<" insetTime:"<<(*iter)->InsertTime<<"  insertDate:"<<(*iter)->InsertDate<<endl
-					<<endl;
+				this->m_orderCollection->PrintAllOrders();
+				//for(vector<CThostFtdcOrderField*>::iterator iter = m_orderList.begin(); iter != m_orderList.end(); iter++)
+				//	//cerr<<"BrokerId:"<<(*iter)->BrokerID<<endl<<" InvestorId:"<<(*iter)->InvestorID<<endl<<" 用户代码:"<<(*iter)->UserID<<endl<<" 合约代码:"<<(*iter)->InstrumentID<<endl<<" 买卖方向:"<<(*iter)->Direction<<endl
+				//	//<<" 组合开平标志:"<<(*iter)->CombOffsetFlag<<endl<<" 价格:"<<(*iter)->LimitPrice<<endl<<" 数量:"<<(*iter)->VolumeTotalOriginal<<endl<<" 报单引用:"<< (*iter)->OrderRef<<endl<<" 客户代码:"<<(*iter)->ClientID<<endl
+				//	//<<" 报单状态:"<<(*iter)->OrderStatus<<endl<<" 委托时间:"<<(*iter)->InsertTime<<endl<<" 报单编号:"<<(*iter)->OrderSysID<<endl<<" GTD日期:"<<(*iter)->GTDDate<<endl<<" 交易日:"<<(*iter)->TradingDay<<endl
+				//	//<<" 报单日期:"<<(*iter)->InsertDate<<endl
+				//	//<<endl;
+				//	cerr<<" UserId:"<<(*iter)->UserID<<" Inst:"<<(*iter)->InstrumentID<<" Dire:"<<(*iter)->Direction<<" price:"<<(*iter)->LimitPrice<<" lots:"<<(*iter)->VolumeTotalOriginal<<
+				//	" status:"<<(*iter)->OrderStatus<<" insetTime:"<<(*iter)->InsertTime<<"  insertDate:"<<(*iter)->InsertDate<<endl
+				//	<<endl;
 				cerr<<"--------------------------------------------------------------------order end"<<endl;
 
 
 				Sleep(1000);
 				cerr<<"First Qry Order Success"<<endl;
-				ReqQryInvestorPositionDetail();
+				ReqQryTrade();
 
 				SetEvent(g_hEvent);
 
@@ -206,7 +210,7 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 			m_first_inquiry_order = false;
 			Sleep(1000);
 			cerr<<"Error or no order"<<endl;
-			ReqQryInvestorPositionDetail();
+			ReqQryTrade();
 		}
 
 	}
@@ -215,6 +219,35 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 
 }
 
+void cTraderSpi::ReqQryTrade(){
+	CThostFtdcQryTradeField req;
+	memset(&req, 0, sizeof(req));
+
+	strcpy(req.InvestorID, this->m_investorID);//投资者代码
+
+	int iResult = m_pUserTraderApi->ReqQryTrade(&req, ++iRequestID);
+
+	char message[256];
+	sprintf( message, "%s:called cTraderSpi::ReqQryTrade: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
+	cout << message << endl;
+}
+
+void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){
+	if (!IsErrorRspInfo(pRspInfo) && pTrade){
+		this->m_tradeCollection->Add(pTrade);
+		if(bIsLast){
+			cerr<<"--------------------------------------------------------------------trade start"<<endl;
+			this->m_tradeCollection->PrintAll();
+			cerr<<"--------------------------------------------------------------------trade start"<<endl;
+			ReqQryInvestorPositionDetail();
+			SetEvent(g_hEvent);
+		}
+	}else{
+		cerr<<"Error or no trade"<<endl;
+		ReqQryInvestorPositionDetail();
+	}
+
+}
  
 //request Query Investor posistion Detail
 void cTraderSpi::ReqQryInvestorPositionDetail()
@@ -799,9 +832,6 @@ void cTraderSpi::ReqOrderInsert(TThostFtdcInstrumentIDType instId,
 	strcpy(req.InvestorID, m_investorID); 	
 	strcpy(req.InstrumentID, instId); 
 	strcpy(req.OrderRef, m_ORDER_REF);  
-	//报单引用
-	int nextOrderRef = atoi(m_ORDER_REF);
-	sprintf(m_ORDER_REF, "%d", ++nextOrderRef);
 
 	req.LimitPrice = price;	//价格
 	if(0==req.LimitPrice){
@@ -812,8 +842,8 @@ void cTraderSpi::ReqOrderInsert(TThostFtdcInstrumentIDType instId,
 		req.TimeCondition = THOST_FTDC_TC_GFD;  //有效期类型:当日有效
 	}
 
-	req.Direction = MapDirection(dir,true);  //买卖方向	
-	req.CombOffsetFlag[0] = MapOffset(kpp[0],true); //组合开平标志:开仓
+	req.Direction = this->MapDirection(dir,true);  //买卖方向	
+	req.CombOffsetFlag[0] = this->MapOffset(kpp[0],true); //组合开平标志:开仓
 
 	//这样也可以
 	/*
@@ -837,6 +867,12 @@ void cTraderSpi::ReqOrderInsert(TThostFtdcInstrumentIDType instId,
 			char message[256];
 			sprintf( message, "%s:called cTraderSpi::ReqQryInstrument: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail" ) );
 			cerr << message << endl;
+		}
+		else
+		{
+			int orderRef = atoi( m_ORDER_REF );
+			m_allOrderRef.push_back( orderRef );
+			sprintf( m_ORDER_REF, "%d", ++orderRef );
 		}
 	}
 
@@ -908,22 +944,11 @@ void cTraderSpi::OnRtnOrder( CThostFtdcOrderField* pOrder )
 {
 	if( !IsMyOrder( pOrder ) )
 		return;
+	if(pOrder){
 
-	if( m_genLog )
-	{
-		char message[256];
-		sprintf( message, "%s:called cTraderSpi::OnRtnOrder.", cSystem::GetCurrentTimeBuffer().c_str() );
-		cout << message << endl;
-		cSystem::WriteLogFile( m_logFile.c_str(), message, false );
+		m_orderCollection->Add( pOrder );
 	}
-	
-	m_orderCollection->Add( pOrder );
 
-	/*if( _DEBUG )
-	{
-		m_orderCollection->PrintCancelledOrders();
-		m_orderCollection->PrintPendingOrders();
-	}*/
 }
 
 
@@ -945,18 +970,19 @@ void cTraderSpi::OnRspOrderAction( CThostFtdcInputOrderActionField* pInputOrderA
 void cTraderSpi::OnRtnTrade( CThostFtdcTradeField* pTrade )
 {
 	////
-	///* update of m_tradeCollection */
-	//m_tradeCollection->Add( pTrade );
+	/* update of m_tradeCollection */
+	m_tradeCollection->Add( pTrade );
+
 	//int tradeID = atoi( pTrade->TradeID );
 	//if( _DEBUG )
 	//	m_tradeCollection->PrintTrade( tradeID );
 
-	////
+	//
 	///* update of m_positionDetail */
-	//if( pTrade->OffsetFlag == '0' )
-	//	m_positionCollection->Add( pTrade );
-	//else
-	//	m_positionCollection->Remove( pTrade );
+	if( pTrade->OffsetFlag == '0' )
+		m_positionCollection->update( pTrade );
+	else
+		m_positionCollection->Remove( pTrade );
 
 	//if( _DEBUG )
 	//{
@@ -1033,7 +1059,7 @@ bool cTraderSpi::IsMyOrder( CThostFtdcOrderField* pOrder )
 
 	int orderRef = atoi( pOrder->OrderRef );
 
-	for( int i = 0; i < m_allOrderRef.getSize(); ++i )
+	for( int i = 0; i < m_allOrderRef.size(); ++i )
 	{
 		if( orderRef == m_allOrderRef[i] )
 		{
@@ -1086,10 +1112,10 @@ void cTraderSpi::RegisterTradeCollection( cTradeCollectionPtr p )
 	m_tradeCollection = p; 
 }
 
-void cTraderSpi::RegisterInstMessageMap( cInstMessageMapPtr p )
+void cTraderSpi::RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>* p )
 { 
-	if( m_InstMeassageMap.get() )
-		m_InstMeassageMap.reset();
+	if( m_InstMeassageMap )
+		m_InstMeassageMap = NULL;
 
 	m_InstMeassageMap = p; 
 }
@@ -1099,7 +1125,6 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 	TThostFtdcDirectionType       dir;//方向,'0'买，'1'卖
 	TThostFtdcCombOffsetFlagType  kpp;//开平，"0"开，"1"平,"3"平今
 	TThostFtdcPriceType           price;//价格，0是市价,上期所不支持
-	TThostFtdcVolumeType          vol;//数量
 	strcpy(instId,inst.c_str());
 
 	//double miniChangeTick = m_instMessage_map[inst.c_str()]->PriceTick * 3; // 对手盘 最小变动价格 保证成交
@@ -1247,8 +1272,7 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirecti
 	}
 
 }
-
-char MapDirection(char src, bool toOrig=true){
+char cTraderSpi::MapDirection(char src, bool toOrig=true){
 	if(toOrig){
 		if('b'==src||'B'==src){src='0';}else if('s'==src||'S'==src){src='1';}
 	}else{
@@ -1258,7 +1282,7 @@ char MapDirection(char src, bool toOrig=true){
 }
 
 
-char MapOffset(char src, bool toOrig=true){
+char cTraderSpi::MapOffset(char src, bool toOrig=true){
 	if(toOrig){
 		if('o'==src||'O'==src){src='0';}
 		else if('c'==src||'C'==src){src='1';}
@@ -1270,3 +1294,4 @@ char MapOffset(char src, bool toOrig=true){
 	}
 	return src;
 }
+

@@ -70,17 +70,6 @@ void cMdSpi::OnHeartBeatWarning(int nTimeLapse)
 	sprintf( message, "%s:called cMdSpi::OnHeartBeatWarning. nTimerLapse = %d", cSystem::GetCurrentTimeBuffer().c_str(), nTimeLapse );
 	cout << message << endl;
 
-	// log info
-	if( m_genLog )
-	{
-		if( m_outputDirectory.IsBlankString() )
-			cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-		else
-		{
-			cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
-			cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
-		}
-	}
 
 }
 
@@ -90,18 +79,6 @@ void cMdSpi::OnFrontConnected()
 	char message[256];
 	sprintf( message, "%s:called cMdSpi::OnFrontConnected.", cSystem::GetCurrentTimeBuffer().c_str() );
 	cout << message << endl;
-
-	// log info
-	if( m_genLog )
-	{
-		if( m_outputDirectory.IsBlankString() )
-			cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-		else
-		{
-			cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
-			cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
-		}
-	}
 
 	// request user login
 	ReqUserLogin();
@@ -290,15 +267,15 @@ bool cMdSpi::IsErrorRspInfo( CThostFtdcRspInfoField* pRspInfo )
 void cMdSpi::RegisterMarketDataCollection( cMarketDataCollection* pMktDataCollection )
 {
 	m_pMktDataCollection = pMktDataCollection;
-	m_pMktDataCollection->Init( m_instrumentIDs );
+	//m_pMktDataCollection->Init( m_instrumentIDs );
 
-	m_genLog = m_pMktDataCollection->GetGenLogFlag();
-	if( m_genLog )
-	{
-		m_logFile = m_pMktDataCollection->GetLogFileName();
-		m_outputDirectory = m_pMktDataCollection->GetOutputDirectory();
-		m_logFileFolder = m_pMktDataCollection->GetLogFolderName();
-	}
+	//m_genLog = m_pMktDataCollection->GetGenLogFlag();
+	//if( m_genLog )
+	//{
+	//	m_logFile = m_pMktDataCollection->GetLogFileName();
+	//	m_outputDirectory = m_pMktDataCollection->GetOutputDirectory();
+	//	m_logFileFolder = m_pMktDataCollection->GetLogFolderName();
+	//}
 
 
 

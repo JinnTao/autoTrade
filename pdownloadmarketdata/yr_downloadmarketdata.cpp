@@ -52,49 +52,49 @@
 //	RunMarketdataDownload();
 //	return 0;
 //}
-
-void RunMarketdataDownload( const cArray< cString >& InstrumentIDs )
-{
-	char flag[256];
-	printf("run market data process(Y/N)?:");
-	cin >> flag;
-	while( !( Compare( flag, "Y" ) || Compare( flag, "N" ) ) )
-	{
-		printf( "invalid input, either 'Y' or 'N' is allowed. please re-enter:" );
-		cin >> flag;
-	}
-	
-	if( Compare( flag, "N" ) )
-	{
-		printf( "goodbye...\n" );
-		cSystem::Sleep(1000);
-		return;
-	}
-
-	cSystem::FirstTimeInit();
-
-	cMarketDataCollection* pMdEngine = new cMarketDataCollection();
-	//pMdEngine->SetDisplayCandleFlags( true );
-	//
-	/* MDApi & MDSpi */
-	CThostFtdcMdApi* pMdUserApi = CThostFtdcMdApi::CreateFtdcMdApi();
-	CThostFtdcMdSpi* pMdUserSpi = new cMdSpi( pMdUserApi, BROKER_ID, INVESTOR_ID, PASSWORD );
-	pMdUserApi->RegisterSpi( pMdUserSpi );
-	pMdUserApi->RegisterFront( QFRONT_ADDR );
-	dynamic_cast< cMdSpi* >( pMdUserSpi )->RegisterMarketDataCollection( pMdEngine );
-	
-
-	/* other threads */
-	// market data thread
-	cThread< cMarketDataCollection >* pMdIOThread = new cThread< cMarketDataCollection>( pMdEngine, &cMarketDataCollection::IOProcess );
-	
-	pMdUserApi->Init();
-	pMdIOThread->Init();
-	
-	pMdUserApi->Join();
-	pMdUserApi->Release();
-	delete pMdUserSpi;
-	pMdEngine->ClearMarketData();
-
-}
-
+//
+//void RunMarketdataDownload( const cArray< cString >& InstrumentIDs )
+//{
+//	char flag[256];
+//	printf("run market data process(Y/N)?:");
+//	cin >> flag;
+//	while( !( Compare( flag, "Y" ) || Compare( flag, "N" ) ) )
+//	{
+//		printf( "invalid input, either 'Y' or 'N' is allowed. please re-enter:" );
+//		cin >> flag;
+//	}
+//	
+//	if( Compare( flag, "N" ) )
+//	{
+//		printf( "goodbye...\n" );
+//		cSystem::Sleep(1000);
+//		return;
+//	}
+//
+//	cSystem::FirstTimeInit();
+//
+//	cMarketDataCollection* pMdEngine = new cMarketDataCollection();
+//	//pMdEngine->SetDisplayCandleFlags( true );
+//	//
+//	/* MDApi & MDSpi */
+//	CThostFtdcMdApi* pMdUserApi = CThostFtdcMdApi::CreateFtdcMdApi();
+//	CThostFtdcMdSpi* pMdUserSpi = new cMdSpi( pMdUserApi, BROKER_ID, INVESTOR_ID, PASSWORD );
+//	pMdUserApi->RegisterSpi( pMdUserSpi );
+//	pMdUserApi->RegisterFront( QFRONT_ADDR );
+//	dynamic_cast< cMdSpi* >( pMdUserSpi )->RegisterMarketDataCollection( pMdEngine );
+//	
+//
+//	/* other threads */
+//	// market data thread
+//	cThread< cMarketDataCollection >* pMdIOThread = new cThread< cMarketDataCollection>( pMdEngine, &cMarketDataCollection::IOProcess );
+//	
+//	pMdUserApi->Init();
+//	pMdIOThread->Init();
+//	
+//	pMdUserApi->Join();
+//	pMdUserApi->Release();
+//	delete pMdUserSpi;
+//	pMdEngine->ClearMarketData();
+//
+//}
+//

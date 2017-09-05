@@ -9,11 +9,15 @@
 #include <cOrderCollection.h>
 #include <cSignal.h>
 
+using std::map;
+
 #ifndef _DEBUG
 #define _DEBUG 0
 #endif
+
 class cString;
 template< class T > class cArray;
+
 
 class cTraderSpi : public CThostFtdcTraderSpi
 {
@@ -62,6 +66,10 @@ public:
 
 	virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
+
+	///请求查询成交响应
+	virtual void OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+
 	// order insertion return
 	virtual void OnRtnOrder( CThostFtdcOrderField* pOrder );
 
@@ -70,7 +78,7 @@ public:
 	void RegisterPositionCollection( cPositionCollectionPtr p );
 	void RegisterOrderCollection( cOrderCollectionPtr p );
 	void RegisterTradeCollection( cTradeCollectionPtr p );
-	void RegisterInstMessageMap( cInstMessageMapPtr p );
+	void RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>* p );
 	void ReqQryInstrument();
 
 	void ReqQryInstrument_all();
@@ -108,7 +116,10 @@ public:
 	void insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol,double orderPrice);
 
 	void StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol);
-	 
+
+	 char MapDirection(char src, bool toOrig);
+
+	 char MapOffset(char src, bool toOrig);
 private:
 	CThostFtdcTraderApi* m_pUserTraderApi;
 	cArray< cString > m_instrumentIDs;
@@ -128,14 +139,14 @@ private:
 	/*cOrderCollection* m_orderCollection;*/
 	cOrderCollectionPtr m_orderCollection;
 
-	cIvector m_allOrderRef;											// list of all orderRef
+	vector<int> m_allOrderRef;											// list of all orderRef
 	//
 	/* trades */
 	/*cTradeCollection* m_tradeCollection;*/
 	cTradeCollectionPtr m_tradeCollection;
 
-	// Instrument detail Message Map
-	cInstMessageMapPtr m_InstMeassageMap;
+	// Instrument detail Message Map	
+	map<string, CThostFtdcInstrumentField*>* m_InstMeassageMap;
 
 	void ReqUserLogin();
 	void ReqSettlementInfoConfirm();
