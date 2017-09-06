@@ -1,8 +1,5 @@
 /***
 *cVector.h - declarations/definitions for marketdata class
-*
-*       Copyright (c) Yiran Yang. All rights reserved.
-*
 ****/
 
 #ifndef __CMARKETDATA_H__
@@ -23,14 +20,17 @@ public:
 	~cMarketData();
 	// get methods
 	string GetID() const { return m_id; }
+	CThostFtdcDepthMarketDataField getLastMarketData(){return m_lastMarketData;};
+	vector<CThostFtdcDepthMarketDataField> getMarketDepthSeries(){return m_marketDepthVector;}
+	vector<double>	getMarketLastSeries(){return m_lastPriceSeries;}
+
 	void OnRtnDepthMarketData( CThostFtdcDepthMarketDataField* pDepthMarketData );
 protected:
 	string m_id;				// contract code
-	vector<CThostFtdcDepthMarketDataField> m_market;
+	vector<CThostFtdcDepthMarketDataField> m_marketDepthVector;
+	vector<double> m_lastPriceSeries;
 	CThostFtdcDepthMarketDataField m_lastMarketData;
 private:
-
-	
 };
 
 typedef shared_ptr< cMarketData > cMarketDataPtr;

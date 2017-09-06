@@ -207,3 +207,19 @@ void cOrderCollection::Remove( int orderID )
 			(*it3).second.drop( index );
 	}
 }
+
+bool cOrderCollection::getOrderByNo(TThostFtdcSequenceNoType orderSequenceNo,shared_ptr<cOrder> &pOrder){
+	orderHandle::const_iterator it;
+	bool exist = false;
+	for( it = _m_order_handle.begin(); it != _m_order_handle.end(); ++it )
+	{
+		if( (*it).second->IsPendingOrder() && (*it).second->GetOrderID() == orderSequenceNo )
+		{
+			pOrder = it->second;
+			exist = true;
+			break;
+		}
+	}
+	return exist;
+}
+

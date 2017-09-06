@@ -6,7 +6,7 @@
 
 class cString;
 class cTraderSpi;
-
+#include "cMdSpi.h"
 #include <cMarketDataCollection.h>
 #include <cStrategy.h>
 #include <cSignalCollection.h>
@@ -22,7 +22,7 @@ public:
 	virtual ~cTradingPlatform();
 
 	void RegisterTraderSpi( cTraderSpi* pTraderSpi );
-
+	void RegisterMdSpi( cMdSpi* p );
 	void RegisterMarketDataEngine( cMarketDataCollectionPtr pMarketDataEngine );
 
 	void RegisterStrategy( cStrategyPtr pStrategy );
@@ -72,12 +72,11 @@ public:
 	void ClearPlatform();
 	
 	void insertOrder(string inst,string dire,string flag, int vol,double orderPrice);
-
+	void cancleOrder(string order,int seqNo);
 
 private:
-	cArray< cString > m_instrumentIDs;
 	cTraderSpi*	m_pTraderSpi;
-
+	cMdSpi* m_pMdSpi;
 	cMarketDataCollectionPtr m_pMarketDataEngine;
 	cStrategyPtr m_pStrategy;
 
@@ -87,6 +86,7 @@ private:
 	cSignalCollectionPtr m_pSignals;
 	
 	map<string, CThostFtdcInstrumentField*>* m_pInstMessageMap;
+	shared_ptr<vector<string>> m_pSubscribeInst;
 
 	int m_nRequestID;
 	bool m_runAutoTrade;

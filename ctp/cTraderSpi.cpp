@@ -8,15 +8,15 @@ bool IsFlowControl( int iResult )
 	return (( iResult == -2 ) || ( iResult == -3 ));
 }
 
-cTraderSpi::cTraderSpi( CThostFtdcTraderApi* pUserTraderApi,CThostFtdcMdApi* pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog )
+cTraderSpi::cTraderSpi( CThostFtdcTraderApi* pUserTraderApi,cMdSpi* pUserMdSpi,CThostFtdcMdApi * pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog )
 : m_pUserTraderApi( pUserTraderApi )
 , m_genLog( genLog )
 {
 	strcpy_s( m_brokerID, sizeof( TThostFtdcBrokerIDType ), brokerID );
 	strcpy_s( m_investorID, sizeof( TThostFtdcInvestorIDType ), investorID );
 	strcpy_s( m_password, sizeof( TThostFtdcPasswordType ), password );
+	this->m_pMdSpi = pUserMdSpi;
 	this->m_pMDUserApi_td = pUserMdApi;
-
 	m_first_inquiry_order = true;//是否首次查询报单
 	m_first_inquiry_trade = true;//是否首次查询成交
 	m_firs_inquiry_Detail = true;//是否首次查询持仓明细
@@ -155,20 +155,8 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 
 	if (!IsErrorRspInfo(pRspInfo) && pOrder )
 	{
-		//cerr<<"OnRspQryOrder: FrontID:"<<pOrder->FrontID<<"  SessionID:"<<pOrder->SessionID<<" OrderRef:"<<pOrder->OrderRef<<endl;
-
 		if(m_first_inquiry_order == true)
 		{
-			//CThostFtdcOrderField* order = new CThostFtdcOrderField();
-			//memcpy(order,  pOrder, sizeof(CThostFtdcOrderField));
-			//m_orderList.push_back(order);
-
-			//if(pOrder->OrderStatus == '1'  || pOrder->OrderStatus == '3'){
-			//	CThostFtdcOrderField* pendOrder = new CThostFtdcOrderField();
-			//	memcpy(pendOrder,  pOrder, sizeof(CThostFtdcOrderField));
-			//	this->m_pendOrderList.push_back(pendOrder);
-			//}
-
 			this->m_orderCollection->Add(pOrder);
 			
 			if(bIsLast) 
@@ -180,17 +168,7 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 
 				cerr<<"--------------------------------------------------------------------order start"<<endl;
 				this->m_orderCollection->PrintAllOrders();
-				//for(vector<CThostFtdcOrderField*>::iterator iter = m_orderList.begin(); iter != m_orderList.end(); iter++)
-				//	//cerr<<"BrokerId:"<<(*iter)->BrokerID<<endl<<" InvestorId:"<<(*iter)->InvestorID<<endl<<" 用户代码:"<<(*iter)->UserID<<endl<<" 合约代码:"<<(*iter)->InstrumentID<<endl<<" 买卖方向:"<<(*iter)->Direction<<endl
-				//	//<<" 组合开平标志:"<<(*iter)->CombOffsetFlag<<endl<<" 价格:"<<(*iter)->LimitPrice<<endl<<" 数量:"<<(*iter)->VolumeTotalOriginal<<endl<<" 报单引用:"<< (*iter)->OrderRef<<endl<<" 客户代码:"<<(*iter)->ClientID<<endl
-				//	//<<" 报单状态:"<<(*iter)->OrderStatus<<endl<<" 委托时间:"<<(*iter)->InsertTime<<endl<<" 报单编号:"<<(*iter)->OrderSysID<<endl<<" GTD日期:"<<(*iter)->GTDDate<<endl<<" 交易日:"<<(*iter)->TradingDay<<endl
-				//	//<<" 报单日期:"<<(*iter)->InsertDate<<endl
-				//	//<<endl;
-				//	cerr<<" UserId:"<<(*iter)->UserID<<" Inst:"<<(*iter)->InstrumentID<<" Dire:"<<(*iter)->Direction<<" price:"<<(*iter)->LimitPrice<<" lots:"<<(*iter)->VolumeTotalOriginal<<
-				//	" status:"<<(*iter)->OrderStatus<<" insetTime:"<<(*iter)->InsertTime<<"  insertDate:"<<(*iter)->InsertDate<<endl
-				//	<<endl;
 				cerr<<"--------------------------------------------------------------------order end"<<endl;
-
 
 				Sleep(1000);
 				cerr<<"First Qry Order Success"<<endl;
@@ -215,7 +193,6 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 
 	}
 
-	//cerr<<"-----------------------------------------------First Request Qry Order Over"<<endl;
 
 }
 
@@ -446,16 +423,16 @@ void cTraderSpi::ReqQryInvestorPosition_all()
 void cTraderSpi::OnRspQryInvestorPosition(
 	CThostFtdcInvestorPositionField *pInvestorPosition, 
 	CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
-{
-	//cerr<<"OnRspQryInvestorPosition"<<endl;
+{;
 
 	if( !IsErrorRspInfo(pRspInfo) &&  pInvestorPosition)
 	{
-		//账号下所有合约
 		if(m_firs_inquiry_Position == true)
 		{
-
+			//update position
 			this->m_positionCollection->update(pInvestorPosition);
+			// subscribe Instrument
+			this->subscribeInst(pInvestorPosition->InstrumentID,false);
 
 			if (bIsLast)
 			{
@@ -485,12 +462,10 @@ void cTraderSpi::OnRspQryInvestorPosition(
 		}
 
 	}
-
-	//cerr<<"-----------------------------------------------查询持仓返回单次结束"<<endl;
 }
 
 
-///请求查询合约信息，所有合约
+
 void cTraderSpi::ReqQryInstrument_all()
 {
 	CThostFtdcQryInstrumentField req;
@@ -509,7 +484,7 @@ void cTraderSpi::OnRspQryInstrument( CThostFtdcInstrumentField* pInstrument, CTh
 	{
 		if(m_first_inquiry_Instrument == true)
 		{
-			//保存所有合约的信息到map
+			//save all instrument message map
 			CThostFtdcInstrumentField* instField = new CThostFtdcInstrumentField();
 			memcpy(instField,pInstrument, sizeof(CThostFtdcInstrumentField));
 			m_InstMeassageMap->insert(pair<string, CThostFtdcInstrumentField*> (instField->InstrumentID, instField));
@@ -536,62 +511,13 @@ void cTraderSpi::OnRspQryInstrument( CThostFtdcInstrumentField* pInstrument, CTh
 
 	}
 
-
-	//// copyright Yiran Yang
-	//for (int i = 0; i < m_instrumentIDs.getSize(); ++i)
-	//{
-	//	if( Compare( pInstrument->InstrumentID, m_instrumentIDs[i] ) )
-	//	{
-	//		
-	//		map< cString, sInstrumentInfo* >::iterator it = m_instrumentInfo.find( m_instrumentIDs[i] );
-	//		if( it == m_instrumentInfo.end() )
-	//		{
-	//			sInstrumentInfo* info = new sInstrumentInfo;
-	//			memset( info, 0, sizeof( sInstrumentInfo ) );
-	//			strcpy( info->InstrumentID, pInstrument->InstrumentID );
-	//			strcpy( info->ExchangeID, pInstrument->ExchangeID );
-	//			strcpy( info->ProductID, pInstrument->ProductID );
-	//			info->MaxMarketOrderVolume = pInstrument->MaxMarketOrderVolume;
-	//			info->MinMarketOrderVolume = pInstrument->MinMarketOrderVolume;
-	//			info->MaxLimitOrderVolume = pInstrument->MaxLimitOrderVolume;
-	//			info->MinLimitOrderVolume = pInstrument->MinLimitOrderVolume;
-	//			info->VolumeMultiple = pInstrument->VolumeMultiple;
-	//			info->PriceTick = pInstrument->PriceTick;
-	//			info->IsTrading = pInstrument->IsTrading;
-	//			info->LongMarginRatio = pInstrument->LongMarginRatio;
-	//			info->ShortMarginRatio = pInstrument->ShortMarginRatio;
-	//			m_instrumentInfo.insert( pair< cString, sInstrumentInfo* >( m_instrumentIDs[i], info ) );
-	//		}
-	//		break;
-	//	}
-	//}
-
-	//if( bIsLast && !IsErrorRspInfo( pRspInfo ) )
-	//{
-	//	printf( "\nInstrument List:\n" );
-	//	for( map< cString, sInstrumentInfo* >::iterator it = m_instrumentInfo.begin(); it != m_instrumentInfo.end(); ++it )
-	//	{
-	//		printf("   Instrument:%s Exchange:%s\n", (*it).second->InstrumentID, (*it).second->ExchangeID );
-	//	}
-
-	//	if( m_genLog )
-	//	{
-	//		char message[256];
-	//		sprintf( message, "%s:called cTraderSpi::OnRspQryInstrument.", cSystem::GetCurrentTimeBuffer().c_str() );
-	//		cout << message << endl;
-	//		cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-	//	}
-	//	ReqQryTradingAccount();
-	//}
 }
 
 void cTraderSpi::saveInstrumentField(CThostFtdcInstrumentField* instField){
 	// 后期 考虑保存到数据库中
-	//string idate = 
 	ofstream output;
 	output.open("output/instrumentListField.csv",ios::_Nocreate | ios::ate) ;
 	if(output){
-		//content
 		output  << instField->InstrumentID << "," 
 				<< instField->ExchangeID << "," 
 				<< instField->InstrumentName << "," 
@@ -658,7 +584,38 @@ void cTraderSpi::saveInstrumentField(CThostFtdcInstrumentField* instField){
 			<< "合约基础商品乘数"  << ","
 			<< "组合类型"  
 			<< endl;
-		
+		output  << instField->InstrumentID << "," 
+				<< instField->ExchangeID << "," 
+				<< instField->InstrumentName << "," 
+				<< instField->ExchangeInstID << "," 
+				<< instField->ProductID << "," 
+				<< instField->ProductClass << "," 
+				<< instField->DeliveryYear << "," 
+				<< instField->DeliveryMonth << "," 
+				<< instField->MaxMarketOrderVolume << "," 
+				<< instField->MinMarketOrderVolume << "," 
+				<< instField->MaxLimitOrderVolume << "," 
+				<< instField->MinLimitOrderVolume << "," 
+				<< instField->VolumeMultiple << "," 
+				<< instField->PriceTick << "," 
+				<< instField->CreateDate << "," 
+				<< instField->OpenDate << "," 
+				<< instField->ExpireDate << "," 
+				<< instField->StartDelivDate << "," 
+				<< instField->EndDelivDate << "," 
+				<< instField->InstLifePhase << "," 
+				<< instField->IsTrading << "," 
+				<< instField->PositionType << "," 
+				<< instField->PositionDateType << "," 
+				<< instField->LongMarginRatio << "," 
+				<< instField->ShortMarginRatio << "," 
+				<< instField->MaxMarginSideAlgorithm << "," 
+				<< instField->UnderlyingInstrID << "," 
+				<< instField->StrikePrice << "," 
+				<< instField->OptionsType << "," 
+				<< instField->UnderlyingMultiple << "," 
+				<< instField->CombinationType 
+				<< endl;
 	}
 	output.close();
 
@@ -699,131 +656,9 @@ void cTraderSpi::ReqQryInstrument()
 			}
 			cSystem::Sleep(1000);
 		}
-	} // while
+	} 
 }
 
-//void cTraderSpi::ReqQryInvestorPositionDetail()
-//{
-//	CThostFtdcQryInvestorPositionDetailField qry;
-//	memset( &qry, 0, sizeof( qry ) );
-//	strcpy( qry.BrokerID, m_brokerID );
-//	strcpy( qry.InvestorID, m_investorID );
-//
-//	while (true)
-//	{
-//		char message[256];
-//		int iResult = m_pUserTraderApi->ReqQryInvestorPositionDetail( &qry, ++iRequestID );
-//
-//		if( !IsFlowControl( iResult ) )
-//		{
-//			if( m_genLog )
-//			{
-//				sprintf( message, "%s:called cTraderSpi::ReqQryInvestorPositionDetail: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail" ) );
-//				cout << message << endl;
-//				cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-//			}
-//			break;
-//		}
-//		else
-//		{
-//			if( m_genLog )
-//			{
-//				sprintf( message, "%s:called cTraderSpi::ReqQryInvestorPositionDetail: Flow Control.", cSystem::GetCurrentTimeBuffer().c_str() );
-//				cout << message << endl;
-//				cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-//			}
-//			cSystem::Sleep(1000);
-//		}
-//	} 
-//}
-
-//void cTraderSpi::OnRspQryInvestorPositionDetail( CThostFtdcInvestorPositionDetailField *pInvestorPositionDetail, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )
-//{
-//	
-//	if( m_genLog )
-//	{
-//		char message[256];
-//		sprintf( message, "%s:called cTraderSpi::OnRspQryInvestorPositionDetail.", cSystem::GetCurrentTimeBuffer().c_str() );
-//		cout << message << endl;
-//		cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-//	}
-//
-//	if( !IsErrorRspInfo( pRspInfo ) && pInvestorPositionDetail )
-//	{
-//		if( pInvestorPositionDetail->Volume == 0 && !bIsLast )
-//			return;
-//		m_positionCollection->Add( pInvestorPositionDetail );
-//	}
-//	else
-//	{
-//		if( !pInvestorPositionDetail )
-//			cout<< "----->> No Position-----"<<endl;
-//	}
-//	if( bIsLast && !IsErrorRspInfo(pRspInfo) )
-//	{
-//		//if( _DEBUG && m_positionCollection->Count() > 0 )
-//		//{
-//		//	printf("\nPosition Detail:\n");
-//		//	m_positionCollection->PrintDetail();
-//		//}
-//		
-//		if( m_positionCollection->Count() > 0 )
-//		{
-//			printf("\nPosition Summary:\n");
-//			m_positionCollection->SummaryByInstrument();
-//		}
-//	}
-//	//
-//	/* request query of existing orders */
-//	//ReqQryOrder();
-//}
-//
-//void cTraderSpi::ReqQryOrder()
-//{
-//	CThostFtdcQryOrderField req;
-//	memset( &req, 0, sizeof( CThostFtdcQryOrderField ) );
-//	strcpy( req.BrokerID, m_brokerID );
-//	strcpy( req.InvestorID, m_investorID );
-//	while( true )
-//	{
-//		char message[256];
-//		int iResult = m_pUserTraderApi->ReqQryOrder( &req, ++iRequestID );
-//		if( !IsFlowControl( iResult ) )
-//		{
-//			sprintf( message, "%s:called cTraderSpi::ReqQryOrder: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
-//			cout << message << endl;
-//			if( m_genLog )
-//			{	
-//				cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-//			}
-//			break;
-//		}
-//		else
-//		{
-//			sprintf( message, "%s:called cTraderSpi::ReqQryOrder: Flow Control.", cSystem::GetCurrentTimeBuffer().c_str() );
-//			cout << message << endl;
-//			if( m_genLog )
-//			{	
-//				cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-//			}
-//			// sleep 1 sec and re-query existing orders
-//			cSystem::Sleep(1000);
-//		}
-//	} // while
-//}
-
-//void cTraderSpi::OnRspQryOrder( CThostFtdcOrderField* pOrder, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
-//{
-//	if( !IsErrorRspInfo( pRspInfo ) )
-//		m_orderCollection->Add( pOrder );
-//		
-//	if( bIsLast && !IsErrorRspInfo(pRspInfo) )
-//	{
-//	/*	if( m_orderCollection->Count() > 0 )
-//			m_orderCollection->PrintAllOrders();*/
-//	}
-//
-//}
 void cTraderSpi::ReqOrderInsert(TThostFtdcInstrumentIDType instId,
 	TThostFtdcDirectionType dir, TThostFtdcCombOffsetFlagType kpp,
 	TThostFtdcPriceType price,   TThostFtdcVolumeType vol)
@@ -944,10 +779,13 @@ void cTraderSpi::OnRspOrderInsert( CThostFtdcInputOrderField* pInputOrder, CThos
 // order insertion return
 void cTraderSpi::OnRtnOrder( CThostFtdcOrderField* pOrder )
 {
-	if( !IsMyOrder( pOrder ) )
-		return;
 	if(pOrder){
 		m_orderCollection->Add( pOrder );
+		if( !IsMyOrder( pOrder ) ){
+			cerr << "Other:";
+		}else{
+			cerr<< "My";
+		}
 		cerr <<"  OrderRef: " <<pOrder->OrderRef <<"  Status:" << pOrder->OrderStatus << pOrder->StatusMsg << endl;
 	}
 
@@ -971,42 +809,20 @@ void cTraderSpi::OnRspOrderAction( CThostFtdcInputOrderActionField* pInputOrderA
 // update m_positions
 void cTraderSpi::OnRtnTrade( CThostFtdcTradeField* pTrade )
 {
-	////
 	/* update of m_tradeCollection */
 	m_tradeCollection->Add( pTrade );
+	int tradeID = atoi( pTrade->TradeID );
+	m_tradeCollection->PrintTrade( tradeID );
 
-	//int tradeID = atoi( pTrade->TradeID );
-	//if( _DEBUG )
-	//	m_tradeCollection->PrintTrade( tradeID );
-
-	//
 	///* update of m_positionDetail */
-
 	m_positionCollection->update( pTrade );
-
-	//if( _DEBUG )
-	//{
-	//	if( m_positionCollection->Count() > 0 )
-	//	{
-	//		printf("\nposition summary:\n");
-	//		m_positionCollection->SummaryByInstrument();
-	//	}
-	//}
+	//subscirbe Instrument 
+	this->subscribeInst(pTrade->InstrumentID,true);
 }
 
 
 
-//void cTraderSpi::ReqQryInvestorPosition()
-//{
-//	yr_error( "ReqQryInvestorPosition not implemented yet!" );
-//}
 
-
-// initialising trading system..............
-//void cTraderSpi::OnRspQryInvestorPosition( CThostFtdcInvestorPositionField* pInvestorPosition, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
-//{
-//	yr_error( "ReqQryInvestorPosition not implemented yet!" );
-//}
 
 
 // the error notification caused by client request
@@ -1111,7 +927,12 @@ void cTraderSpi::RegisterTradeCollection( cTradeCollectionPtr p )
 
 	m_tradeCollection = p; 
 }
+void cTraderSpi::RegisterSubscribeInstList(shared_ptr<vector<string>> p){
+	if( m_pSubscribeInst.get() )
+		m_pSubscribeInst.reset();
 
+	m_pSubscribeInst = p; 
+}
 void cTraderSpi::RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>* p )
 { 
 	if( m_InstMeassageMap )
@@ -1293,3 +1114,54 @@ char cTraderSpi::MapOffset(char src, bool toOrig=true){
 	return src;
 }
 
+bool cTraderSpi::subscribeInst(TThostFtdcInstrumentIDType instrumentName,bool subscribeTag){
+	bool find_instId_Trade = false;
+
+	for(unsigned int i = 0; i< m_pSubscribeInst->size(); i++)
+	{
+		if(strcmp(m_pSubscribeInst->at(i).c_str(), instrumentName) == 0)/// already subscribe Instrument 
+		{
+			find_instId_Trade = true;
+			break;
+		}
+	}
+
+	if(!find_instId_Trade)
+	{	
+		if(subscribeTag){
+			m_pMdSpi->SubscribeMarketData(instrumentName);
+		}
+		m_pSubscribeInst->push_back(instrumentName); 
+	}
+	return true;
+}
+///  cancle order
+void cTraderSpi::ReqOrderAction(TThostFtdcSequenceNoType orderSeq)//company order sequence No
+{
+	bool found=false; 
+	unsigned int i=0;
+	shared_ptr<cOrder> pOrder = NULL;
+	if(!this->m_orderCollection->getOrderByNo(orderSeq,pOrder)){
+		cerr<<"  Order Seq No Exist."<<endl;
+		return;
+	}
+
+	CThostFtdcInputOrderActionField req;
+	memset(&req, 0, sizeof(req));
+
+	strcpy( req.BrokerID, m_brokerID );
+	strcpy( req.InvestorID, m_investorID );
+	//sprintf( req.OrderRef, "%d",pOrder->GetOrderRef() );
+	strcpy( req.OrderSysID, pOrder->m_orderSysID );
+	strcpy( req.ExchangeID, pOrder->ExchangeID );
+	req.FrontID = m_FRONT_ID;
+	req.SessionID = m_SESSION_ID;
+	req.ActionFlag = THOST_FTDC_AF_Delete;
+
+
+	int iResult = m_pUserTraderApi->ReqOrderAction(&req, ++iRequestID);
+
+	char message[256];
+	sprintf( message, "%s:called cTraderSpi::ReqOrderAction: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail" ) );
+	cout << message << endl;
+}

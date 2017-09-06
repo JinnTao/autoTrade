@@ -8,6 +8,7 @@
 #include <cTradeCollection.h>
 #include <cOrderCollection.h>
 #include <cSignal.h>
+#include <cMdSpi.h>
 
 using std::map;
 
@@ -22,7 +23,7 @@ template< class T > class cArray;
 class cTraderSpi : public CThostFtdcTraderSpi
 {
 public:
-	cTraderSpi( CThostFtdcTraderApi* pUserTraderApi, CThostFtdcMdApi* pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog = false );
+	cTraderSpi( CThostFtdcTraderApi* pUserTraderApi, cMdSpi* pUserMdSpi,CThostFtdcMdApi* pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog = false );
 	
 	~cTraderSpi();
 
@@ -78,6 +79,7 @@ public:
 	void RegisterPositionCollection( cPositionCollectionPtr p );
 	void RegisterOrderCollection( cOrderCollectionPtr p );
 	void RegisterTradeCollection( cTradeCollectionPtr p );
+	void RegisterSubscribeInstList(shared_ptr<vector<string>> p);
 	void RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>* p );
 	void ReqQryInstrument();
 
@@ -111,15 +113,20 @@ public:
 	void cTraderSpi::saveInstrumentField(CThostFtdcInstrumentField* instField);
 
 	void showPositionDetail();
+
 	void ReqOrderInsert(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir, TThostFtdcCombOffsetFlagType kpp,TThostFtdcPriceType price,   TThostFtdcVolumeType vol);
-	// insert order
+
 	void insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol,double orderPrice);
 
 	void StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol);
 
-	 char MapDirection(char src, bool toOrig);
+	char MapDirection(char src, bool toOrig);
 
-	 char MapOffset(char src, bool toOrig);
+	char MapOffset(char src, bool toOrig);
+
+	bool subscribeInst(TThostFtdcInstrumentIDType instrumentName,bool tag);
+
+	void ReqOrderAction(TThostFtdcSequenceNoType orderSeq);
 private:
 	CThostFtdcTraderApi* m_pUserTraderApi;
 	cArray< cString > m_instrumentIDs;
@@ -144,6 +151,9 @@ private:
 	/* trades */
 	/*cTradeCollection* m_tradeCollection;*/
 	cTradeCollectionPtr m_tradeCollection;
+
+	//subscribe inst
+	shared_ptr<vector<string>> m_pSubscribeInst;
 
 	// Instrument detail Message Map	
 	map<string, CThostFtdcInstrumentField*>* m_InstMeassageMap;
@@ -182,8 +192,9 @@ private:
 
 	//map<string, CThostFtdcInstrumentField*> m_instMessage_map;//保存合约信息的map
 	
-	CThostFtdcMdApi* m_pMDUserApi_td;//行情API指针，构造函数里赋值
-	
+	cMdSpi* m_pMdSpi;//行情API指针，构造函数里赋值
+
+	CThostFtdcMdApi* m_pMDUserApi_td;
 	double m_accountMargin;
 };
 

@@ -123,34 +123,6 @@ void cMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin, CThostFt
 
 void cMdSpi::SubscribeMarketData(char *instIdList)
 {
-	////
-	//const int NUM_INSTRUMENT = 200;
-	//char* p[NUM_INSTRUMENT];
-	//for( int i = 0; i < NUM_INSTRUMENT; ++i )
-	//{
-	//	if( i < m_instrumentIDs.getSize() )
-	//		p[i] = m_instrumentIDs[i].c_str2();
-	//	else
-	//		p[i] = NULL;
-	//}
-	//
-	//int iResult = m_pUserMdApi->SubscribeMarketData( p, m_instrumentIDs.getSize() );
-	//
-	//char message[256];
-	//sprintf( message, "%s:called cMdSpi::SubscribeMarketData:%s", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail" ) );
-	//cout << message << endl;
-
-	//if( m_genLog )
-	//{
-	//	if( m_outputDirectory.IsBlankString() )
-	//		cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-	//	else
-	//	{
-	//		cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
-	//		cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
-	//	}
-	//}
-	
 	vector<char*> list;
 
 	char *token = strtok(instIdList, ",");
@@ -171,13 +143,20 @@ void cMdSpi::SubscribeMarketData(char *instIdList)
 
 	int ret=m_pUserMdApi->SubscribeMarketData(pInstId, len);
 
-	cerr<<" 请求 | 发送行情订阅... "<<((ret == 0) ? "成功" : "失败")<< endl;
-	
+	cerr<<" Request SubscribeMarketData.. "<<((ret == 0) ? "success" : "fail")<< endl;
 
 	SetEvent(g_hEvent);
 }
 
 
+void cMdSpi::SubscribeMarketData(shared_ptr<vector<string>> instList)
+{
+	for(auto it = instList->begin();it != instList->end();it++){
+		char instBuff[50];
+		strcpy(instBuff,it->c_str());
+		this->SubscribeMarketData(instBuff);
+	}
+}
 void cMdSpi::SubscribeForQuoteRsp()
 {
 	/*int iResult = m_pUserMdApi->SubscribeForQuoteRsp( ppInstrumentID, m_instrumentIDs.getSize() );

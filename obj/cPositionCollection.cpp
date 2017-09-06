@@ -20,18 +20,20 @@ void cPositionCollection::PrintDetail()
 	double closeProfit = 0,openProfit = 0,margin = 0;
 		for(map<string, cPositionDetailPtr>::iterator iter = m_positionMap.begin(); iter != m_positionMap.end(); iter++)
 		{
-			iter->second->Print();
+			if(iter->second->getHoldLong() != 0 || iter->second->getHoldShort() != 0){
+				iter->second->Print();
 
-			//cerr<<"map元素个数:"<<m_trade_message_map.size()<<","<<"多单平仓盈亏:"<<iter->second->closeProfit_long<<","<<"空单平仓盈亏:"<<iter->second->closeProfit_short<<",账户平仓盈亏"<<m_closeProfit<<endl;
+				//cerr<<"map元素个数:"<<m_trade_message_map.size()<<","<<"多单平仓盈亏:"<<iter->second->closeProfit_long<<","<<"空单平仓盈亏:"<<iter->second->closeProfit_short<<",账户平仓盈亏"<<m_closeProfit<<endl;
 					
-			//		
-			//账户平仓盈亏
-			closeProfit = closeProfit + iter->second->closeProfit_long + iter->second->closeProfit_short;
-			//		
-			//账户浮动盈亏
-			openProfit = openProfit + iter->second->OpenProfit_long + iter->second->OpenProfit_short;
+				//		
+				//账户平仓盈亏
+				closeProfit = closeProfit + iter->second->closeProfit_long + iter->second->closeProfit_short;
+				//		
+				//账户浮动盈亏
+				openProfit = openProfit + iter->second->OpenProfit_long + iter->second->OpenProfit_short;
 
-			margin += iter->second->margin;
+				margin += iter->second->margin;
+				}
 
 		}
 				
@@ -58,7 +60,7 @@ void cPositionCollection::update(CThostFtdcInvestorPositionField* pInvestorPosit
 			if(!find_trade_message_map )
 			{
 
-				cPositionDetailPtr trade_message_p(new cPositionDetail(pInvestorPosition->InstrumentID));
+				cPositionDetailPtr trade_message_p = make_shared<cPositionDetail>(pInvestorPosition->InstrumentID);
 
 				m_positionMap.insert(pair<string, cPositionDetailPtr> (pInvestorPosition->InstrumentID, trade_message_p));
 			}
@@ -69,7 +71,7 @@ void cPositionCollection::update(CThostFtdcInvestorPositionField* pInvestorPosit
 void cPositionCollection::update(CThostFtdcTradeField* pTrade){
 		bool find_trade_message_map = false;
 		// new open 
-		if(pTrade->OffsetFlag == 0){
+		if(pTrade->OffsetFlag == THOST_FTDC_OF_Open){
 			
 			for(map<string, cPositionDetailPtr>::iterator iter = m_positionMap.begin(); iter!= m_positionMap.end();iter++)
 			{
@@ -83,7 +85,7 @@ void cPositionCollection::update(CThostFtdcTradeField* pTrade){
 			if(!find_trade_message_map )
 			{
 
-				cPositionDetailPtr trade_message_p(new cPositionDetail(pTrade->InstrumentID));
+				cPositionDetailPtr trade_message_p  = make_shared<cPositionDetail>(pTrade->InstrumentID);
 
 				m_positionMap.insert(pair<string, cPositionDetailPtr> (pTrade->InstrumentID, trade_message_p));
 			}

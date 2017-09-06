@@ -18,11 +18,11 @@ public:
 
 	void Add( CThostFtdcOrderField* );
 	void Add( cOrderPtr p_element );
-
 	int Count() const;
 	void GetInstrumentIDs( cArray< cString >& instrumentIDs ) const;
 	void GetOrderIDs( cIvector& orderIDs ) const;
 
+	bool getOrderByNo(int,shared_ptr<cOrder>& );
 	cOrder* GetOrderHandle( int );
 	cOrderPtr GetOrderHandleSharedPtr( int );
 	cArray< const cOrder* > GetOrderByInstrument( const cString& ) const;
@@ -30,6 +30,9 @@ public:
 	void PrintPendingOrders() const;
 	void PrintCancelledOrders() const;
 	void PrintAllOrders() const;
+
+	// 
+
 	//
 	/*
 	functions used for demo-trading, i.e. cTraderApi/cTraderSpi is not needed

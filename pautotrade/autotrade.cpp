@@ -53,7 +53,7 @@ void autotrade_trade()
 		//
 		/* TraderApi && TraderSpi */
 		CThostFtdcTraderApi* pTraderUserApi = CThostFtdcTraderApi::CreateFtdcTraderApi(".\\TDflow\\");
-		cTraderSpi* pTraderUserSpi = new cTraderSpi( pTraderUserApi,pMdUserApi, ctpAccount.brokerId, ctpAccount.userId, ctpAccount.passwd );
+		cTraderSpi* pTraderUserSpi = new cTraderSpi( pTraderUserApi,pMdUserSpi,pMdUserApi, ctpAccount.brokerId, ctpAccount.userId, ctpAccount.passwd );
 		//CThostFtdcTraderSpi* pTraderUserSpi = new cTraderSpi( pTraderUserApi, NULL, BROKER_ID_DEMO, INVESTOR_ID_DEMO, PASSWORD_DEMO );
 		pTraderUserApi->RegisterSpi((CThostFtdcTraderSpi*) pTraderUserSpi );
 		pTraderUserApi->SubscribePublicTopic( THOST_TERT_RESTART );	// subsribe public topic
@@ -64,6 +64,7 @@ void autotrade_trade()
 		cTradingPlatformPtr pTradingPlatform = make_shared< cTradingPlatform >();
 		pTradingPlatform->RegisterMarketDataEngine( pMdEngine );
 		pTradingPlatform->RegisterTraderSpi(  pTraderUserSpi);
+		pTradingPlatform->RegisterMdSpi(pMdUserSpi);
 		pTradingPlatform->RegisterStrategy( pStrategy );
 
 		cThread< cTradingPlatform >* pTradingThread = new cThread< cTradingPlatform >( pTradingPlatform.get(), &cTradingPlatform::AutoTrading );

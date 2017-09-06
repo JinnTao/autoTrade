@@ -17,6 +17,7 @@ cOrder::cOrder()
 ,m_frontID( -1 )
 ,m_sessionID( -1 )
 {
+	m_BrokerOrderSeq = 0;
 }
 
 cOrder::cOrder( CThostFtdcOrderField* pOrder )
@@ -34,8 +35,10 @@ cOrder::cOrder( CThostFtdcOrderField* pOrder )
 	m_orderServerTime = cTickTime( pOrder->InsertDate, pOrder->InsertTime );
 	m_orderLocalTime = theTickTime;
 	strcpy( m_orderSysID, pOrder->OrderSysID );
+	strcpy( ExchangeID, pOrder->ExchangeID );// exchange Id
 	m_frontID = pOrder->FrontID;
 	m_sessionID = pOrder->SessionID;
+	m_BrokerOrderSeq = pOrder->BrokerOrderSeq;
 }
 
 cOrder::cOrder( const cOrder& in )
@@ -54,8 +57,10 @@ cOrder::cOrder( const cOrder& in )
 	m_orderServerTime = in.m_orderServerTime;
 	m_orderLocalTime = in.m_orderLocalTime;
 	strcpy( m_orderSysID, in.m_orderSysID );
+	strcpy( ExchangeID, in.ExchangeID );// exchange Id
 	m_frontID = in.m_frontID;
 	m_sessionID = in.m_sessionID;
+	m_BrokerOrderSeq = in.m_BrokerOrderSeq;
 }
 
 cOrder& cOrder::operator = ( const cOrder& in )
@@ -75,8 +80,10 @@ cOrder& cOrder::operator = ( const cOrder& in )
 		m_orderServerTime = in.m_orderServerTime;
 		m_orderLocalTime = in.m_orderLocalTime;
 		strcpy( m_orderSysID, in.m_orderSysID );
+		strcpy( ExchangeID, in.ExchangeID );// exchange Id
 		m_frontID = in.m_frontID;
 		m_sessionID = in.m_sessionID;
+		m_BrokerOrderSeq = in.m_BrokerOrderSeq;
 	}
 	return *this;
 }
@@ -85,8 +92,8 @@ void cOrder::Print() const
 {
 	if( m_orderID <= 0 )
 		return;
-
-	printf( "OrderID:%d ", m_orderID );
+	printf( "No:%d ", m_orderID );
+	//printf( "OrderID:%d ", m_orderID );
 	printf( "InstrumentID:%s ", m_instrumentID.c_str() );
 	printf( "Direction:%s ", m_direction == '0' ? "B" : "S" );
 	printf( "Price:%5.3f ", m_price );

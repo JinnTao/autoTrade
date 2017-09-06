@@ -168,6 +168,9 @@ void cTradeCollection::AddToMapInternal( shared_ptr< cTrade >& element )
 void cTradeCollection::PrintAll() const
 {
 	tradeHandle::const_iterator it;
+	if (_m_trade_handle.size() == 0){
+		cerr << "  No trade List" << endl;
+	}
 	for( it = _m_trade_handle.begin(); it != _m_trade_handle.end(); ++it )
 		(*it).second->Print();
 }
@@ -178,3 +181,4 @@ void cTradeCollection::PrintTrade( int tradeID )
 	if( p )
 		p->Print();
 }
+

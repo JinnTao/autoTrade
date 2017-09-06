@@ -27,6 +27,7 @@ public:
 	char GetOffsetFlag() const { return m_offsetFlag; }
 	int GetVolumeOriginal() const { return m_volumeOriginal; }
 	int GetVolumeTraded() const { return m_volumeTraded; }
+	int GetSeqNo() const { return m_BrokerOrderSeq; }
 	cTickTime GetOrderServerTime() const { return m_orderServerTime; }
 	cTickTime GetOrderLocalTime() const { return m_orderLocalTime; }
 	
@@ -80,7 +81,7 @@ public:
 	bool IsCancelledOrder() const;
 
 	TThostFtdcOrderSysIDType m_orderSysID;
-
+	TThostFtdcExchangeIDType	ExchangeID;
 private:
 	int m_orderID;
 	cString m_instrumentID;
@@ -101,6 +102,7 @@ private:
 
 	int m_frontID;
 	int m_sessionID;
+	TThostFtdcSequenceNoType m_BrokerOrderSeq;
 };
 
 typedef shared_ptr< cOrder > cOrderPtr;

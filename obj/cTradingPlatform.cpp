@@ -48,7 +48,7 @@ cTradingPlatform::cTradingPlatform()
 	m_pOrders = make_shared< cOrderCollection >();
 	m_pTrades = make_shared< cTradeCollection >();
 	m_pSignals = make_shared< cSignalCollection >();
-
+	m_pSubscribeInst = make_shared<vector<string>>();
 	m_pInstMessageMap = new map<string, CThostFtdcInstrumentField*>();
 
 //	m_pInstMessageMap = make_shared<map<string,CThostFtdcInstrumentField*>>();
@@ -70,6 +70,7 @@ void cTradingPlatform::RegisterTraderSpi( cTraderSpi* pTraderSpi )
 	m_pTraderSpi->RegisterOrderCollection( m_pOrders );
 	m_pTraderSpi->RegisterTradeCollection( m_pTrades );
 	m_pTraderSpi->RegisterInstMessageMap(m_pInstMessageMap);
+	m_pTraderSpi->RegisterSubscribeInstList(m_pSubscribeInst);
 	//cArray< cString > instrumentIDs;
 	//pTraderSpi->GetInstrumentIDs( instrumentIDs );
 
@@ -92,6 +93,15 @@ void cTradingPlatform::RegisterTraderSpi( cTraderSpi* pTraderSpi )
 	//		m_closedPnL.insert( map< cString, double >::value_type( m_instrumentIDs[i], 0.0 ) );
 	//	}
 	//}
+}
+
+
+void cTradingPlatform::RegisterMdSpi( cMdSpi* p )
+{
+	if( m_pMdSpi == p )
+		return;
+
+	m_pMdSpi = p;
 }
 
 void cTradingPlatform::RegisterMarketDataEngine( cMarketDataCollectionPtr pMarketDataEngine )
@@ -129,36 +139,6 @@ void cTradingPlatform::RegisterMarketDataEngine( cMarketDataCollectionPtr pMarke
 
 void cTradingPlatform::RegisterStrategy( cStrategyPtr pStrategy )
 {
-	if( m_pStrategy.get() )
-		m_pStrategy.reset();
-
-	m_pStrategy = pStrategy;
-
-	m_pStrategy->RegisterSignalCollection( m_pSignals );
-
-	cArray< cString > instrumentIDs;
-	pStrategy->GetInstrumentIDs( instrumentIDs );
-
-	if( !m_instrumentIDs.getSize() )
-	{	
-		for( int i = 0; i < instrumentIDs.getSize(); ++i )
-			m_instrumentIDs.push_back( instrumentIDs[i] );
-	}
-	else
-	{
-		if( !CompareStringArray( m_instrumentIDs, instrumentIDs ) )
-			yr_error( "cStrategy and cTradingPlatform has different instruments" );
-	}
-
-	for( int i = 0; i < m_instrumentIDs.getSize(); ++i )
-	{
-		map< cString, double >::iterator it = m_closedPnL.find( m_instrumentIDs[i] );
-		if( it == m_closedPnL.end() )
-		{
-			m_closedPnL.insert( map< cString, double >::value_type( m_instrumentIDs[i], 0.0 ) );
-		}
-	}
-
 
 }
 
@@ -173,75 +153,11 @@ void cTradingPlatform::SendNewOrders( const cString& instrumentID )
 
 void cTradingPlatform::SendNewOrder( cOrder* pOrder )
 {
-	//if( m_pTraderSpi )
-	//	m_pTraderSpi->ReqOrderInsert( pOrder );
-	//else
-	//{
-	//	//demo trade and no traderspi is required
-	//	//also assume all orders are fully executed with no pending orders
-	//	shared_ptr< cOrder > p = make_shared< cOrder >();
-	//	++m_nRequestID;
-	//	p->SetOrderID( m_nRequestID );
-	//	p->SetInstrumentID( pOrder->GetInstrumentID() );
-	//	if( pOrder->GetDirection() == '0' )
-	//		p->SetDirection( 0 );
-	//	else
-	//		p->SetDirection( 1 );
-
-	//	if( pOrder->GetOffsetFlag() == '0' )
-	//		p->SetOffsetFlag( 0 );
-	//	else if( pOrder->GetOffsetFlag() == '1' )
-	//		p->SetOffsetFlag( 1 );
-	//	else if( pOrder->GetOffsetFlag() == '3' )
-	//		p->SetOffsetFlag( 3 );
-	//	else if( pOrder->GetOffsetFlag() == '4' )
-	//		p->SetOffsetFlag( 4 );
-
-	//	p->SetVolumeOriginal( pOrder->GetVolumeOriginal() );
-	//	p->SetVolumeTraded( pOrder->GetVolumeTraded() );
-	//	p->SetPrice( pOrder->GetPrice() );
-	//	p->SetOrderTime( pOrder->GetOrderServerTime() );
-
-	//	if( _DEBUG )
-	//	{
-	//		cout << p->GetOrderID() << ":" << p->GetOrderServerTime().TimeString().c_str() << ": ";
-	//		cout << p->GetInstrumentID() << " " << p->GetDirection() << " " << p->GetOffsetFlag() << " " << p->GetPrice() << endl;
-	//		PrintClosePnL();
-	//	}
-
-	//	
-	//	//1. add order into collection
-	//	m_pOrders->Add( p );
-	//	//3. create a trade from the order
-	//	//   assume the orderID and the trade ID are the same
-	//	cTradePtr pTrade = make_shared< cTrade >( p.get(), p->GetOrderID() );
-	//	//4. add trade into collection
-	//	m_pTrades->Add( pTrade );
-	//	//5. update positions
-	//	if( pTrade->GetOffsetFlag() == '0' )
-	//	{
-	//		// add new positions
-	//		m_pPositions->Add( pTrade.get() );
-	//	}
-	//	else
-	//	{
-	//		// unwind existing positions
-	//		m_pPositions->Remove( pTrade.get() );
-	//		/* new code */
-	//		cIvector tradeIDsToRemove;
-	//		m_pPositions->RemoveTradesList( pTrade.get(), tradeIDsToRemove );
-
-	//	}
-	//	
-	//	delete pOrder;
-	//}
+	
 }
 
 void cTradingPlatform::PrintClosePnL( int tradeID ) const
 {
-	//cPositionDetail* pPosition = m_pPositions->GetPositionDetail( tradeID );
-	//double openPrice = pPosition->GetPrice();
-	//double volume = pPosition->GetVolume();
 
 
 }
@@ -274,8 +190,7 @@ const sTradingAccountInfo* cTradingPlatform::GetTradingAccountInfo() const
 
 void cTradingPlatform::CancelPendingOrders()
 {
-	for( int i = 0; i < m_instrumentIDs.getSize(); ++i )
-		CancelPendingOrders( m_instrumentIDs[i] );
+
 }
 
 void cTradingPlatform::CancelPendingOrders( const cString& instrumentID )
@@ -310,185 +225,67 @@ DWORD cTradingPlatform::AutoTrading()
 {
 
 	string str;
-	char dire[50];
-	char offset[50];
-	char inst[50];
-	int vol;
-	char price[50];
-	int mark = 0;
-	int a;
+	char dire[50],offset[50],inst[50],price[50],order[50];
+	int vol, mark = 0,orderNo;
 	cerr<<"--------------------Human-computer interaction function Start--------------------------------"<<endl;
-	cerr<<endl<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º";
-
-	while(1)
+	cerr<<endl<<"OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancle seqNo£º";
+	
+	//initial subcribe instrument
+	this->m_pMdSpi->SubscribeMarketData(this->m_pSubscribeInst);
+	while(true)
 	{
 		//std::cin>>str;
-		getline(cin,str);
-		if(str == "show")
-			a = 0;	
+		memset(price,0,50);
+		vol = 0;
+		orderNo = 0;
+		getline(std::cin,str);
+		if(str == "show"){
+			m_pTraderSpi->showPositionDetail();
+		}
+
 		else if(str == "close")
-			a = 1;
+		{	
+			cerr<<"close Position:"<<endl;
+			//g_pUserSpi_tradeAll->ForceClose();
+		}
 		else if(str == "run")
-			a = 2;
+		{					
+			//g_strategy->set_allow_open(true);
+		}
 		else if(str == "stop")
-			a = 3;
-		else if(str.length() >10){
-				sscanf(str.c_str(),"%s %s %s %d %s",dire,offset,inst,&vol,price);
-				double dPrice = atof(price);
-				this->insertOrder(string(inst),string(dire),string(offset),vol,dPrice);
-				a = 4;
-			}
+		{
+			cerr<<"stop:"<<endl;
+			//g_strategy->set_allow_open(false);
+		}
 		else if(str == "order"){
-			a = 5;
+			this->m_pOrders->PrintPendingOrders();
 		}
 		else if(str == "trade"){
-			a = 6;
+			this->m_pTrades->PrintAll();
+		}else if(str == "help"){
+			cerr<<"OrderList: show | order| trade | stop | run |close |buy/sell open/close inst vol price -> ";
 		}
-		switch(a){
-		case 0:
-			{		
-				cerr<<"show Postion:"<<endl;
-				//g_pUserSpi_tradeAll->printTrade_message_map("");
-				m_pTraderSpi->showPositionDetail();
-				cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
-				break;
+		else if(str.length() >7)
+		{
+			// insert order
+			sscanf(str.c_str(),"%s %s %s %d %s",dire,offset,inst,&vol,price);
+			double dPrice = atof(price);
+			if(vol!=0){
+				this->insertOrder(string(inst),string(dire),string(offset),vol,dPrice);
 			}
-		case 1:
-			{
-				cerr<<"close Position:"<<endl;
-				//g_pUserSpi_tradeAll->ForceClose();
-				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
-				break;
+			// cancle order
+			sscanf(str.c_str(),"%s %d",order,&orderNo);
+			if(orderNo !=0 ){
+				this->cancleOrder(order,orderNo);
 			}
-		case 2:
-			{
-				cerr<<"run:"<<endl;
-				//g_strategy->set_allow_open(true);
-				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
-				break;
-
-			}
-		case 3:
-			{
-				cerr<<"stop:"<<endl;
-				//g_strategy->set_allow_open(false);
-				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
-				break;
-
-			}
-		case 4:
-			{
-				//cerr<<endl<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
-				break;
-			}
-		case 5:
-			{
-				this->m_pOrders->PrintPendingOrders();
-				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
-				break;
-			}
-		case 6:
-			{
-				this->m_pTrades->PrintAll();
-				//cerr<<"Input Order(show : show ,close : close all position,Run : run Strategy, stop : stop Strategy)£º"<<endl;
-				break;
-			}
-
-
 		}
-
 	}
-	//while( m_runAutoTrade )
-	//{
-	//	for( int i = 0; i < m_instrumentIDs.getSize(); ++i )
-	//	{
-	//		bool updateFlag = m_pStrategy.get() ? m_pStrategy->RealTimeIndicatorSignalUpdate( m_instrumentIDs[i] ) : false;
-	//		if( updateFlag )
-	//		{
-	//			CancelPendingOrders( m_instrumentIDs[i] );
-	//			SendNewOrders( m_instrumentIDs[i] );
-	//		}
-	//	}
-	//}
 	return 0;
 }
 
 
 DWORD cTradingPlatform::ProcessOrderTest()
 {
-	cSystem::Sleep(3000);
-	while( true )
-	{
-		char runTest[1];
-		printf( "process order open test (Y/N)?:" );
-		cin >> runTest;
-		while( !( Compare( runTest, "Y" ) || Compare( runTest, "N" ) ) )
-		{
-			printf( "invalid input, either 'Y' or 'N' is allowed. please re-enter:" );
-			cin >> runTest;
-		}
-		if( Compare( runTest, "Y" ) )
-		{
-			int id;
-			for( int i = 0; i < m_instrumentIDs.getSize(); ++i )
-				cout << m_instrumentIDs[i].c_str() << "(" << i << ") ";
-			cout << endl;
-			cin >> id;
-			while( !( id >=0 && id < m_instrumentIDs.getSize() ) )
-			{
-				printf( "invalid input, id shall be between 0 and %d, please re-enter:", m_instrumentIDs.getSize()-1 );
-				cin >> id;
-			}
-			cOrder pOrder;
-			pOrder.SetInstrumentID( m_instrumentIDs[id] );
-			printf( "open(0), close(1), close today(3), close yesterday(4)?:" );
-			int offsetFlag;		//'0':open, '1':close
-			cin >> offsetFlag;
-			while( !( offsetFlag == 0 || offsetFlag == 1 || offsetFlag == 3 || offsetFlag == 4 ) )
-			{
-				printf( "invalid input, either 0 or 1 is allowed. please re-enter:" );
-				cin >> offsetFlag;
-			}
-			pOrder.SetOffsetFlag( offsetFlag );
-
-			//
-			int direction;			//'0':buy,'1':short
-			printf( "buy(0) or sell(1)?:" );
-			cin >> direction;
-			while( !( direction == 0 || direction == 1 ) )
-			{
-				printf( "invalid input, either 0 or 1 is allowed. please re-enter:" );
-				cin >> direction;
-			}
-			pOrder.SetDirection( direction );
-			//
-			double price;
-			unsigned int volume;
-			printf( "price:" );
-			cin >> price;
-			printf( "volume:" );
-			cin >> volume;
-			pOrder.SetPrice( price );
-			pOrder.SetVolumeOriginal( volume );
-
-			SendNewOrder( &pOrder );
-			cSystem::Sleep(1000);
-
-		}
-		//
-		printf( "process order cancelation test (Y/N)?:" );
-		cin >> runTest;
-		while( !( Compare( runTest, "Y" ) || Compare( runTest, "N" ) ) )
-		{
-			printf( "invalid input, either 'Y' or 'N' is allowed. please re-enter:" );
-			cin >> runTest;
-		}
-		if( Compare( runTest, "Y" ) )
-		{
-			PrintPendingOrders();
-			CancelPendingOrders();
-		}
-	}
 	return 0;
 }
 
@@ -613,26 +410,49 @@ void cTradingPlatform::ClearPlatform()
 		m_pSignals.reset();
 	}
 }
-
+void cTradingPlatform::cancleOrder(string order,int seqNo){
+	if(order == "cancle"){
+		this->m_pTraderSpi->ReqOrderAction(seqNo);
+	}
+}
 void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,double orderPrice){
+	// get parameters type
 	DIRECTION eDire;
 	OFFSETFLAG eFlag;
 	if(dire == "buy"){
 		eDire = DIRECTION::buy;
 	}
-	if(dire == "sell"){
+	else if(dire == "sell"){
 		eDire =	DIRECTION::sell;
+	}else{
+		cerr << "input parameter Error" << endl;
+		return;
 	}
+	
 	if(flag == "open"){
 		eFlag = OFFSETFLAG::open;
 	}
-	if(flag == "close"){
+	else if(flag == "close"){
 		eFlag = OFFSETFLAG::close;;
+	}else{
+		cerr << "input parameter Error" << endl;
+		return;
 	}
-	//if(orderPrice >)
-	if(vol != 0 ){
-		
-		this->m_pTraderSpi->insertOrder(inst,eDire,eFlag,vol,orderPrice);
+
+	// make market price order
+	if(orderPrice == 0){
+		switch (eDire)
+		{
+		case buy:
+			orderPrice = this->m_pMarketDataEngine->GetMarketDataHandle(inst)->getLastMarketData().LastPrice + this->m_pInstMessageMap->at(inst)->PriceTick;
+			break;
+		case sell:
+			orderPrice =  this->m_pMarketDataEngine->GetMarketDataHandle(inst)->getLastMarketData().LastPrice - this->m_pInstMessageMap->at(inst)->PriceTick;
+			break;
+		}
 	}
-	//Sleep(500);
+	
+	// go into order
+	this->m_pTraderSpi->insertOrder(inst,eDire,eFlag,vol,orderPrice);
+	_sleep(500);// wait 500ms for pTrader response.
 }

@@ -1,9 +1,11 @@
 #ifndef __CMDSPI_H__
 #define __CMDSPI_H__
 
-#include <stl_ctp.h>
+#include <ThostFtdcMdApi.h>
+#include <ThostFtdcTraderApi.h>
 #include <cString.h>
-
+#include <memory>
+using std::shared_ptr;
 template< class T > class cArray;
 class cMarketDataCollection;
 
@@ -55,9 +57,12 @@ public:
 	void RegisterMarketDataCollection( cMarketDataCollection* pMktDataCollection );
 
 	bool getSatus(){return this->m_status;}
+
+	void SubscribeMarketData(char *instIdList);
+	void cMdSpi::SubscribeMarketData(shared_ptr<vector<string>> instList);
 private:
 	void ReqUserLogin();
-	void SubscribeMarketData(char *instIdList);
+
 	void SubscribeForQuoteRsp();
 	bool IsErrorRspInfo( CThostFtdcRspInfoField* pRspInfo );
 
