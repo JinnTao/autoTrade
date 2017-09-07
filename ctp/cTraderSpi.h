@@ -12,9 +12,6 @@
 
 using std::map;
 
-#ifndef _DEBUG
-#define _DEBUG 0
-#endif
 
 class cString;
 template< class T > class cArray;
@@ -98,7 +95,7 @@ public:
 
 	void ReqOrderInsert( cOrder* pOrder );
 
-	void ReqOrderAction( cOrder* pOrder );
+	void ReqOrderAction( shared_ptr<cOrder> pOrder );
 
 	void Close();
 
@@ -126,7 +123,6 @@ public:
 
 	bool subscribeInst(TThostFtdcInstrumentIDType instrumentName,bool tag);
 
-	void ReqOrderAction(TThostFtdcSequenceNoType orderSeq);
 private:
 	CThostFtdcTraderApi* m_pUserTraderApi;
 	cArray< cString > m_instrumentIDs;
@@ -165,7 +161,7 @@ private:
 
 	TThostFtdcBrokerIDType	m_brokerID;
 	TThostFtdcInvestorIDType m_investorID;
-	TThostFtdcPasswordType	m_password;
+	char	m_password[252];
 
 	bool m_genLog;
 	cString m_logFile;
@@ -198,6 +194,7 @@ private:
 	double m_accountMargin;
 };
 
+typedef int (*ccbf_secureApi_LoginTrader)(CThostFtdcTraderApi* ctp_futures_pTraderApi, TThostFtdcBrokerIDType brokeId, TThostFtdcUserIDType userId, char* pChar_passwd, int& ctp_futures_requestId);
 
 #endif
 

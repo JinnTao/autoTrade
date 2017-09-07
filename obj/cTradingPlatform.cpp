@@ -204,28 +204,28 @@ void cTradingPlatform::CancelPendingOrders( const cString& instrumentID )
 
 void cTradingPlatform::CancelPendingOrder( int orderID )
 {
-	cOrder* pOrder = m_pOrders->GetOrderHandle( orderID );
-	if( m_pTraderSpi )
-	{
-		if( pOrder && pOrder->IsPendingOrder() )
-			m_pTraderSpi->ReqOrderAction( pOrder );
-	}
-	else
-	{
-		//
-		/*
-			here we do the demo trade and no TraderSpi is required
-			and thus we simply change m_orders
-		*/
-		m_pOrders->Remove( orderID );
-	}
+	//cOrder* pOrder = m_pOrders->GetOrderHandle( orderID );
+	//if( m_pTraderSpi )
+	//{
+	//	if( pOrder && pOrder->IsPendingOrder() )
+	//		m_pTraderSpi->ReqOrderAction( pOrder );
+	//}
+	//else
+	//{
+	//	//
+	//	/*
+	//		here we do the demo trade and no TraderSpi is required
+	//		and thus we simply change m_orders
+	//	*/
+	//	m_pOrders->Remove( orderID );
+	//}
 }
 
 DWORD cTradingPlatform::AutoTrading()
 {
 
 	string str;
-	char dire[50],offset[50],inst[50],price[50],order[50];
+	char dire[50],offset[50],inst[50],price[50],order[50],tag[50];
 	int vol, mark = 0,orderNo;
 	cerr<<"--------------------Human-computer interaction function Start--------------------------------"<<endl;
 	cerr<<endl<<"OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancle seqNo£º";
@@ -236,6 +236,8 @@ DWORD cTradingPlatform::AutoTrading()
 	{
 		//std::cin>>str;
 		memset(price,0,50);
+		memset(order,0,50);
+		memset(tag,0,50);
 		vol = 0;
 		orderNo = 0;
 		getline(std::cin,str);
@@ -265,6 +267,9 @@ DWORD cTradingPlatform::AutoTrading()
 		}else if(str == "help"){
 			cerr<<"OrderList: show | order| trade | stop | run |close |buy/sell open/close inst vol price -> ";
 		}
+		else if(str == "account"){
+			this->m_pTraderSpi->ReqQryTradingAccount();
+		}
 		else if(str.length() >7)
 		{
 			// insert order
@@ -278,6 +283,9 @@ DWORD cTradingPlatform::AutoTrading()
 			if(orderNo !=0 ){
 				this->cancleOrder(order,orderNo);
 			}
+		//	sscanf(str.c_str(),"%s %s",order,tag);
+			
+
 		}
 	}
 	return 0;
@@ -412,9 +420,34 @@ void cTradingPlatform::ClearPlatform()
 }
 void cTradingPlatform::cancleOrder(string order,int seqNo){
 	if(order == "cancle"){
-		this->m_pTraderSpi->ReqOrderAction(seqNo);
+		
+		shared_ptr<cOrder> pOrder = NULL;
+		if(seqNo != -1){
+			if(!this->m_pOrders->getOrderByNo(seqNo,pOrder)){
+				cerr<<"  Order Seq No Exist."<<endl;
+				return;
+			}
+			this->m_pTraderSpi->ReqOrderAction(pOrder);
+		}else{
+			vector<cOrderPtr> vOrder = this->m_pOrders->GetAllOrder();
+			for(auto it = vOrder.begin();it!=vOrder.end();it++){
+				if(it->get()->IsPendingOrder()){
+					this->m_pTraderSpi->ReqOrderAction(*it);
+				}
+			}
+		}
 	}
 }
+void cTradingPlatform::cancleAllOrder(string order,string tag){
+	//if(order == "cancle" && tag == "all"){
+	//	vector<cOrderPtr> vOrder = this->m_pOrders->GetAllOrder();
+	//	for(auto it = vOrder.begin();it!=vOrder.end();it++){
+
+	//		this->m_pTraderSpi->ReqOrderAction(it->get()->GetOrderID());
+	//	}
+	//}
+}
+
 void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,double orderPrice){
 	// get parameters type
 	DIRECTION eDire;
@@ -441,13 +474,19 @@ void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,
 
 	// make market price order
 	if(orderPrice == 0){
+		cMarketData *p;
+		double lastprice = 0;
+		p = this->m_pMarketDataEngine->GetMarketDataHandle(inst);
+		if(p) {
+			 lastprice = p->getLastMarketData().LastPrice;
+		}
 		switch (eDire)
 		{
 		case buy:
-			orderPrice = this->m_pMarketDataEngine->GetMarketDataHandle(inst)->getLastMarketData().LastPrice + this->m_pInstMessageMap->at(inst)->PriceTick;
+			orderPrice = lastprice + this->m_pInstMessageMap->at(inst)->PriceTick;
 			break;
 		case sell:
-			orderPrice =  this->m_pMarketDataEngine->GetMarketDataHandle(inst)->getLastMarketData().LastPrice - this->m_pInstMessageMap->at(inst)->PriceTick;
+			orderPrice =  lastprice - this->m_pInstMessageMap->at(inst)->PriceTick;
 			break;
 		}
 	}

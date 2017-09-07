@@ -32,7 +32,7 @@ public:
 	void PrintAllOrders() const;
 
 	// 
-
+	vector< cOrderPtr > GetAllOrder( ) const;
 	//
 	/*
 	functions used for demo-trading, i.e. cTraderApi/cTraderSpi is not needed

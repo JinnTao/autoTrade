@@ -68,7 +68,7 @@ private:
 
 	TThostFtdcBrokerIDType	m_brokerID;
 	TThostFtdcInvestorIDType m_investorID;
-	TThostFtdcPasswordType	m_password;
+	char	m_password[252];
 
 	CThostFtdcMdApi* m_pUserMdApi;
 
@@ -86,5 +86,5 @@ private:
 	bool m_status;
 
 };
-
+typedef int (*ccbf_secureApi_LoginMd)(CThostFtdcMdApi* ctp_futures_pMdApi, TThostFtdcBrokerIDType brokeId, TThostFtdcUserIDType userId, char* pChar_passwd, int& ctp_futures_requestId);
 #endif

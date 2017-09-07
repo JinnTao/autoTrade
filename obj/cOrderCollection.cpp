@@ -84,6 +84,15 @@ cArray< const cOrder* > cOrderCollection::GetOrderByInstrument( const cString& i
 	else
 		return cArray< const cOrder* >();
 }
+vector<cOrderPtr> cOrderCollection::GetAllOrder( ) const{
+	orderHandle::const_iterator it;
+	vector<cOrderPtr> vOrder;
+	for( it = _m_order_handle.begin(); it != _m_order_handle.end(); ++it )
+	{
+		vOrder.push_back(it->second);
+	}
+	return vOrder;
+}
 
 void cOrderCollection::AddToMapInternal( shared_ptr< cOrder >& element )
 {

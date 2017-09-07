@@ -18,7 +18,7 @@ cMdSpi::cMdSpi( CThostFtdcMdApi* pUserMdApi, TThostFtdcBrokerIDType brokerID, TT
 {
 	strcpy_s( m_brokerID, sizeof( TThostFtdcBrokerIDType ), brokerID );
 	strcpy_s( m_investorID, sizeof( TThostFtdcInvestorIDType ), investorID );
-	strcpy_s( m_password, sizeof( TThostFtdcPasswordType ), password );
+	strcpy( m_password, password );
 	m_status = false;
 }
 
@@ -91,7 +91,9 @@ void cMdSpi::ReqUserLogin()
 	memset( &req, 0, sizeof( req ) );
 	strcpy_s( req.BrokerID, sizeof( TThostFtdcBrokerIDType ), m_brokerID );
 	strcpy_s( req.UserID, sizeof( TThostFtdcInvestorIDType ), m_investorID );
-	strcpy_s( req.Password, sizeof( TThostFtdcPasswordType ), m_password );
+	strcpy( req.Password,  m_password );
+
+#ifdef _DEBUG
 
 	int iResult = m_pUserMdApi->ReqUserLogin( &req, ++m_requestID );
 
@@ -100,6 +102,22 @@ void cMdSpi::ReqUserLogin()
 	cout << message << endl;
 	SetEvent(g_hEvent);
 
+#else
+	HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_Win32.dll"));
+	DWORD errorID = GetLastError();
+	ccbf_secureApi_LoginMd ccbf_MdFuncInterface = (ccbf_secureApi_LoginMd)GetProcAddress(hInst,"ccbf_secureApi_LoginMd_After_CTP_OnConnected");
+	if(!ccbf_MdFuncInterface){
+		cerr << " DLL Interface Error" << endl;
+	}else{
+		//int ret = m_pUserApi_md->ReqUserLogin(&req, ++requestId);
+		int iResult = ccbf_MdFuncInterface(m_pUserMdApi,m_brokerID,m_investorID,m_password,++m_requestID);
+		char message[256];
+		sprintf( message, "%s:called cMdSpi::ReqUserLogin:%s", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
+		cout << message << endl;
+		SetEvent(g_hEvent);
+	}
+
+#endif
 }
 
 void cMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
@@ -143,7 +161,7 @@ void cMdSpi::SubscribeMarketData(char *instIdList)
 
 	int ret=m_pUserMdApi->SubscribeMarketData(pInstId, len);
 
-	cerr<<" Request SubscribeMarketData.. "<<((ret == 0) ? "success" : "fail")<< endl;
+	//cerr<<" Request SubscribeMarketData.. "<<((ret == 0) ? "success" : "fail")<< endl;
 
 	SetEvent(g_hEvent);
 }
@@ -167,19 +185,19 @@ void cMdSpi::OnRspSubMarketData( CThostFtdcSpecificInstrumentField* pSpecificIns
 {
 	if( bIsLast && !IsErrorRspInfo( pRspInfo ) )
 	{
-		char message[256];
-		sprintf( message, "%s:called cMdSpi::OnRspSubMarketData:%s", cSystem::GetCurrentTimeBuffer().c_str(), pSpecificInstrument->InstrumentID );
-		cout << message << endl;
-		if( m_genLog )
-		{
-			if( m_outputDirectory.IsBlankString() )
-				cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-			else
-			{
-				cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
-				cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
-			}
-		}
+		//char message[256];
+		//sprintf( message, "%s:called cMdSpi::OnRspSubMarketData:%s", cSystem::GetCurrentTimeBuffer().c_str(), pSpecificInstrument->InstrumentID );
+		//cout << message << endl;
+		//if( m_genLog )
+		//{
+		//	if( m_outputDirectory.IsBlankString() )
+		//		cSystem::WriteLogFile( m_logFile.c_str(), message, false );
+		//	else
+		//	{
+		//		cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
+		//		cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
+		//	}
+		//}
 	}
 	
 }

@@ -67,7 +67,7 @@ struct AccountParam
 {
 	TThostFtdcBrokerIDType	brokerId;//经纪公司代码
 	TThostFtdcInvestorIDType	userId;//用户名
-	TThostFtdcPasswordType	passwd;//密码
+	char	passwd[252];//密码
 
 	char mdAddress[50];//行情服务器地址
 	char tdAddress[50];//交易服务器地址

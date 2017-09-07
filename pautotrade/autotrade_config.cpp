@@ -4,11 +4,11 @@
 
 int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting){  
 	try{
-		IniFile ini("CodeLib/config/setting.ini");
+		IniFile ini("setting.ini");
 
 		strcpy_s(account.brokerId,sizeof(account.brokerId), ini.ReadString("account", "brokerID", "1").c_str());
 		strcpy_s(account.tdAddress,sizeof(account.tdAddress), ini.ReadString("account", "tdAddress", "1").c_str());
-		strcpy_s(account.passwd,sizeof(account.passwd), ini.ReadString("account", "password", "1").c_str());
+		strcpy(account.passwd, ini.ReadString("account", "password", "1").c_str());
 		strcpy_s(account.mdAddress,sizeof(account.mdAddress), ini.ReadString("account", "mdAddress", "1").c_str());
 		strcpy_s(account.userId,sizeof(account.userId), ini.ReadString("account", "userID", "1").c_str());
 

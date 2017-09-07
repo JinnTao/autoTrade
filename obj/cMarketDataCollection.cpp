@@ -46,6 +46,7 @@ void cMarketDataCollection::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField
 		// create new CmarketData
 		shared_ptr< cMarketData > ptr = make_shared< cMarketData >( id);
 		ptr->OnRtnDepthMarketData(pDepthMarketData);
+		_m_mkt_handle.insert(map< string, cMarketDataPtr >::value_type(id,ptr));
 	}else{
 		md->OnRtnDepthMarketData( pDepthMarketData );
 	}

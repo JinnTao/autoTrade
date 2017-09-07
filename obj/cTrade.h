@@ -3,9 +3,10 @@
 
 #include <cString.h>
 #include <cTickTime.h>
-#include <stl.h>
+#include "ThostFtdcUserApiDataType.h"
 #include <ThostFtdcUserApiStruct.h>
-
+#include <memory>
+using std::shared_ptr;
 
 
 
@@ -14,7 +15,7 @@ class cTrade
 public:
 	cTrade();
 	cTrade( CThostFtdcTradeField* );
-	cTrade(CThostFtdcOrderField *);
+
 	cTrade( const cTrade& );
 	cTrade& operator = ( const cTrade& );
 

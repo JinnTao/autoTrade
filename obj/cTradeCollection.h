@@ -2,7 +2,9 @@
 #define __CTRADECOLLECTION_H__
 
 #include <cTrade.h>
-
+#include <iostream>
+#include <map>
+using std::map;
 template< class T > class cArray;
 
 typedef map< cString, cArray< const cTrade* > > tradeStoreByInstrument;
@@ -19,7 +21,6 @@ public:
 
 	void Add( CThostFtdcTradeField* pTrade );
 	void Add( cTradePtr p_element );
-	void Add(CThostFtdcOrderField* pOrder);
 	int Count() const;
 	void GetInstrumentIDs( cArray< cString >& instrumentIDs ) const;
 	void GetOrderIDs( cIvector& orderIDs ) const;

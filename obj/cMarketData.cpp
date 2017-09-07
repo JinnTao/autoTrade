@@ -36,10 +36,10 @@ void cMarketData::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField* pDepthMa
 	CThostFtdcDepthMarketDataField marketData;
 	memset(&marketData,0,sizeof(CThostFtdcDepthMarketDataField));
 	//strcpy(&marketData,pDepthMarketData);
-
-	this->m_marketDepthVector.push_back(*pDepthMarketData);
 	m_lastMarketData = *pDepthMarketData;
+	this->m_marketDepthVector.push_back(m_lastMarketData);
+
 	m_lastPriceSeries.push_back(pDepthMarketData->LastPrice);
-	cerr << pDepthMarketData->InstrumentID << " " << pDepthMarketData->LastPrice << endl;
+	//cerr << pDepthMarketData->InstrumentID << " " << pDepthMarketData->LastPrice << endl;
 
 }

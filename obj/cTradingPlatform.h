@@ -73,6 +73,7 @@ public:
 	
 	void insertOrder(string inst,string dire,string flag, int vol,double orderPrice);
 	void cancleOrder(string order,int seqNo);
+	void cancleAllOrder(string order,string tag);
 
 private:
 	cTraderSpi*	m_pTraderSpi;

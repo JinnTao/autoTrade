@@ -1,6 +1,4 @@
 #include <autotrade.h>
-#include <autotrade_downloadmarketdata.h>
-#include <autotrade_backtest.h>
 #include <cStrategyMovAvg.h>
 #include <autotrade_config.h>
 

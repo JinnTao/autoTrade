@@ -8,13 +8,13 @@ bool IsFlowControl( int iResult )
 	return (( iResult == -2 ) || ( iResult == -3 ));
 }
 
-cTraderSpi::cTraderSpi( CThostFtdcTraderApi* pUserTraderApi,cMdSpi* pUserMdSpi,CThostFtdcMdApi * pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog )
+cTraderSpi::cTraderSpi( CThostFtdcTraderApi* pUserTraderApi,cMdSpi* pUserMdSpi,CThostFtdcMdApi * pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, char* password, bool genLog )
 : m_pUserTraderApi( pUserTraderApi )
 , m_genLog( genLog )
 {
 	strcpy_s( m_brokerID, sizeof( TThostFtdcBrokerIDType ), brokerID );
 	strcpy_s( m_investorID, sizeof( TThostFtdcInvestorIDType ), investorID );
-	strcpy_s( m_password, sizeof( TThostFtdcPasswordType ), password );
+	strcpy_s( m_password, sizeof( m_password), password );
 	this->m_pMdSpi = pUserMdSpi;
 	this->m_pMDUserApi_td = pUserMdApi;
 	m_first_inquiry_order = true;//是否首次查询报单
@@ -45,9 +45,6 @@ void cTraderSpi::OnFrontConnected()
 	sprintf( message, "%s:called cTraderSpi::OnFrontConnected.", cSystem::GetCurrentTimeBuffer().c_str() );
 	cout << message << endl;
 
-	// log info
-	if( m_genLog )
-		cSystem::WriteLogFile( m_logFile.c_str(), message, false );
 
 	ReqUserLogin();
 	SetEvent(g_hEvent);
@@ -56,18 +53,34 @@ void cTraderSpi::OnFrontConnected()
 void cTraderSpi::ReqUserLogin()
 {
 	CThostFtdcReqUserLoginField req;
+	
 	memset( &req, 0, sizeof( req ) );
 	strcpy_s( req.BrokerID, sizeof( TThostFtdcBrokerIDType ), m_brokerID );
 	strcpy_s( req.UserID, sizeof( TThostFtdcInvestorIDType ), m_investorID );
-	strcpy_s( req.Password, sizeof( TThostFtdcPasswordType ), m_password );
+	strcpy( req.Password, m_password );
 
-	int iResult = m_pUserTraderApi->ReqUserLogin( &req, ++iRequestID );
-	
+	#ifdef _DEBUG
 
-	char message[256];
-	sprintf( message, "%s:called cTraderSpi::ReqUserLogin: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
-	cout << message << endl;
+		int iResult = m_pUserTraderApi->ReqUserLogin( &req, ++iRequestID );
+		char message[256];
+		sprintf( message, "%s:called cTraderSpi::ReqUserLogin: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
+		cout << message << endl;	
 
+	#else
+
+		HINSTANCE hInst = LoadLibrary("dll_FBI_Release_Win32.dll");
+		DWORD errorId = GetLastError();
+		ccbf_secureApi_LoginTrader ccbf_traderFuncInterface = (ccbf_secureApi_LoginTrader)GetProcAddress(hInst,"ccbf_secureApi_LoginTrader_After_CTP_OnConnected");
+		if(!ccbf_traderFuncInterface)
+		{
+			cerr <<"Interface func error"<<endl;
+		}else{
+			int ret = ccbf_traderFuncInterface(m_pUserTraderApi,req.BrokerID,req.UserID,m_password,++iRequestID);
+			//int ret = m_pUserApi_td->ReqUserLogin(&req, ++requestId);
+			cerr<<"Trader login request..."<<((ret == 0) ? "success" :"fail") << endl;	
+			FreeLibrary(hInst);
+		}
+	#endif
 }
 
 // When the connection between client and the CTP server disconnected, the following function will be called
@@ -213,9 +226,9 @@ void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoFi
 	if (!IsErrorRspInfo(pRspInfo) && pTrade){
 		this->m_tradeCollection->Add(pTrade);
 		if(bIsLast){
-			cerr<<"--------------------------------------------------------------------trade start"<<endl;
+			cerr<<"--------------------------------------------------------------------Trade list start"<<endl;
 			this->m_tradeCollection->PrintAll();
-			cerr<<"--------------------------------------------------------------------trade start"<<endl;
+			cerr<<"--------------------------------------------------------------------Trade list end"<<endl;
 			Sleep(1000);
 			ReqQryInvestorPositionDetail();
 			SetEvent(g_hEvent);
@@ -363,15 +376,17 @@ void cTraderSpi::OnRspQryTradingAccount( CThostFtdcTradingAccountField* pTrading
 
 		printf("\nAccount Summary:\n");
 		printf("   AccountID:%s\n", m_accountInfo->AccountID );
-		printf("   PreBalance:%f\n", m_accountInfo->PreBalance );
-		printf("   Balance:%f\n", m_accountInfo->Balance );
-		printf("   Available:%f\n", m_accountInfo->Available );
-		printf("   WithdrawQuota:%f\n", m_accountInfo->WithdrawQuota );
-		printf("   CurrMargin:%f\n", m_accountInfo->CurrMargin );
-		printf("   CloseProfit:%f\n", m_accountInfo->CloseProfit );
-		printf("   PositionProfit:%f\n", m_accountInfo->PositionProfit );
-		printf("   Commission:%f\n", m_accountInfo->Commission );
-		printf("   FrozenMargin:%f\n", m_accountInfo->FrozenMargin );
+		printf("   PreBalance:%.2f\n", m_accountInfo->PreBalance );
+		printf("   Balance:%.2f\n", m_accountInfo->Balance );
+		
+		//printf("   WithdrawQuota:%f\n", m_accountInfo->WithdrawQuota );
+		printf("   totalPnl:%.2f\n", m_accountInfo->CloseProfit +  m_accountInfo->PositionProfit);
+		printf("   CloseProfit:%.2f\n", m_accountInfo->CloseProfit );
+		printf("   PositionProfit:%.2f\n", m_accountInfo->PositionProfit );
+		printf("   Commission:%.2f\n", m_accountInfo->Commission );
+		printf("   Available:%.2f\n", m_accountInfo->Available );
+		printf("   CurrMargin:%.2f\n", m_accountInfo->CurrMargin );
+		//printf("   FrozenMargin:%f\n", m_accountInfo->FrozenMargin );
 
 		if(m_firs_inquiry_TradingAccount == true)
 		{
@@ -782,11 +797,11 @@ void cTraderSpi::OnRtnOrder( CThostFtdcOrderField* pOrder )
 	if(pOrder){
 		m_orderCollection->Add( pOrder );
 		if( !IsMyOrder( pOrder ) ){
-			cerr << "Other:";
+			cerr << " Other:";
 		}else{
-			cerr<< "My";
+			cerr<< " My";
 		}
-		cerr <<"  OrderRef: " <<pOrder->OrderRef <<"  Status:" << pOrder->OrderStatus << pOrder->StatusMsg << endl;
+		cerr <<" No" <<pOrder->OrderSysID <<"  Status:" << pOrder->OrderStatus << pOrder->StatusMsg << endl;
 	}
 
 }
@@ -843,20 +858,25 @@ void cTraderSpi::OnHeartBeatWarning( int nTimeLapse )
 
 
 // ReqOrderAction is used for order cancellation
-void cTraderSpi::ReqOrderAction( cOrder* pOrder )
+void cTraderSpi::ReqOrderAction(shared_ptr<cOrder>  pOrder )
 {
 	CThostFtdcInputOrderActionField req;
-	memset( &req, 0, sizeof( req ) );
+	memset(&req, 0, sizeof(req));
+
 	strcpy( req.BrokerID, m_brokerID );
 	strcpy( req.InvestorID, m_investorID );
-	sprintf( req.OrderRef, "%d",pOrder->GetOrderRef() );
+	//sprintf( req.OrderRef, "%d",pOrder->GetOrderRef() );
+	strcpy( req.OrderSysID, pOrder->m_orderSysID );
+	strcpy( req.ExchangeID, pOrder->ExchangeID );
 	req.FrontID = m_FRONT_ID;
 	req.SessionID = m_SESSION_ID;
 	req.ActionFlag = THOST_FTDC_AF_Delete;
-	strcpy( req.InstrumentID, pOrder->GetInstrumentID().c_str() );
 
 	int iResult = m_pUserTraderApi->ReqOrderAction( &req, ++iRequestID );
 
+	/*char message[256];
+	sprintf( message, "%s:called cTraderSpi::ReqOrderAction: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail" ) );
+	cout << message << endl;*/
 }
 
 
@@ -990,10 +1010,8 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 
 }
 void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol){
-	TThostFtdcCombOffsetFlagType  kpp;//开平，"0"开，"1"平,"3"平今
-
-
-	//平多 卖 平 就是 平的多仓
+	TThostFtdcCombOffsetFlagType  kpp;//开平，"0"开，"1"平昨 平,"3"平今
+	// close Long
 	if(dir == '1'){
 		if(this->m_positionCollection->getHolding_long(instId) < vol){
 			cerr << "Long:close vol more than hold vol" << endl;
@@ -1001,37 +1019,30 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirecti
 		}
 		if(this->m_positionCollection->getHolding_long(instId)> 0 )
 		{
-			//上期所
 			if(strcmp(m_InstMeassageMap->at(instId)->ExchangeID, "SHFE") == 0)
 			{
-				// 先平今日持仓
+				// close y than close t
 				int Yd_long =this->m_positionCollection->getYdLong(instId);
 				int Td_long =this->m_positionCollection->getTdLong(instId);
-				if(Td_long > vol)
+				if(Yd_long > vol)
 				{
-					//cerr<<"多单上期所平今："<<endl;
-					strcpy(kpp, "3");//平今
+					strcpy(kpp, "1");// close yP
 					ReqOrderInsert(instId, dir, kpp, price, vol);
 					
 				}
-				else//今仓不够平
+				else
 				{
-					//cerr<<"多单上期所同时平今平昨 先平今 再平昨："<<endl;
-					// 有今仓先平了
-					if(Td_long>0){
-						strcpy(kpp, "3");//平今
-						ReqOrderInsert(instId, dir, kpp, price, Td_long);
+					if(Yd_long>0){
+						strcpy(kpp, "1");//close yP
+						ReqOrderInsert(instId, dir, kpp, price, Yd_long);
 					}
-					strcpy(kpp, "1");//平昨仓
-					ReqOrderInsert(instId, dir, kpp, price, vol-Td_long);
+					strcpy(kpp, "3");//close tP
+					ReqOrderInsert(instId, dir, kpp, price, vol-Yd_long);
 				}
 
 			}
-			//非上期所
 			else
 			{
-				
-				//cerr<<"非上期所多单平仓:"<<endl;
 				strcpy(kpp, "1");
 				ReqOrderInsert(instId, dir, kpp, price, vol);
 				
@@ -1040,7 +1051,7 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirecti
 
 		}
 	}
-	//平空
+	//close short
 	else{
 		if(this->m_positionCollection->getHolding_short(instId)< vol){
 			cerr << "short:close vol more than hold vol" << endl;
@@ -1049,36 +1060,31 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirecti
 		
 		if(this->m_positionCollection->getHolding_short(instId) > 0)
 		{
-			//上期所
 			if(strcmp(m_InstMeassageMap->at(instId)->ExchangeID, "SHFE") == 0)
 			{
-				// 先平今日持仓
+				// close yP than tP
 				int Yd_short = this->m_positionCollection->getYdShort(instId);
 				int Td_short = this->m_positionCollection->getTdShort(instId);
 
-				if(Td_short >= vol)
+				if(Yd_short >= vol)
 				{
-					//cerr<<"空单上期所平今："<<endl;
-					strcpy(kpp, "3");//平今
+					strcpy(kpp, "1");//yP
 					ReqOrderInsert(instId, dir, kpp, price, vol);
 					
 				}
-				else//没有今仓
+				else// yd is not enough
 				{
-					//cerr<<"空单上期所同时平今平昨 先平今 再平昨："<<endl;
-					if(Td_short>0){
-						strcpy(kpp, "3");//平今
-						ReqOrderInsert(instId, dir, kpp, price, Td_short);
+					if(Yd_short>0){
+						strcpy(kpp, "1");//yP
+						ReqOrderInsert(instId, dir, kpp, price, Yd_short);
 					}
-					strcpy(kpp, "1");//平昨仓
-					ReqOrderInsert(instId, dir, kpp, price, vol-Td_short);
+					strcpy(kpp, "3");//tP
+					ReqOrderInsert(instId, dir, kpp, price, vol-Yd_short);
 				}
 
 			}
-			//非上期所
 			else
 			{
-				//cerr<<"非上期所空单平仓:"<<endl;
 				strcpy(kpp, "1");
 				ReqOrderInsert(instId, dir, kpp, price, vol);
 				
@@ -1136,32 +1142,3 @@ bool cTraderSpi::subscribeInst(TThostFtdcInstrumentIDType instrumentName,bool su
 	return true;
 }
 ///  cancle order
-void cTraderSpi::ReqOrderAction(TThostFtdcSequenceNoType orderSeq)//company order sequence No
-{
-	bool found=false; 
-	unsigned int i=0;
-	shared_ptr<cOrder> pOrder = NULL;
-	if(!this->m_orderCollection->getOrderByNo(orderSeq,pOrder)){
-		cerr<<"  Order Seq No Exist."<<endl;
-		return;
-	}
-
-	CThostFtdcInputOrderActionField req;
-	memset(&req, 0, sizeof(req));
-
-	strcpy( req.BrokerID, m_brokerID );
-	strcpy( req.InvestorID, m_investorID );
-	//sprintf( req.OrderRef, "%d",pOrder->GetOrderRef() );
-	strcpy( req.OrderSysID, pOrder->m_orderSysID );
-	strcpy( req.ExchangeID, pOrder->ExchangeID );
-	req.FrontID = m_FRONT_ID;
-	req.SessionID = m_SESSION_ID;
-	req.ActionFlag = THOST_FTDC_AF_Delete;
-
-
-	int iResult = m_pUserTraderApi->ReqOrderAction(&req, ++iRequestID);
-
-	char message[256];
-	sprintf( message, "%s:called cTraderSpi::ReqOrderAction: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail" ) );
-	cout << message << endl;
-}

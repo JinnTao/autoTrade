@@ -12,11 +12,6 @@
 #include <cStrategyUtils.h>
 #include <cTradingPlatform.h>
 
-//tests
-#include <yr_ticktime_test.h>
-#include <yr_marketdata_test.h>
-#include <yr_strategy_test.h>
-#include <yr_tradingplatform_test.h>
 
 //
 #include <FuturesCNUtils.h>

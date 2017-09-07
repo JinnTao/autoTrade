@@ -26,13 +26,7 @@ void cTradeCollection::Add( CThostFtdcTradeField* pTrade )
 		AddToMapInternal( ptr );
 	}
 }
-void cTradeCollection::Add(CThostFtdcOrderField* pOrder){
-	if( pOrder->OrderStatus == THOST_FTDC_OST_AllTraded )
-	{
-		shared_ptr< cTrade > ptr = make_shared< cTrade >( pOrder );
-		AddToMapInternal( ptr );
-	}
-}
+
 void cTradeCollection::Add( cTradePtr p_element )
 {
 	AddToMapInternal( p_element ); 
