@@ -6,8 +6,9 @@
 #include <cString.h>
 #include <memory>
 using std::shared_ptr;
-template< class T > class cArray;
+
 class cMarketDataCollection;
+extern int iRequestID;
 
 class cMdSpi : public CThostFtdcMdSpi
 {
@@ -74,8 +75,6 @@ private:
 
 	cMarketDataCollection* m_pMktDataCollection;
 	
-	cArray< cString > m_instrumentIDs;
-
 	bool m_genLog;
 	
 	int m_requestID;

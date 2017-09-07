@@ -5,7 +5,7 @@
 #include <cStringUtils.h>
 #include <cTickTime.h>
 #include <cSystem.h>
-#include <stl_ctp.h>
+
 
 
 cMarketData::cMarketData(string id)

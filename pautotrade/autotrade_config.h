@@ -6,7 +6,6 @@
 #include <map>
 #include <cSystem.h>
 #include <ThostFtdcMdApi.h>
-#include <trading_account.h>
 //
 struct sATGeneralConfig
 {

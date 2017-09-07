@@ -24,7 +24,6 @@ cMdSpi::cMdSpi( CThostFtdcMdApi* pUserMdApi, TThostFtdcBrokerIDType brokerID, TT
 
 void cMdSpi::OnRspError( CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
 {
-	// copyright Yiran Yang
 	char message[256];
 	sprintf( message, "%s:called cMdSpi::OnRspError", cSystem::GetCurrentTimeBuffer().c_str() );
 	cout << message << endl;
@@ -45,7 +44,6 @@ void cMdSpi::OnRspError( CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool 
 
 void cMdSpi::OnFrontDisconnected( int nReason )
 {
-	// copyright Yiran Yang
 	char message[256];
 	sprintf( message, "%s:called cMdSpi::OnFrontDisconnected. Reason = %d", cSystem::GetCurrentTimeBuffer().c_str(), nReason );
 	cout << message << endl;
@@ -65,7 +63,6 @@ void cMdSpi::OnFrontDisconnected( int nReason )
 		
 void cMdSpi::OnHeartBeatWarning(int nTimeLapse)
 {
-	// copyright Yiran Yang
 	char message[256];
 	sprintf( message, "%s:called cMdSpi::OnHeartBeatWarning. nTimerLapse = %d", cSystem::GetCurrentTimeBuffer().c_str(), nTimeLapse );
 	cout << message << endl;
@@ -75,7 +72,6 @@ void cMdSpi::OnHeartBeatWarning(int nTimeLapse)
 
 void cMdSpi::OnFrontConnected()
 {
-	// copyright Yiran Yang
 	char message[256];
 	sprintf( message, "%s:called cMdSpi::OnFrontConnected.", cSystem::GetCurrentTimeBuffer().c_str() );
 	cout << message << endl;
@@ -86,7 +82,6 @@ void cMdSpi::OnFrontConnected()
 
 void cMdSpi::ReqUserLogin()
 {
-	// copyright Yiran Yang
 	CThostFtdcReqUserLoginField req;
 	memset( &req, 0, sizeof( req ) );
 	strcpy_s( req.BrokerID, sizeof( TThostFtdcBrokerIDType ), m_brokerID );
@@ -133,7 +128,7 @@ void cMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin, CThostFt
 	if(bIsLast){ 
 		SetEvent(g_hEvent);
 		cerr << cSystem::GetCurrentTimeBuffer() << " Market init Finish" << endl;
-		Sleep(1000);
+		Sleep(500);
 		
 		this->m_status = true;
 	};

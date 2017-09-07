@@ -1,6 +1,6 @@
 #include <cSystem.h>
 #include <cTraderSpi.h>
-#include <global_defs.h>
+
 #include <cTrade.h>
 extern HANDLE g_hEvent;
 bool IsFlowControl( int iResult )

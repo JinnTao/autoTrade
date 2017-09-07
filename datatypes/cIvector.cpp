@@ -1,7 +1,7 @@
 #include <math_defs.h>
 #include <cIvector.h>
 #include <cSort.h>
-#include <yr_assert.h>
+
 
 void cIvector::_allocate()
 {

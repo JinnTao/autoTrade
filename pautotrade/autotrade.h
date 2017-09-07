@@ -3,8 +3,6 @@
 
 #include <cMarketDataCollection.h>
 #include <cSystem.h>
-#include <trading_account.h>
-#include <yr_utils.h>
 #include <cMdSpi.h>
 #include <cTraderSpi.h>
 #include <cThread.h>

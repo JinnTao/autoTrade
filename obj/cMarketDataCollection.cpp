@@ -1,8 +1,7 @@
-#include <stl_ctp.h>
 #include <cMarketDataCollection.h>
 #include <cTickTime.h>
 #include <cSystem.h>
-#include <global_defs.h>
+
 
 
 cMarketDataCollection::cMarketDataCollection()

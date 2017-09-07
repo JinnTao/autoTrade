@@ -1,7 +1,6 @@
 #ifndef __CTRADERSPI_H__
 #define __CTRADERSPI_H__
 
-#include <stl_ctp.h>
 #include <map>
 #include <yr_structs.h>
 #include <cPositionCollection.h>
@@ -10,9 +9,8 @@
 #include <cSignal.h>
 #include <cMdSpi.h>
 
-using std::map;
-
-
+using namespace std;
+extern int iRequestID;
 class cString;
 template< class T > class cArray;
 
