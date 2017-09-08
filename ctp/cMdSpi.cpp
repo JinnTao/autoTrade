@@ -88,31 +88,30 @@ void cMdSpi::ReqUserLogin()
 	strcpy_s( req.UserID, sizeof( TThostFtdcInvestorIDType ), m_investorID );
 	strcpy( req.Password,  m_password );
 
-#ifdef _DEBUG
+	#ifdef _DEBUG
 
-	int iResult = m_pUserMdApi->ReqUserLogin( &req, ++m_requestID );
-
-	char message[256];
-	sprintf( message, "%s:called cMdSpi::ReqUserLogin:%s", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
-	cout << message << endl;
-	SetEvent(g_hEvent);
-
-#else
-	HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_Win32.dll"));
-	DWORD errorID = GetLastError();
-	ccbf_secureApi_LoginMd ccbf_MdFuncInterface = (ccbf_secureApi_LoginMd)GetProcAddress(hInst,"ccbf_secureApi_LoginMd_After_CTP_OnConnected");
-	if(!ccbf_MdFuncInterface){
-		cerr << " DLL Interface Error" << endl;
-	}else{
-		//int ret = m_pUserApi_md->ReqUserLogin(&req, ++requestId);
-		int iResult = ccbf_MdFuncInterface(m_pUserMdApi,m_brokerID,m_investorID,m_password,++m_requestID);
+		int iResult = m_pUserMdApi->ReqUserLogin( &req, ++iRequestID );
 		char message[256];
 		sprintf( message, "%s:called cMdSpi::ReqUserLogin:%s", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
 		cout << message << endl;
-		SetEvent(g_hEvent);
-	}
+	#else
+		HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_Win32.dll"));
+		DWORD errorID = GetLastError();
+		ccbf_secureApi_LoginMd ccbf_MdFuncInterface = (ccbf_secureApi_LoginMd)GetProcAddress(hInst,"ccbf_secureApi_LoginMd_After_CTP_OnConnected");
+		if(!ccbf_MdFuncInterface){
+			cerr << " DLL Interface Error" << endl;
+		}else{
+			//int ret = m_pUserApi_md->ReqUserLogin(&req, ++requestId);
+			int iResult = ccbf_MdFuncInterface(m_pUserMdApi,req.BrokerID,req.UserID,m_password,iRequestID);
+			char message[256];
+			sprintf( message, "%s:called cMdSpi::ReqUserLogin:%s", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
+			cout << message << endl;
+			FreeLibrary(hInst);
+			
+		}
 
-#endif
+	#endif
+	SetEvent(g_hEvent);
 }
 
 void cMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )

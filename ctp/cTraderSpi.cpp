@@ -68,19 +68,20 @@ void cTraderSpi::ReqUserLogin()
 
 	#else
 
-		HINSTANCE hInst = LoadLibrary("dll_FBI_Release_Win32.dll");
+		HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_Win32.dll"));
 		DWORD errorId = GetLastError();
 		ccbf_secureApi_LoginTrader ccbf_traderFuncInterface = (ccbf_secureApi_LoginTrader)GetProcAddress(hInst,"ccbf_secureApi_LoginTrader_After_CTP_OnConnected");
 		if(!ccbf_traderFuncInterface)
 		{
 			cerr <<"Interface func error"<<endl;
 		}else{
-			int ret = ccbf_traderFuncInterface(m_pUserTraderApi,req.BrokerID,req.UserID,m_password,++iRequestID);
+			int ret = ccbf_traderFuncInterface(m_pUserTraderApi,req.BrokerID,req.UserID,req.Password,iRequestID);
 			//int ret = m_pUserApi_td->ReqUserLogin(&req, ++requestId);
 			cerr<<"Trader login request..."<<((ret == 0) ? "success" :"fail") << endl;	
 			FreeLibrary(hInst);
 		}
 	#endif
+	SetEvent(g_hEvent);
 }
 
 // When the connection between client and the CTP server disconnected, the following function will be called
@@ -505,7 +506,7 @@ void cTraderSpi::OnRspQryInstrument( CThostFtdcInstrumentField* pInstrument, CTh
 			m_InstMeassageMap->insert(pair<string, CThostFtdcInstrumentField*> (instField->InstrumentID, instField));
 
 
-			saveInstrumentField(pInstrument);
+			//saveInstrumentField(pInstrument);
 
 			if(bIsLast)
 			{
