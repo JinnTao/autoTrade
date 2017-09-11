@@ -5,9 +5,6 @@
 #include <map>
 using std::map;
 
-
-// underlying string versus array of cMarketData, i.e. IF vs. IF1601 and IF1603
-//typedef map< cString, cArray< const cMarketData* > > marketdataStore;
 // futures ID versus cMarketDataPtr, i.e. IF1601
 typedef map< string, cMarketDataPtr > marketdataHandle;
 

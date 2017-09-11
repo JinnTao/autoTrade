@@ -9,7 +9,6 @@ class cTraderSpi;
 #include "cMdSpi.h"
 #include <cMarketDataCollection.h>
 #include <cStrategy.h>
-#include <cSignalCollection.h>
 #include <cOrderCollection.h>
 #include <cTradeCollection.h>
 #include <cPositionCollection.h>
@@ -84,7 +83,6 @@ private:
 	cPositionCollectionPtr m_pPositions;
 	cOrderCollectionPtr m_pOrders;
 	cTradeCollectionPtr m_pTrades;
-	cSignalCollectionPtr m_pSignals;
 	
 	map<string, CThostFtdcInstrumentField*>* m_pInstMessageMap;
 	shared_ptr<vector<string>> m_pSubscribeInst;

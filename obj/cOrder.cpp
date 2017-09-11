@@ -1,5 +1,4 @@
 #include <cOrder.h>
-#include <cSignal.h>
 
 cOrder::cOrder()
 :m_orderID( -1 )

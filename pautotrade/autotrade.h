@@ -7,7 +7,6 @@
 #include <cTraderSpi.h>
 #include <cThread.h>
 #include <cStrategy.h>
-#include <cStrategyUtils.h>
 #include <cTradingPlatform.h>
 
 

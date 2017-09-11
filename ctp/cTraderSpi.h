@@ -6,7 +6,6 @@
 #include <cPositionCollection.h>
 #include <cTradeCollection.h>
 #include <cOrderCollection.h>
-#include <cSignal.h>
 #include <cMdSpi.h>
 
 using namespace std;

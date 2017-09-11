@@ -47,7 +47,6 @@ cTradingPlatform::cTradingPlatform()
 	m_pPositions = make_shared< cPositionCollection >();
 	m_pOrders = make_shared< cOrderCollection >();
 	m_pTrades = make_shared< cTradeCollection >();
-	m_pSignals = make_shared< cSignalCollection >();
 	m_pSubscribeInst = make_shared<vector<string>>();
 	m_pInstMessageMap = new map<string, CThostFtdcInstrumentField*>();
 
@@ -142,14 +141,7 @@ void cTradingPlatform::RegisterStrategy( cStrategyPtr pStrategy )
 
 }
 
-void cTradingPlatform::SendNewOrders( const cString& instrumentID )
-{
-	cArray< cOrder* > orders = m_pStrategy->GenNewOrders( instrumentID, m_pPositions.get() );
-	for( int i = 0; i < orders.getSize(); ++i )
-	{
-		SendNewOrder( orders[i] );
-	}
-}
+
 
 void cTradingPlatform::SendNewOrder( cOrder* pOrder )
 {
@@ -195,10 +187,6 @@ void cTradingPlatform::CancelPendingOrders()
 
 void cTradingPlatform::CancelPendingOrders( const cString& instrumentID )
 {
-	cIvector orderIDs;
-	m_pStrategy->CancelPendingOrders( instrumentID, m_pOrders.get(), orderIDs );
-	for( int i = 0; i < orderIDs.getSize(); ++i )
-		CancelPendingOrder( orderIDs[i] );
 
 }
 
@@ -283,7 +271,6 @@ DWORD cTradingPlatform::AutoTrading()
 			if(orderNo !=0 ){
 				this->cancleOrder(order,orderNo);
 			}
-		//	sscanf(str.c_str(),"%s %s",order,tag);
 			
 
 		}
@@ -333,11 +320,6 @@ void cTradingPlatform::PrintPositionSummary() const
 //	m_pPositions->SummaryByInstrument();
 }
 
-void cTradingPlatform::PrintClosePnL() const
-{
-	double pnl = m_pStrategy->PositionPnL( m_pPositions.get() );
-	cout << "position PnL is: " << pnl << endl;
-}
 
 
 bool cTradingPlatform::SimulationUpdate( const cTick& tick )
@@ -363,8 +345,6 @@ void cTradingPlatform::Sleep()
 
 	if( flag )
 	{
-		if( m_pSignals->Count() )
-			m_pSignals->Clear();
 		//
 		if( m_pTrades->Count() )
 			m_pTrades->Clear();
@@ -412,11 +392,6 @@ void cTradingPlatform::ClearPlatform()
 		m_pTrades.reset();
 	}
 
-	if( m_pSignals.get() )
-	{
-		m_pSignals->Clear();
-		m_pSignals.reset();
-	}
 }
 void cTradingPlatform::cancleOrder(string order,int seqNo){
 	if(order == "cancle"){

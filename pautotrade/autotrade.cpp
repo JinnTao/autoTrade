@@ -1,5 +1,4 @@
 #include <autotrade.h>
-#include <cStrategyMovAvg.h>
 #include <autotrade_config.h>
 
 //#pragma comment(lib,"json_vc71_libmtd.lib")
@@ -41,11 +40,6 @@ void autotrade_trade()
 		/* cMarketDataCollection */
 		cMarketDataCollectionPtr pMdEngine = make_shared< cMarketDataCollection >();
 		dynamic_cast< cMdSpi* >( pMdUserSpi )->RegisterMarketDataCollection( pMdEngine.get() );
-		//
-		/* Strategy */
-		
-		cStrategyPtr pStrategy = make_shared< cStrategyMovAvg >( "MovAvg" );
-		pStrategy->RegisterMarketDataCollection( pMdEngine );
 
 		//
 		/* TraderApi && TraderSpi */
@@ -61,7 +55,6 @@ void autotrade_trade()
 		pTradingPlatform->RegisterMarketDataEngine( pMdEngine );
 		pTradingPlatform->RegisterTraderSpi(  pTraderUserSpi);
 		pTradingPlatform->RegisterMdSpi(pMdUserSpi);
-		pTradingPlatform->RegisterStrategy( pStrategy );
 
 		cThread< cTradingPlatform >* pTradingThread = new cThread< cTradingPlatform >( pTradingPlatform.get(), &cTradingPlatform::AutoTrading );
 
