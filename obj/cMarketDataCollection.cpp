@@ -50,4 +50,3 @@ void cMarketDataCollection::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField
 		md->OnRtnDepthMarketData( pDepthMarketData );
 	}
 }
-

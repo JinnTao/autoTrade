@@ -258,16 +258,4 @@ bool cMdSpi::IsErrorRspInfo( CThostFtdcRspInfoField* pRspInfo )
 void cMdSpi::RegisterMarketDataCollection( cMarketDataCollection* pMktDataCollection )
 {
 	m_pMktDataCollection = pMktDataCollection;
-	//m_pMktDataCollection->Init( m_instrumentIDs );
-
-	//m_genLog = m_pMktDataCollection->GetGenLogFlag();
-	//if( m_genLog )
-	//{
-	//	m_logFile = m_pMktDataCollection->GetLogFileName();
-	//	m_outputDirectory = m_pMktDataCollection->GetOutputDirectory();
-	//	m_logFileFolder = m_pMktDataCollection->GetLogFolderName();
-	//}
-
-
-
 }

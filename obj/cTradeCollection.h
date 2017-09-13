@@ -19,8 +19,8 @@ public:
 
 	void Clear();
 
-	void Add( CThostFtdcTradeField* pTrade );
-	void Add( cTradePtr p_element );
+	void Add( CThostFtdcTradeField* pTrade,CThostFtdcInstrumentCommissionRateField* ,CThostFtdcInstrumentField*);
+	void Add( cTradePtr p_element ,CThostFtdcInstrumentCommissionRateField*,CThostFtdcInstrumentField*);
 	int Count() const;
 	void GetInstrumentIDs( cArray< cString >& instrumentIDs ) const;
 	void GetOrderIDs( cIvector& orderIDs ) const;
@@ -44,7 +44,7 @@ protected:
 	tradeHandle	_m_trade_handle;
 
 private:
-	void AddToMapInternal( shared_ptr< cTrade >& element );
+	void AddToMapInternal( shared_ptr< cTrade >& element ,CThostFtdcInstrumentCommissionRateField*,CThostFtdcInstrumentField*);
 };
 
 typedef shared_ptr< cTradeCollection > cTradeCollectionPtr;

@@ -10,8 +10,7 @@
 #include <cTradingPlatform.h>
 
 
-//
-#include <FuturesCNUtils.h>
+
 //
 #include <autotrade_config.h>
 

@@ -70,11 +70,16 @@ public:
 
 	virtual void OnRtnTrade( CThostFtdcTradeField* pTrade);
 
+	//请求查询合约手续费率响应
+	virtual void OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) ;
+
+
 	void RegisterPositionCollection( cPositionCollectionPtr p );
 	void RegisterOrderCollection( cOrderCollectionPtr p );
 	void RegisterTradeCollection( cTradeCollectionPtr p );
 	void RegisterSubscribeInstList(shared_ptr<vector<string>> p);
 	void RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>* p );
+	void RegisterInstCommissionMap(map<string,CThostFtdcInstrumentCommissionRateField*>*p);
 	void ReqQryInstrument();
 
 	void ReqQryInstrument_all();
@@ -93,6 +98,8 @@ public:
 	void ReqOrderInsert( cOrder* pOrder );
 
 	void ReqOrderAction( shared_ptr<cOrder> pOrder );
+
+	void ReqQryInstrumentCommissionRate();
 
 	void Close();
 
@@ -151,6 +158,9 @@ private:
 	// Instrument detail Message Map	
 	map<string, CThostFtdcInstrumentField*>* m_InstMeassageMap;
 
+	//
+	map<string,CThostFtdcInstrumentCommissionRateField*>*m_pInstCommissionMap;
+
 	void ReqUserLogin();
 	void ReqSettlementInfoConfirm();
 	bool IsErrorRspInfo( CThostFtdcRspInfoField* pRspInfo );
@@ -189,6 +199,13 @@ private:
 
 	CThostFtdcMdApi* m_pMDUserApi_td;
 	double m_accountMargin;
+
+	fstream m_output;
+	string m_tradeDay;
+	bool m_qryStatus;
+
+	///
+	map<string,CThostFtdcInstrumentField*>::iterator m_itMap;
 };
 
 typedef int (*ccbf_secureApi_LoginTrader)(CThostFtdcTraderApi* ctp_futures_pTraderApi, TThostFtdcBrokerIDType brokeId, TThostFtdcUserIDType userId, char* pChar_passwd, int& ctp_futures_requestId);

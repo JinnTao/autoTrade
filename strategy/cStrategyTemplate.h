@@ -8,10 +8,9 @@ public:
 	cStrategyTemplate(string strategyName);
 
 	~cStrategyTemplate(void);
+	virtual void init();
 
-	virtual void onInit();
-
-	virtual void onStart();
+	virtual void run();
 
 	virtual void onOrder(cOrderPtr	);
 

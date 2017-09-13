@@ -102,7 +102,7 @@ void cTraderSpi::OnRspUserLogin( CThostFtdcRspUserLoginField* pRspUserLogin, CTh
 		m_FRONT_ID = pRspUserLogin->FrontID;
 		m_SESSION_ID = pRspUserLogin->SessionID;
 		int iNextOrderRef = atoi( pRspUserLogin->MaxOrderRef );
-
+		m_tradeDay = string(pRspUserLogin->TradingDay);
 		iNextOrderRef++;
 		sprintf( m_ORDER_REF, "%d", iNextOrderRef );
 
@@ -186,7 +186,7 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 
 				Sleep(1000);
 				cerr<<"First Qry Order Success"<<endl;
-				ReqQryTrade();
+				ReqQryInvestorPositionDetail();
 
 				SetEvent(g_hEvent);
 
@@ -202,46 +202,15 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 			m_first_inquiry_order = false;
 			Sleep(1000);
 			cerr<<"Error or no order"<<endl;
-			ReqQryTrade();
-		}
-
-	}
-
-
-}
-
-void cTraderSpi::ReqQryTrade(){
-	CThostFtdcQryTradeField req;
-	memset(&req, 0, sizeof(req));
-
-	strcpy(req.InvestorID, this->m_investorID);//投资者代码
-
-	int iResult = m_pUserTraderApi->ReqQryTrade(&req, ++iRequestID);
-
-	char message[256];
-	sprintf( message, "%s:called cTraderSpi::ReqQryTrade: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
-	cout << message << endl;
-}
-
-void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){
-	if (!IsErrorRspInfo(pRspInfo) && pTrade){
-		this->m_tradeCollection->Add(pTrade);
-		if(bIsLast){
-			cerr<<"--------------------------------------------------------------------Trade list start"<<endl;
-			this->m_tradeCollection->PrintAll();
-			cerr<<"--------------------------------------------------------------------Trade list end"<<endl;
-			Sleep(1000);
 			ReqQryInvestorPositionDetail();
-			SetEvent(g_hEvent);
 		}
-	}else{
-		cerr<<"Error or no trade"<<endl;
-		Sleep(1000);
-		ReqQryInvestorPositionDetail();
+
 	}
 
+
 }
- 
+
+
 //request Query Investor posistion Detail
 void cTraderSpi::ReqQryInvestorPositionDetail()
 {
@@ -505,19 +474,36 @@ void cTraderSpi::OnRspQryInstrument( CThostFtdcInstrumentField* pInstrument, CTh
 			memcpy(instField,pInstrument, sizeof(CThostFtdcInstrumentField));
 			m_InstMeassageMap->insert(pair<string, CThostFtdcInstrumentField*> (instField->InstrumentID, instField));
 
-
 			//saveInstrumentField(pInstrument);
 
 			if(bIsLast)
 			{
+
 				m_first_inquiry_Instrument = false;
-
-
-				cout<<"Trade Init Finish, start up MD:"<<endl;
-
-				m_pMDUserApi_td->Init();
-
+				Sleep(1000);
 				SetEvent(g_hEvent);
+				m_itMap = m_InstMeassageMap->begin();
+				//First Start up
+				m_output.open("output/" + string(m_investorID)  + "_" + m_tradeDay + "_commission.txt", ios::_Nocreate | ios::in) ;
+				if(m_output){
+					while(!m_output.eof()){
+						//get Instrument List
+						CThostFtdcInstrumentCommissionRateField* instField = new CThostFtdcInstrumentCommissionRateField();
+						m_output >> instField->InstrumentID  >>
+							instField->CloseRatioByMoney		>>instField->CloseRatioByVolume>>
+							instField->CloseTodayRatioByMoney	>>instField->CloseTodayRatioByVolume>>
+							instField->OpenRatioByMoney			>>instField->OpenRatioByVolume ;
+						m_pInstCommissionMap->insert(pair<string, CThostFtdcInstrumentCommissionRateField*> (instField->InstrumentID, instField));
+					}
+
+					if(m_pInstCommissionMap->size()>10){
+						ReqQryTrade();
+						return;
+					}
+					
+				}
+				m_output.open("output/" + string(m_investorID)   + "_" + m_tradeDay + "_commission.txt", ios::app|ios::out) ;
+				ReqQryInstrumentCommissionRate();
 
 			}
 
@@ -525,6 +511,105 @@ void cTraderSpi::OnRspQryInstrument( CThostFtdcInstrumentField* pInstrument, CTh
 
 
 
+	}
+
+}
+void cTraderSpi::ReqQryInstrumentCommissionRate(){
+
+	CThostFtdcQryInstrumentCommissionRateField req;
+	memset(&req, 0, sizeof(req));
+	strcpy(req.InvestorID, m_investorID);//investor Id
+	strcpy(req.BrokerID, m_brokerID);//broker Id
+	strcpy(req.InstrumentID, m_itMap->second->InstrumentID);
+	int iResult = m_pUserTraderApi->ReqQryInstrumentCommissionRate(&req, ++iRequestID);
+	cerr << cSystem::GetCurrentTimeBuffer() <<" Qry:" << req.InstrumentID << (( iResult == 0 ) ? "Success" : "Fail") << endl;
+
+
+}
+
+void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+	
+	if(!IsErrorRspInfo(pRspInfo) && pInstrumentCommissionRate )
+	{
+			//save all instrument message map
+			CThostFtdcInstrumentCommissionRateField* instField = new CThostFtdcInstrumentCommissionRateField();
+			memcpy(instField,pInstrumentCommissionRate, sizeof(CThostFtdcInstrumentCommissionRateField));
+			m_pInstCommissionMap->insert(pair<string, CThostFtdcInstrumentCommissionRateField*> (m_itMap->second->InstrumentID, instField));
+			m_output << m_itMap->second->InstrumentID<<" "  <<
+				instField->CloseRatioByMoney<<" "		<<instField->CloseRatioByVolume<<" "<<
+				instField->CloseTodayRatioByMoney<<" "	<<instField->CloseTodayRatioByVolume<<" "<<
+				instField->OpenRatioByMoney<<" "			<<instField->OpenRatioByVolume << endl;
+			if(bIsLast){
+				Sleep(1000);
+				SetEvent(g_hEvent);
+				m_itMap++;
+				while(m_itMap != this->m_InstMeassageMap->end() && (string(m_itMap->second->InstrumentID).size() < 4 || string(m_itMap->second->InstrumentID).size() > 8 )){
+					cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
+					m_itMap++;
+				}
+				if(m_itMap != this->m_InstMeassageMap->end()){
+				//if(m_pInstCommissionMap->size() < 10){
+					ReqQryInstrumentCommissionRate();
+				}
+				else{
+					ReqQryTrade();
+				}
+			}
+	}
+	else
+	{
+		Sleep(1000);
+		SetEvent(g_hEvent);
+		cerr << "OnRsp::error" << endl;
+		m_itMap++;
+		while(m_itMap != this->m_InstMeassageMap->end() &&( string(m_itMap->second->InstrumentID).size() < 4 || string(m_itMap->second->InstrumentID).size() > 8 )){
+			cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
+			m_itMap++;
+
+		}
+		if(m_itMap != this->m_InstMeassageMap->end()){
+			ReqQryInstrumentCommissionRate();
+		}
+		else{
+			ReqQryTrade();
+		}
+	}
+}
+
+void cTraderSpi::ReqQryTrade(){
+	m_output.close();
+	CThostFtdcQryTradeField req;
+	memset(&req, 0, sizeof(req));
+
+	strcpy(req.InvestorID, this->m_investorID);//
+
+	int iResult = m_pUserTraderApi->ReqQryTrade(&req, ++iRequestID);
+
+	char message[256];
+	sprintf( message, "%s:called cTraderSpi::ReqQryTrade: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
+	cout << message << endl;
+}
+
+void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){
+	if (!IsErrorRspInfo(pRspInfo) && pTrade){
+
+		this->m_tradeCollection->Add(pTrade,this->m_pInstCommissionMap->at(pTrade->InstrumentID),this->m_InstMeassageMap->at(pTrade->InstrumentID));
+
+		if(bIsLast){
+			cerr<<"--------------------------------------------------------------------Trade list start"<<endl;
+			this->m_tradeCollection->PrintAll();
+			cerr<<"--------------------------------------------------------------------Trade list end"<<endl;
+			Sleep(500);
+			cout<<"Trade Init Finish, start up MD:"<<endl;
+			m_pMDUserApi_td->Init();
+			SetEvent(g_hEvent);
+		}
+	}else{
+		cerr<<"Error or no trade"<<endl;
+		Sleep(500);
+		cerr<<"Trade Init Finish, start up MD:"<<endl;
+		m_pMDUserApi_td->Init();
+		SetEvent(g_hEvent);
 	}
 
 }
@@ -826,7 +911,7 @@ void cTraderSpi::OnRspOrderAction( CThostFtdcInputOrderActionField* pInputOrderA
 void cTraderSpi::OnRtnTrade( CThostFtdcTradeField* pTrade )
 {
 	/* update of m_tradeCollection */
-	m_tradeCollection->Add( pTrade );
+	m_tradeCollection->Add( pTrade,m_pInstCommissionMap->at(pTrade->InstrumentID),m_InstMeassageMap->at(pTrade->InstrumentID));
 	int tradeID = atoi( pTrade->TradeID );
 	m_tradeCollection->PrintTrade( tradeID );
 
@@ -961,7 +1046,13 @@ void cTraderSpi::RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>
 
 	m_InstMeassageMap = p; 
 }
+void cTraderSpi::RegisterInstCommissionMap( map<string,CThostFtdcInstrumentCommissionRateField*>*p )
+{ 
+	if( m_pInstCommissionMap )
+		m_pInstCommissionMap = NULL;
 
+	m_pInstCommissionMap = p; 
+}
 void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol,double orderPrice){
 	TThostFtdcInstrumentIDType    instId;
 	TThostFtdcDirectionType       dir;//方向,'0'买，'1'卖

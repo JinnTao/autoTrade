@@ -1,5 +1,5 @@
 #include <cTradeCollection.h>
-
+#include <direct.h>
 cTradeCollection::cTradeCollection()
 {
 	_it = _map_trade.end();
@@ -18,18 +18,18 @@ void cTradeCollection::Clear()
 	_m_trade_handle.clear();
 }
 
-void cTradeCollection::Add( CThostFtdcTradeField* pTrade )
+void cTradeCollection::Add( CThostFtdcTradeField* pTrade,CThostFtdcInstrumentCommissionRateField *pCom ,CThostFtdcInstrumentField *pInstFiled)
 {
 	if( pTrade->Volume > 0 )
 	{
 		shared_ptr< cTrade > ptr = make_shared< cTrade >( pTrade );
-		AddToMapInternal( ptr );
+		AddToMapInternal( ptr ,pCom,pInstFiled);
 	}
 }
 
-void cTradeCollection::Add( cTradePtr p_element )
+void cTradeCollection::Add( cTradePtr p_element ,CThostFtdcInstrumentCommissionRateField*pCom,CThostFtdcInstrumentField* pInstField)
 {
-	AddToMapInternal( p_element ); 
+	AddToMapInternal( p_element,pCom ,pInstField); 
 }
 
 int cTradeCollection::Count() const
@@ -94,64 +94,12 @@ cArray< const cTrade* > cTradeCollection::GetTradeByOrder( int orderID ) const
 		return cArray< const cTrade* >();
 }
 
-void cTradeCollection::AddToMapInternal( shared_ptr< cTrade >& element )
+void cTradeCollection::AddToMapInternal( shared_ptr< cTrade >& element,CThostFtdcInstrumentCommissionRateField* pCom,CThostFtdcInstrumentField *pInstField )
 {
 	//
 	int tradeID = element->GetTradeID();
-	mapType::iterator it1 = _map_trade.find( tradeID );
-	if( it1 != _map_trade.end() )
-		(*it1).second = element;
-	else
-		_map_trade.insert( mapType::value_type( tradeID, element ) );
 	//
-	cString instrumentID = element->GetInstrumentID();
-	tradeStoreByInstrument::iterator it2 = _m_trade_instrument.find( instrumentID );
-	if( it2 == _m_trade_instrument.end() )
-	{
-		cArray< const cTrade* > v;
-		v.push_back( element.get() );
-		_m_trade_instrument.insert( tradeStoreByInstrument::value_type( instrumentID, v ) );
-	}
-	else
-	{
-		bool foundFlag = false;
-		for( int i = 0; i < (*it2).second.getSize(); ++i )
-		{
-			if( element->GetTradeID() == (*it2).second[i]->GetTradeID() )
-			{
-				foundFlag = true;
-				break;
-			}
-		}
-		if( !foundFlag )
-			(*it2).second.push_back( element.get() );
-	}
-	//
-	int orderID = element->GetOrderID();
-	tradeStoreByOrder::iterator it3 = _m_trade_order.find( orderID );
-	if( it3 == _m_trade_order.end() )
-	{
-		cArray< const cTrade* > v;
-		v.push_back( element.get() );
-		_m_trade_order.insert( tradeStoreByOrder::value_type( orderID, v ) );
-	}
-	else
-	{
-		bool foundFlag = false;
-		for( int i = 0; i < (*it3).second.getSize(); ++i )
-		{
-			if( element->GetTradeID() == (*it3).second[i]->GetTradeID() )
-			{
-				foundFlag = true;
-				break;
-			}
-		}
-		if( !foundFlag )
-			(*it3).second.push_back( element.get() );
-	}
-
-	//
-	//
+	element->setCommission(pCom,pInstField);
 	tradeHandle::iterator it = _m_trade_handle.find( tradeID );
 	if( it == _m_trade_handle.end() )
 		_m_trade_handle.insert( tradeHandle::value_type( tradeID, element ) );
@@ -164,9 +112,29 @@ void cTradeCollection::PrintAll() const
 	tradeHandle::const_iterator it;
 	if (_m_trade_handle.size() == 0){
 		cerr << "  No trade List" << endl;
+		return ;
 	}
-	for( it = _m_trade_handle.begin(); it != _m_trade_handle.end(); ++it )
+	_mkdir("output//tradeList");
+	ofstream output;
+	string s_userId =  (*_m_trade_handle.begin()).second->GetAccountID();
+	string date =  (*_m_trade_handle.begin()).second->GetTradeDate();
+	output.open("output/tradeList/" + s_userId  + "_" + date + ".csv", ios::ate) ;
+	output <<"合约"<<","<< "日期"<< "," << "时间"<< "," << "方向"<< "," << "标志"<< "," << "成交笔数"<< ","<< "成交价格"<< ","<< "手续费"<< endl;
+	for( it = _m_trade_handle.begin(); it != _m_trade_handle.end(); ++it ){
 		(*it).second->Print();
+		output
+		<<(*it).second->GetInstrumentID()<< "," 
+		<< (*it).second->GetTradeDate()<< ","
+		<< (*it).second->GetTradeTime() <<","
+		<< ((*it).second->GetDirection()=='0'?"买":"卖" )<< ","
+		<<((*it).second->GetOffsetFlag()=='0'?"开仓":"平仓" )<< ","
+		<<  (*it).second->GetVolume() << ","
+		<< (*it).second->GetPrice()<<","
+		<< (*it).second->GetCommission()
+		<<endl;
+
+	}
+	output.close();
 }
 
 void cTradeCollection::PrintTrade( int tradeID )

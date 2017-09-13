@@ -12,7 +12,7 @@ class cTraderSpi;
 #include <cOrderCollection.h>
 #include <cTradeCollection.h>
 #include <cPositionCollection.h>
-
+#include "cStrategyTemplate.h"
 
 class cTradingPlatform
 {
@@ -83,14 +83,18 @@ private:
 	cPositionCollectionPtr m_pPositions;
 	cOrderCollectionPtr m_pOrders;
 	cTradeCollectionPtr m_pTrades;
-	
+	// Instrument base Message
 	map<string, CThostFtdcInstrumentField*>* m_pInstMessageMap;
+	// instrument Commission Rate
+	map<string, CThostFtdcInstrumentCommissionRateField*>* m_pInstCommissionRate;
+
 	shared_ptr<vector<string>> m_pSubscribeInst;
 
 	int m_nRequestID;
 	bool m_runAutoTrade;
 	map< cString, double > m_closedPnL;
 
+	cStrategyTemplate m_strategy;
 };
 
 typedef shared_ptr< cTradingPlatform > cTradingPlatformPtr;

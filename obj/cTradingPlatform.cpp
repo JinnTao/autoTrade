@@ -3,7 +3,7 @@
 #include <cTradingPlatform.h>
 #include <cTraderSpi.h>
 #include <cTick.h>
-#include <FuturesCNUtils.h>
+
 #include <iostream>
 #include <string>
 using std::string;
@@ -49,6 +49,7 @@ cTradingPlatform::cTradingPlatform()
 	m_pTrades = make_shared< cTradeCollection >();
 	m_pSubscribeInst = make_shared<vector<string>>();
 	m_pInstMessageMap = new map<string, CThostFtdcInstrumentField*>();
+	m_pInstCommissionRate = new map<string, CThostFtdcInstrumentCommissionRateField*>();
 
 //	m_pInstMessageMap = make_shared<map<string,CThostFtdcInstrumentField*>>();
 }
@@ -69,6 +70,7 @@ void cTradingPlatform::RegisterTraderSpi( cTraderSpi* pTraderSpi )
 	m_pTraderSpi->RegisterOrderCollection( m_pOrders );
 	m_pTraderSpi->RegisterTradeCollection( m_pTrades );
 	m_pTraderSpi->RegisterInstMessageMap(m_pInstMessageMap);
+	m_pTraderSpi->RegisterInstCommissionMap(m_pInstCommissionRate);
 	m_pTraderSpi->RegisterSubscribeInstList(m_pSubscribeInst);
 	//cArray< cString > instrumentIDs;
 	//pTraderSpi->GetInstrumentIDs( instrumentIDs );
@@ -239,13 +241,12 @@ DWORD cTradingPlatform::AutoTrading()
 			//g_pUserSpi_tradeAll->ForceClose();
 		}
 		else if(str == "run")
-		{					
-			//g_strategy->set_allow_open(true);
+		{			
+			m_strategy.start();
 		}
 		else if(str == "stop")
 		{
-			cerr<<"stop:"<<endl;
-			//g_strategy->set_allow_open(false);
+			m_strategy.stop();
 		}
 		else if(str == "order"){
 			this->m_pOrders->PrintPendingOrders();
@@ -391,6 +392,9 @@ void cTradingPlatform::ClearPlatform()
 		m_pTrades->Clear();
 		m_pTrades.reset();
 	}
+	// 
+	delete this->m_pInstCommissionRate;
+	delete this->m_pInstMessageMap;
 
 }
 void cTradingPlatform::cancleOrder(string order,int seqNo){
