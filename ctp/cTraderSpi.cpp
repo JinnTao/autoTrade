@@ -67,7 +67,7 @@ void cTraderSpi::ReqUserLogin()
 		cout << message << endl;	
 
 	#else
-
+	//我们一般情况下 可以在debug模式下使用该程序，release是为了使用公司的加密解密dll 注意属性选择 无程序优化 - 多字节 同时 预处理为：WIN32;_SCL_SECURE_NO_WARNINGS
 		HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_Win32.dll"));
 		DWORD errorId = GetLastError();
 		ccbf_secureApi_LoginTrader ccbf_traderFuncInterface = (ccbf_secureApi_LoginTrader)GetProcAddress(hInst,"ccbf_secureApi_LoginTrader_After_CTP_OnConnected");
@@ -75,7 +75,7 @@ void cTraderSpi::ReqUserLogin()
 		{
 			cerr <<"Interface func error"<<endl;
 		}else{
-			int ret = ccbf_traderFuncInterface(m_pUserTraderApi,req.BrokerID,req.UserID,req.Password,iRequestID);
+			int ret = ccbf_traderFuncInterface(m_pUserTraderApi, req.BrokerID, req.UserID, req.Password, iRequestID);
 			//int ret = m_pUserApi_td->ReqUserLogin(&req, ++requestId);
 			cerr<<"Trader login request..."<<((ret == 0) ? "success" :"fail") << endl;	
 			FreeLibrary(hInst);
@@ -514,6 +514,7 @@ void cTraderSpi::OnRspQryInstrument( CThostFtdcInstrumentField* pInstrument, CTh
 	}
 
 }
+// 这种循环查询 手续费的方式：因为接口一次只能查询一个，为了方便，查询出来的结果 保存到txt中，第二次启动时直接从文件读取，速度就快很多，但是第一次查询需要花费10Min
 void cTraderSpi::ReqQryInstrumentCommissionRate(){
 
 	CThostFtdcQryInstrumentCommissionRateField req;
@@ -543,6 +544,7 @@ void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommission
 				Sleep(1000);
 				SetEvent(g_hEvent);
 				m_itMap++;
+				// 为了过滤组合合约 比如 XX-SR801&SR803 这个没必要查询手续费了。
 				while(m_itMap != this->m_InstMeassageMap->end() && (string(m_itMap->second->InstrumentID).size() < 4 || string(m_itMap->second->InstrumentID).size() > 8 )){
 					cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
 					m_itMap++;
