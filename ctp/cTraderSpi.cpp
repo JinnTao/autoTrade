@@ -103,6 +103,7 @@ void cTraderSpi::OnRspUserLogin( CThostFtdcRspUserLoginField* pRspUserLogin, CTh
 		m_SESSION_ID = pRspUserLogin->SessionID;
 		int iNextOrderRef = atoi( pRspUserLogin->MaxOrderRef );
 		m_tradeDay = string(pRspUserLogin->TradingDay);
+		m_actionDay = cSystem::GetCurrentDayBuffer();
 		iNextOrderRef++;
 		sprintf( m_ORDER_REF, "%d", iNextOrderRef );
 
@@ -521,6 +522,19 @@ void cTraderSpi::ReqQryInstrumentCommissionRate(){
 	memset(&req, 0, sizeof(req));
 	strcpy(req.InvestorID, m_investorID);//investor Id
 	strcpy(req.BrokerID, m_brokerID);//broker Id
+	//cout << m_itMap->second->ExpireDate << " " << m_actionDay << (string(m_itMap->second->ExpireDate) == m_actionDay) << " " << string(m_itMap->second->InstrumentID).size() << endl;
+	//system("pause");
+	// 为了过滤组合合约 比如 XX-SR801&SR803 这个没必要查询手续费了。 交割日为当日的合约 查询会error，忽略
+	while (m_itMap != this->m_InstMeassageMap->end() &&
+		(string(m_itMap->second->ExpireDate) == m_actionDay ||
+		(!isValidInsturment(string(m_itMap->second->InstrumentID))))){
+		cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
+		m_itMap++;
+	}
+	// over QryTrade；
+	if (m_itMap == this->m_InstMeassageMap->end()){
+		ReqQryTrade();
+	}
 	strcpy(req.InstrumentID, m_itMap->second->InstrumentID);
 	int iResult = m_pUserTraderApi->ReqQryInstrumentCommissionRate(&req, ++iRequestID);
 	cerr << cSystem::GetCurrentTimeBuffer() <<" Qry:" << req.InstrumentID << (( iResult == 0 ) ? "Success" : "Fail") << endl;
@@ -544,11 +558,7 @@ void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommission
 				Sleep(1000);
 				SetEvent(g_hEvent);
 				m_itMap++;
-				// 为了过滤组合合约 比如 XX-SR801&SR803 这个没必要查询手续费了。
-				while(m_itMap != this->m_InstMeassageMap->end() && (string(m_itMap->second->InstrumentID).size() < 4 || string(m_itMap->second->InstrumentID).size() > 8 )){
-					cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
-					m_itMap++;
-				}
+				
 				if(m_itMap != this->m_InstMeassageMap->end()){
 				//if(m_pInstCommissionMap->size() < 10){
 					ReqQryInstrumentCommissionRate();
@@ -564,11 +574,6 @@ void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommission
 		SetEvent(g_hEvent);
 		cerr << "OnRsp::error" << endl;
 		m_itMap++;
-		while(m_itMap != this->m_InstMeassageMap->end() &&( string(m_itMap->second->InstrumentID).size() < 4 || string(m_itMap->second->InstrumentID).size() > 8 )){
-			cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
-			m_itMap++;
-
-		}
 		if(m_itMap != this->m_InstMeassageMap->end()){
 			ReqQryInstrumentCommissionRate();
 		}
@@ -1235,4 +1240,15 @@ bool cTraderSpi::subscribeInst(TThostFtdcInstrumentIDType instrumentName,bool su
 	}
 	return true;
 }
-///  cancle order
+
+
+bool cTraderSpi::isValidInsturment(string inst){
+
+	char cstr[] = "cu1709";
+	std::regex pattern("[a-zA-Z]{1,2}[0-9]{3,4}");
+	std::match_results<std::string::const_iterator> result;
+	bool valid = regex_match(inst, result, pattern);
+
+	return valid;
+
+}

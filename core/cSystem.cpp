@@ -56,6 +56,19 @@ string cSystem::GetCurrentTimeBuffer()
 	return string( time_buf );
 }
 
+string cSystem::GetCurrentDayBuffer()
+{
+	char time_buf[256];
+	time_t now;
+	struct tm * timeinfo;
+
+	time(&now);
+	timeinfo = localtime(&now);
+
+	sprintf(time_buf, "%04d%02d%02d", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday);
+
+	return string(time_buf);
+}
 int cSystem::HourNow()
 {
 	struct tm* timeinfo = GetTime();

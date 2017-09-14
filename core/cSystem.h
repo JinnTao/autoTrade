@@ -12,6 +12,7 @@ public:
 	static void Sleep( size_t delay );		// delay in milliseconds
 	static struct tm* GetTime();
 	static string GetCurrentTimeBuffer();
+	static string GetCurrentDayBuffer();
 	static string GetTimeHMS();
 	static int GetGregorianDateToday();
 	static string TimeNow();

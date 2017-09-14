@@ -7,7 +7,7 @@
 #include <cTradeCollection.h>
 #include <cOrderCollection.h>
 #include <cMdSpi.h>
-
+#include <regex> // ÕýÔò
 using namespace std;
 extern int iRequestID;
 class cString;
@@ -127,6 +127,8 @@ public:
 
 	bool subscribeInst(TThostFtdcInstrumentIDType instrumentName,bool tag);
 
+	bool isValidInsturment(string inst);
+
 private:
 	CThostFtdcTraderApi* m_pUserTraderApi;
 	cArray< cString > m_instrumentIDs;
@@ -202,6 +204,7 @@ private:
 
 	fstream m_output;
 	string m_tradeDay;
+	string m_actionDay;
 	bool m_qryStatus;
 
 	///
