@@ -6,6 +6,7 @@
 #include <map>
 #include <cSystem.h>
 #include <ThostFtdcMdApi.h>
+
 //
 struct sATGeneralConfig
 {
