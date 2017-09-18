@@ -9,6 +9,7 @@ public:
 
 	~cStrategyTemplate(void);
 	virtual void init();
+	virtual void unInit();
 
 	virtual void run();
 
@@ -18,6 +19,12 @@ public:
 
 private:
 
+	vector<double> m_open;
+	vector<double> m_high;
+	vector<double> m_low;
+	vector<double> m_close;
+	vector<double> m_volume;
 
+	double *m_buffer;
 };
 

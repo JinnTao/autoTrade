@@ -12,7 +12,7 @@
 
 using namespace std;
 enum DataFrequency{D1,H1,M15,M5,M1,Tick};
-enum DataType{Close,High,Low};
+enum DataType{Close,High,Low,Open};
 
 class cMarketData
 {

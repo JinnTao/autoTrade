@@ -13,12 +13,32 @@
 #include <cPositionCollection.h>
 #include <cOrderCollection.h>
 #include "cthread.h"
-
+#include "ta_libc.h"
 #include "cTraderSpi.h"
 #include "cMdSpi.h"
 
 
-
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd.lib")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdr.lib.lib")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
+//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
 //
 class cStrategy
 {
@@ -34,7 +54,9 @@ public:
 	
 	virtual ~cStrategy();
 
-	virtual void init(){};
+	virtual void init();
+
+	virtual void unInit();
 
 	void start();
 
@@ -54,9 +76,9 @@ protected:
 	// base collection
 	cPositionCollectionPtr m_pPositionC;
 	cOrderCollectionPtr m_pOrderC;
-	cMarketDataCollectionPtr m_mc;
+	cMarketDataCollectionPtr m_marketData;
 	cTradeCollectionPtr m_tradeC;
-
+	
 	// base mdptr tdptr
 	cTraderSpi* m_pTradeSpi;
 	cMdSpi* m_pMdSpi;

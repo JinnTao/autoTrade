@@ -60,7 +60,8 @@ public:
 	bool getSatus(){return this->m_status;}
 
 	void SubscribeMarketData(char *instIdList);
-	void cMdSpi::SubscribeMarketData(shared_ptr<vector<string>> instList);
+	void SubscribeMarketData(shared_ptr<vector<string>> instList);
+	void SubscribeMarketData(string inst);
 private:
 	void ReqUserLogin();
 

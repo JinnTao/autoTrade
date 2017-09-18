@@ -458,6 +458,10 @@ void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,
 		p = this->m_pMarketDataEngine->GetMarketDataHandle(inst);
 		if(p) {
 			 lastprice = p->getLastMarketData().LastPrice;
+		}else{
+			cerr << "Inst Error" << endl;
+			this->m_pMdSpi->SubscribeMarketData(inst);
+			return;
 		}
 		switch (eDire)
 		{

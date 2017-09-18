@@ -30,12 +30,20 @@ void cStrategy::stop(){
 
 
 DWORD cStrategy::AutoTrading(){
+	init();
 	while(this->m_status){
-		
 		this->run();
 		Sleep(this->m_timeSpan);
 
 	}
+	unInit();
 	return 0;
 
 }
+void cStrategy::init(){
+	cerr << this->m_strategyName << " init" << endl;
+};
+
+void cStrategy::unInit(){
+		cerr << this->m_strategyName << " unInit" << endl;
+};

@@ -159,7 +159,15 @@ void cMdSpi::SubscribeMarketData(char *instIdList)
 
 	SetEvent(g_hEvent);
 }
+void cMdSpi::SubscribeMarketData(string inst)
+{
+	char p[50];
 
+	memset(p,0,50);
+	strcpy_s(p,sizeof(inst),inst.c_str());
+	SubscribeMarketData(p);
+
+}
 
 void cMdSpi::SubscribeMarketData(shared_ptr<vector<string>> instList)
 {
