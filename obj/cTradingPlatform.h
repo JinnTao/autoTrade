@@ -26,6 +26,7 @@ public:
 
 	void RegisterStrategy( cStrategyPtr pStrategy );
 	
+	void initStrategy();
 	//
 	/* send orders */
 	void SendNewOrders( const cString& instrumentID );

@@ -22,7 +22,7 @@ public:
 	~cMarketData();
 	// get methods
 	string GetID() const { return m_id; }
-	CThostFtdcDepthMarketDataField getLastMarketData(){return m_lastMarketData;};
+	CThostFtdcDepthMarketDataField* getLastMarketData(){return &m_lastMarketData;};
 	vector<CThostFtdcDepthMarketDataField> getMarketDepthSeries(){return m_marketDepthVector;}
 	vector<double>	getMarketLastSeries(){return m_lastPriceSeries;}
 

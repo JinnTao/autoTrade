@@ -211,6 +211,18 @@ void cTradingPlatform::CancelPendingOrder( int orderID )
 	//}
 }
 
+void cTradingPlatform::initStrategy(){
+	this->m_strategy.RegisterMarketDataCollection(this->m_pMarketDataEngine);
+	this->m_strategy.RegisterTradeSpi(this->m_pTraderSpi);
+	this->m_strategy.RegisterMdSpi(this->m_pMdSpi);
+	this->m_strategy.RegisterPositionCollectionPtr(this->m_pPositions);
+	this->m_strategy.RegisterOrderCollectionPtr(this->m_pOrders);
+	this->m_strategy.RegisterTradeCollectionPtr(this->m_pTrades);
+
+
+
+}
+
 DWORD cTradingPlatform::AutoTrading()
 {
 
@@ -219,7 +231,8 @@ DWORD cTradingPlatform::AutoTrading()
 	int vol, mark = 0,orderNo;
 	cerr<<"--------------------Human-computer interaction function Start--------------------------------"<<endl;
 	cerr<<endl<<"OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancle seqNo£º";
-	
+	//init strategy 
+	initStrategy();
 	//initial subcribe instrument
 	this->m_pMdSpi->SubscribeMarketData(this->m_pSubscribeInst);
 	while(true)
@@ -457,7 +470,7 @@ void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,
 		double lastprice = 0;
 		p = this->m_pMarketDataEngine->GetMarketDataHandle(inst);
 		if(p) {
-			 lastprice = p->getLastMarketData().LastPrice;
+			 lastprice = p->getLastMarketData()->LastPrice;
 		}else{
 			cerr << "Inst Error" << endl;
 			this->m_pMdSpi->SubscribeMarketData(inst);

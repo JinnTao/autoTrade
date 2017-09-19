@@ -16,6 +16,8 @@
 #include "ta_libc.h"
 #include "cTraderSpi.h"
 #include "cMdSpi.h"
+#include "cDateTime.h"
+#include "cSystem.h"
 
 
 //#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd.lib")
@@ -70,18 +72,25 @@ public:
 
 
 	// ***************************************************************************
-	void RegisterMarketDataCollection( cMarketDataCollectionPtr p );
+	void RegisterMarketDataCollection( cMarketDataCollectionPtr p ){m_marketData = p;}
+	void RegisterTradeSpi(cTraderSpi *p){m_pTradeSpi = p;}
+	void RegisterMdSpi(cMdSpi *p){m_pMdSpi = p;}
+	void RegisterPositionCollectionPtr(cPositionCollectionPtr p){m_pPositionC = p;};
+	void RegisterOrderCollectionPtr(cOrderCollectionPtr p){m_pOrderC = p;}
+	void RegisterTradeCollectionPtr(cTradeCollectionPtr p){m_pTradeC = p;}
 
 protected:
 	// base collection
-	cPositionCollectionPtr m_pPositionC;
-	cOrderCollectionPtr m_pOrderC;
 	cMarketDataCollectionPtr m_marketData;
-	cTradeCollectionPtr m_tradeC;
-	
 	// base mdptr tdptr
 	cTraderSpi* m_pTradeSpi;
 	cMdSpi* m_pMdSpi;
+
+	cPositionCollectionPtr m_pPositionC;
+	cOrderCollectionPtr m_pOrderC;
+
+	cTradeCollectionPtr m_pTradeC;
+	
 
 	// run status;
 	bool m_status;

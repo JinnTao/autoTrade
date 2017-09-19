@@ -50,7 +50,7 @@ void cMarketDataCollection::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField
 		md->OnRtnDepthMarketData( pDepthMarketData );
 	}
 }
-void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,string endDate,DataFrequency dataFrequency,DataType dataType,vector<double>& open,vector<double> &high,vector<double> &low,vector<double> &close,vector<double> &volume){
+void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,string endDate,DataFrequency dataFrequency,DataType dataType,vector<double>& open,vector<double> &high,vector<double> &low,vector<double> &close,vector<double> &volume,int length){
 	try{
 		fstream dataFile;
 		string fileName = startDate;
@@ -68,6 +68,9 @@ void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,strin
 				low.push_back(dLow);
 				close.push_back(dClose);
 				volume.push_back(dVolume);
+				if(open.size() >= length){
+					break;
+				}
 			}
 			dataFile.close();	
 		}

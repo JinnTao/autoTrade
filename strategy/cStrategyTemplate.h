@@ -12,6 +12,7 @@ public:
 	virtual void unInit();
 
 	virtual void run();
+	void on1MBar();
 
 	virtual void onOrder(cOrderPtr	);
 
@@ -26,5 +27,15 @@ private:
 	vector<double> m_volume;
 
 	double *m_buffer;
+
+	int m_candleMinute;
+
+	double m_lastOpen;
+	double m_lastHigh;
+	double m_lastLow;
+	double m_lastClose;
+	double m_lastVolume;
+
+	string m_inst;
 };
 
