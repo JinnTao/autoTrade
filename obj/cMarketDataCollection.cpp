@@ -50,6 +50,7 @@ void cMarketDataCollection::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField
 		md->OnRtnDepthMarketData( pDepthMarketData );
 	}
 }
+
 void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,string endDate,DataFrequency dataFrequency,DataType dataType,vector<double>& open,vector<double> &high,vector<double> &low,vector<double> &close,vector<double> &volume,int length){
 	try{
 		fstream dataFile;

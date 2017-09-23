@@ -34,7 +34,7 @@ void cStrategyTemplate::onTrade(cTradePtr p){
 }
 void cStrategyTemplate::run(){
 	if(this->m_marketData->GetMarketDataHandle(m_inst)){
-		CThostFtdcDepthMarketDataField* plastData = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
+		CThostFtdcDepthMarketDataField lastData = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
 		int tickMinute = cDateTime(cSystem::GetCurrentTimeBuffer().c_str()).Second();
 		// new Candle
 		if(tickMinute != m_candleMinute){
@@ -47,18 +47,18 @@ void cStrategyTemplate::run(){
 				m_volume.push_back(m_lastVolume);
 			}
 			on1MBar();
-			m_lastOpen = plastData->LastPrice;
-			m_lastHigh = plastData->LastPrice;
-			m_lastLow = plastData->LastPrice;
-			m_lastClose = plastData->LastPrice;
-			m_lastVolume = plastData->Volume;
+			m_lastOpen = lastData.LastPrice;
+			m_lastHigh = lastData.LastPrice;
+			m_lastLow = lastData.LastPrice;
+			m_lastClose = lastData.LastPrice;
+			m_lastVolume = lastData.Volume;
 			m_candleMinute = tickMinute;// update current candle Minute
 	
 		}else{
-			m_lastHigh = max(m_lastHigh,plastData->LastPrice);
-			m_lastLow = min(m_lastLow,plastData->LastPrice);
-			m_lastClose = plastData->LastPrice;
-			m_lastVolume += plastData->Volume;
+			m_lastHigh = max(m_lastHigh, lastData.LastPrice);
+			m_lastLow = min(m_lastLow,lastData.LastPrice);
+			m_lastClose = lastData.LastPrice;
+			m_lastVolume += lastData.Volume;
 		
 		}
 	}
