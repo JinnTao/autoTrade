@@ -23,7 +23,7 @@ public:
     ~cMarketData();
     // get methods
     string GetID() const { return m_id; }
-    CThostFtdcDepthMarketDataField getLastMarketData() const;
+    CThostFtdcDepthMarketDataField getLastMarketData() ;
     vector<CThostFtdcDepthMarketDataField> getMarketDepthSeries(){return m_marketDepthVector;}
     vector<double>	getMarketLastSeries(){return m_lastPriceSeries;}
 
@@ -33,7 +33,7 @@ protected:
     vector<CThostFtdcDepthMarketDataField> m_marketDepthVector;
     vector<double> m_lastPriceSeries;
     CThostFtdcDepthMarketDataField m_lastMarketData;
-    mutex _mtx;
+    mutex _mtx;//  locks access to marketData
 private:
 };
 

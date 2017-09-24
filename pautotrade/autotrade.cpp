@@ -1,7 +1,9 @@
 #include <autotrade.h>
 #include <autotrade_config.h>
+#include "easylogging++.h"
 
-//#pragma comment(lib,"json_vc71_libmtd.lib")
+// initial easylogging
+INITIALIZE_EASYLOGGINGPP
 
 HANDLE g_hEvent;//事件句柄
 
@@ -22,7 +24,16 @@ void autotrade_trade()
 	{
 		printf( "\n" );
 		printf( "running process to automatically trade with self-defined strategies...\n" );
-		
+		//-------------------------------------easyLogging-----------------------------------------
+		el::Configurations conf("conf/easyLog.conf");
+		el::Loggers::reconfigureAllLoggers(conf);
+
+		LOG(TRACE) << "***** trace log  *****";
+		LOG(DEBUG) << "***** debug log  *****";
+		LOG(ERROR) << "***** error log  *****";
+		LOG(WARNING) << "***** warning log  *****";
+		LOG(INFO) << "***** info log  *****";
+
 		//-------------------------------------读取基本配置---------------------------------------
 		AccountParam ctpAccount;
 		mongoSetting mongoDbSetting;

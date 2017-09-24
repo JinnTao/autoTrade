@@ -31,15 +31,16 @@ cMarketData::~cMarketData()
 }
 
 
-CThostFtdcDepthMarketDataField cMarketData::getLastMarketData() const
+CThostFtdcDepthMarketDataField cMarketData::getLastMarketData() 
 {
-    lock_guard<std::mutex> guard(_mtx);
+    std::unique_lock<std::mutex> guard(_mtx);
     return m_lastMarketData;
 }
 
+
 void cMarketData::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField* pDepthMarketData )
 {
-    lock_guard<std::mutex> guard(_mtx);
+	unique_lock<std::mutex> guard(_mtx);
     CThostFtdcDepthMarketDataField marketData;
     memset(&marketData,0,sizeof(CThostFtdcDepthMarketDataField));
     //strcpy(&marketData,pDepthMarketData);
