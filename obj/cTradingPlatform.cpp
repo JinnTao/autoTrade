@@ -421,12 +421,7 @@ void cTradingPlatform::cancleOrder(string order,int seqNo){
 			}
 			this->m_pTraderSpi->ReqOrderAction(pOrder);
 		}else{
-			vector<cOrderPtr> vOrder = this->m_pOrders->GetAllOrder();
-			for(auto it = vOrder.begin();it!=vOrder.end();it++){
-				if(it->get()->IsPendingOrder()){
-					this->m_pTraderSpi->ReqOrderAction(*it);
-				}
-			}
+			this->m_pTraderSpi->cancleAllPendingOrder();
 		}
 	}
 }

@@ -17,6 +17,7 @@ cOrder::cOrder()
 ,m_sessionID( -1 )
 {
 	m_BrokerOrderSeq = 0;
+	memset(&this->m_orderField,0,sizeof(CThostFtdcOrderField));
 }
 
 cOrder::cOrder( CThostFtdcOrderField* pOrder )
@@ -38,6 +39,8 @@ cOrder::cOrder( CThostFtdcOrderField* pOrder )
 	m_frontID = pOrder->FrontID;
 	m_sessionID = pOrder->SessionID;
 	m_BrokerOrderSeq = pOrder->BrokerOrderSeq;
+
+	memccpy(&this->m_orderField,pOrder,sizeof(CThostFtdcOrderField));
 }
 
 cOrder::cOrder( const cOrder& in )

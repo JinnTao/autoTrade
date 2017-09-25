@@ -64,26 +64,30 @@ void cStrategyTemplate::run(){
 	}
 
 }
-void cStrategyTemplate::unInit(){
 
-
-}
 // 相对强弱策略
+// 策略说明 RSI > 90 卖出开仓 < 10 买入开仓;
+// 持仓多头 RSI > 50 平仓
+// 持仓空头 RSI < 50 平仓
 void cStrategyTemplate::on1MBar(){
+		// =================================================================  指标计算 =================================================
 		int outBegIdx[100]={};
 		int outNBElement [100]={};
-		double outReal[100]={};
-	
-		TA_RSI(m_open.size()-14,m_open.size()-1, &m_open[0],14,outBegIdx,outNBElement,outReal);
+		double outReal[100]={};	
+		TA_RSI(m_close.size()-14,m_close.size()-1, &m_close[0],14,outBegIdx,outNBElement,outReal);
 
+		//=============================================================取消前面所有未成交单 ==============================================
+		this->m_pTradeSpi->cancleMyPendingOrder();
 
+		// ==============================================================日志输出========================================================
 		double rsiValue = outReal[0];
 		cout << cSystem::GetCurrentTimeBuffer() << " RSI: " << rsiValue << " "<< m_lastOpen << " " << m_lastHigh << " " << m_lastLow << " " << m_lastClose << endl;
-
+		// ===========================================================下单逻辑============================================================
 		int longPos = this->m_pPositionC.get()->getHolding_long(m_inst);
 		int shortPos = this->m_pPositionC.get()->getHolding_short(m_inst);
-		int netPos = longPos - shortPos;
 
+		int netPos = longPos - shortPos;
+		
 		if(netPos == 0){
 			if(rsiValue>90){
 				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::sell,OFFSETFLAG::open,1,0);
@@ -97,10 +101,13 @@ void cStrategyTemplate::on1MBar(){
 				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::sell,OFFSETFLAG::close,1,0);
 			}
 		}else if(netPos < 0){
-		
 			if(rsiValue<50){
 				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::buy,OFFSETFLAG::close,1,0);
 			}
 		}
+}
+
+void cStrategyTemplate::unInit(){
+
 
 }

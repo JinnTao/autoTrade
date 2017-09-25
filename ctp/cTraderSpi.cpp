@@ -1252,3 +1252,21 @@ bool cTraderSpi::isValidInsturment(string inst){
 	return valid;
 
 }
+
+void cTraderSpi::cancleAllPendingOrder(){
+	vector<cOrderPtr> vOrder = this->m_orderCollection->GetAllOrder();
+	for(auto it = vOrder.begin();it!=vOrder.end();it++){
+		if(it->get()->IsPendingOrder() ){
+			this->ReqOrderAction(*it);
+		}
+	}
+}
+
+void cTraderSpi::cancleMyPendingOrder(){
+	vector<cOrderPtr> vOrder = this->m_orderCollection->GetAllOrder();
+	for(auto it = vOrder.begin();it!=vOrder.end();it++){
+		if(it->get()->IsPendingOrder() && IsMyOrder( it->get()->getOrderStruct() ) ){
+			this->ReqOrderAction(*it);
+		}
+	}
+}

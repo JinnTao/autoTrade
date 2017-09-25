@@ -129,6 +129,10 @@ public:
 
 	bool isValidInsturment(string inst);
 
+	void cancleAllPendingOrder();
+
+	void cancleMyPendingOrder();
+
 private:
 	CThostFtdcTraderApi* m_pUserTraderApi;
 	cArray< cString > m_instrumentIDs;

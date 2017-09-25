@@ -30,7 +30,7 @@ public:
 	int GetSeqNo() const { return m_BrokerOrderSeq; }
 	cTickTime GetOrderServerTime() const { return m_orderServerTime; }
 	cTickTime GetOrderLocalTime() const { return m_orderLocalTime; }
-	
+	CThostFtdcOrderField* getOrderStruct(){ return &m_orderField;}
 	//
 	/* Set Method */
 	void SetInstrumentID( const cString& id ) { m_instrumentID = id; }
@@ -103,6 +103,8 @@ private:
 	int m_frontID;
 	int m_sessionID;
 	TThostFtdcSequenceNoType m_BrokerOrderSeq;
+	CThostFtdcOrderField m_orderField;
+
 };
 
 typedef shared_ptr< cOrder > cOrderPtr;
