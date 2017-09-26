@@ -8,6 +8,8 @@
 #include <cOrderCollection.h>
 #include <cMdSpi.h>
 #include <regex> // 正则
+#include <cMarketDataCollection.h>
+
 using namespace std;
 extern int iRequestID;
 class cString;
@@ -129,9 +131,13 @@ public:
 
 	bool isValidInsturment(string inst);
 
+<<<<<<< HEAD
 	void cancleAllPendingOrder();
 
 	void cancleMyPendingOrder();
+=======
+	void RegisterMarketDataEngine(cMarketDataCollectionPtr p){ this->m_pMarketDataEngine = p;}
+>>>>>>> dev
 
 private:
 	CThostFtdcTraderApi* m_pUserTraderApi;
@@ -212,7 +218,9 @@ private:
 	bool m_qryStatus;
 
 	///
-	map<string,CThostFtdcInstrumentField*>::iterator m_itMap;
+	map<string,CThostFtdcInstrumentField*>::iterator m_itMap;// 用于查询合约
+	/// marketData
+	cMarketDataCollectionPtr m_pMarketDataEngine;
 };
 
 typedef int (*ccbf_secureApi_LoginTrader)(CThostFtdcTraderApi* ctp_futures_pTraderApi, TThostFtdcBrokerIDType brokeId, TThostFtdcUserIDType userId, char* pChar_passwd, int& ctp_futures_requestId);

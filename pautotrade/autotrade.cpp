@@ -1,7 +1,9 @@
 #include <autotrade.h>
 #include <autotrade_config.h>
+#include "easylogging++.h"
 
-//#pragma comment(lib,"json_vc71_libmtd.lib")
+// initial easylogging
+INITIALIZE_EASYLOGGINGPP
 
 HANDLE g_hEvent;//事件句柄
 
@@ -22,7 +24,11 @@ void autotrade_trade()
 	{
 		printf( "\n" );
 		printf( "running process to automatically trade with self-defined strategies...\n" );
-		
+		//-------------------------------------easyLogging-----------------------------------------
+		el::Configurations conf("conf/easyLog.conf");
+		el::Loggers::reconfigureAllLoggers(conf);
+
+
 		//-------------------------------------读取基本配置---------------------------------------
 		AccountParam ctpAccount;
 		mongoSetting mongoDbSetting;
@@ -36,7 +42,7 @@ void autotrade_trade()
 		pMdUserApi->RegisterSpi( pMdUserSpi );
 		pMdUserApi->RegisterFront( ctpAccount.mdAddress );
 
-		//-------------------------------------创建数据收集器--------------------------------------------
+		//------------------------------------- 创建数据收集器 --------------------------------------------
 		/* cMarketDataCollection */
 		cMarketDataCollectionPtr pMdEngine = make_shared< cMarketDataCollection >();
 		dynamic_cast< cMdSpi* >( pMdUserSpi )->RegisterMarketDataCollection( pMdEngine.get() );
@@ -46,10 +52,10 @@ void autotrade_trade()
 		CThostFtdcTraderApi* pTraderUserApi = CThostFtdcTraderApi::CreateFtdcTraderApi(".\\TDflow\\");
 		cTraderSpi* pTraderUserSpi = new cTraderSpi( pTraderUserApi,pMdUserSpi,pMdUserApi, ctpAccount.brokerId, ctpAccount.userId, ctpAccount.passwd );
 		pTraderUserApi->RegisterSpi((CThostFtdcTraderSpi*) pTraderUserSpi );
-		pTraderUserApi->SubscribePublicTopic( THOST_TERT_RESTART );	// subsribe public topic
+		pTraderUserApi->SubscribePublicTopic( THOST_TERT_RESTART );	// subscribe public topic
 		pTraderUserApi->SubscribePrivateTopic( THOST_TERT_QUICK );	// subscribe private topic
 		pTraderUserApi->RegisterFront( ctpAccount.tdAddress ); 
-
+		pTraderUserSpi->RegisterMarketDataEngine( pMdEngine );
 		//-----------------------------------------人机交互线程---------------------------------------------------------------------------------
 		cTradingPlatformPtr pTradingPlatform = make_shared< cTradingPlatform >();
 		pTradingPlatform->RegisterMarketDataEngine( pMdEngine );
