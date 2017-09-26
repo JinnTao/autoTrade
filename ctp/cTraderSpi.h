@@ -131,13 +131,13 @@ public:
 
 	bool isValidInsturment(string inst);
 
-<<<<<<< HEAD
+
 	void cancleAllPendingOrder();
 
 	void cancleMyPendingOrder();
-=======
+
 	void RegisterMarketDataEngine(cMarketDataCollectionPtr p){ this->m_pMarketDataEngine = p;}
->>>>>>> dev
+
 
 private:
 	CThostFtdcTraderApi* m_pUserTraderApi;
