@@ -18,6 +18,8 @@ public:
 
 	virtual void onTrade(cTradePtr );
 
+	bool isTradeTime();
+
 private:
 
 	vector<double> m_open;
@@ -35,6 +37,8 @@ private:
 	double m_lastLow;
 	double m_lastClose;
 	double m_lastVolume;
+
+	bool m_oldState;
 
 	string m_inst;
 };
