@@ -19,7 +19,6 @@
 #include "cDateTime.h"
 #include "cSystem.h"
 
-
 //#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd.lib")
 //#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdr.lib.lib")
 //#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
@@ -78,7 +77,7 @@ public:
 	void RegisterPositionCollectionPtr(cPositionCollectionPtr p){m_pPositionC = p;};
 	void RegisterOrderCollectionPtr(cOrderCollectionPtr p){m_pOrderC = p;}
 	void RegisterTradeCollectionPtr(cTradeCollectionPtr p){m_pTradeC = p;}
-
+//	void RegisterTradePlatForm(cTradingPlatform *p){m_pTradePlatform = p;}
 protected:
 	// base collection
 	cMarketDataCollectionPtr m_marketData;
@@ -91,6 +90,7 @@ protected:
 
 	cTradeCollectionPtr m_pTradeC;
 	
+	//cTradingPlatform * m_pTradePlatform;
 
 	// run status;
 	bool m_status;

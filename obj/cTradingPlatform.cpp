@@ -220,7 +220,6 @@ void cTradingPlatform::initStrategy(){
 	this->m_strategy.RegisterTradeCollectionPtr(this->m_pTrades);
 
 
-
 }
 
 DWORD cTradingPlatform::AutoTrading()
@@ -464,28 +463,6 @@ void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,
 		return;
 	}
 
-	// make market price order
-	if(orderPrice == 0){
-		cMarketData *p;
-		double lastprice = 0;
-		p = this->m_pMarketDataEngine->GetMarketDataHandle(inst);
-		if(p) {
-			 lastprice = p->getLastMarketData().LastPrice;
-		}else{
-			cerr << "Inst Error" << endl;
-			this->m_pMdSpi->SubscribeMarketData(inst);
-			return;
-		}
-		switch (eDire)
-		{
-		case buy:
-			orderPrice = lastprice + this->m_pInstMessageMap->at(inst)->PriceTick;
-			break;
-		case sell:
-			orderPrice =  lastprice - this->m_pInstMessageMap->at(inst)->PriceTick;
-			break;
-		}
-	}
 	
 	// go into order
 	this->m_pTraderSpi->insertOrder(inst,eDire,eFlag,vol,orderPrice);

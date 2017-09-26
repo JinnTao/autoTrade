@@ -28,11 +28,6 @@ void autotrade_trade()
 		el::Configurations conf("conf/easyLog.conf");
 		el::Loggers::reconfigureAllLoggers(conf);
 
-		LOG(TRACE) << "***** trace log  *****";
-		LOG(DEBUG) << "***** debug log  *****";
-		LOG(ERROR) << "***** error log  *****";
-		LOG(WARNING) << "***** warning log  *****";
-		LOG(INFO) << "***** info log  *****";
 
 		//-------------------------------------读取基本配置---------------------------------------
 		AccountParam ctpAccount;
@@ -47,7 +42,7 @@ void autotrade_trade()
 		pMdUserApi->RegisterSpi( pMdUserSpi );
 		pMdUserApi->RegisterFront( ctpAccount.mdAddress );
 
-		//-------------------------------------创建数据收集器--------------------------------------------
+		//------------------------------------- 创建数据收集器 --------------------------------------------
 		/* cMarketDataCollection */
 		cMarketDataCollectionPtr pMdEngine = make_shared< cMarketDataCollection >();
 		dynamic_cast< cMdSpi* >( pMdUserSpi )->RegisterMarketDataCollection( pMdEngine.get() );
@@ -57,10 +52,10 @@ void autotrade_trade()
 		CThostFtdcTraderApi* pTraderUserApi = CThostFtdcTraderApi::CreateFtdcTraderApi(".\\TDflow\\");
 		cTraderSpi* pTraderUserSpi = new cTraderSpi( pTraderUserApi,pMdUserSpi,pMdUserApi, ctpAccount.brokerId, ctpAccount.userId, ctpAccount.passwd );
 		pTraderUserApi->RegisterSpi((CThostFtdcTraderSpi*) pTraderUserSpi );
-		pTraderUserApi->SubscribePublicTopic( THOST_TERT_RESTART );	// subsribe public topic
+		pTraderUserApi->SubscribePublicTopic( THOST_TERT_RESTART );	// subscribe public topic
 		pTraderUserApi->SubscribePrivateTopic( THOST_TERT_QUICK );	// subscribe private topic
 		pTraderUserApi->RegisterFront( ctpAccount.tdAddress ); 
-
+		pTraderUserSpi->RegisterMarketDataEngine( pMdEngine );
 		//-----------------------------------------人机交互线程---------------------------------------------------------------------------------
 		cTradingPlatformPtr pTradingPlatform = make_shared< cTradingPlatform >();
 		pTradingPlatform->RegisterMarketDataEngine( pMdEngine );

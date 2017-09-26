@@ -1069,9 +1069,29 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 
 	//double miniChangeTick = m_instMessage_map[inst.c_str()]->PriceTick * 3; // 对手盘 最小变动价格 保证成交
 	double BuyPrice, SellPrice;// 卖出价 买入价
-	
-	BuyPrice = orderPrice;
-	SellPrice = orderPrice;
+	// make market price order
+	if(orderPrice == 0){
+		cMarketData *p;
+		double lastprice = 0;
+		p = this->m_pMarketDataEngine->GetMarketDataHandle(inst);
+		if(p) {
+			lastprice = p->getLastMarketData().LastPrice;
+		}else{
+			cerr << "Inst Error" << endl;
+			this->m_pMdSpi->SubscribeMarketData(inst);
+			return;
+		}
+		switch (dire)
+		{
+		case buy:
+			BuyPrice = lastprice + this->m_InstMeassageMap->at(inst)->PriceTick;
+			break;
+		case sell:
+			SellPrice =  lastprice - this->m_InstMeassageMap->at(inst)->PriceTick;
+			break;
+		}
+	}
+
 	
 	//开仓
 	if(flag == OFFSETFLAG::open){
