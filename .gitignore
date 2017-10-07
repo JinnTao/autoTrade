@@ -1,4 +1,4 @@
-﻿# Prerequisites
+# Prerequisites
 *.d
 
 # Compiled Object files
@@ -34,3 +34,7 @@
 # Vs2017
 /.vs
 strategy/cStrategyTemplate.cpp
+
+# config
+account.txt
+
