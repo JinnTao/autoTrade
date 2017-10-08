@@ -13,6 +13,7 @@ class cTraderSpi;
 #include <cTradeCollection.h>
 #include <cPositionCollection.h>
 #include "cStrategyTemplate.h"
+#include "autotrade_config.h"
 
 class cTradingPlatform
 {
@@ -24,9 +25,10 @@ public:
 	void RegisterMdSpi( cMdSpi* p );
 	void RegisterMarketDataEngine( cMarketDataCollectionPtr pMarketDataEngine );
 
+
 	void RegisterStrategy( cStrategyPtr pStrategy );
 	
-	void initStrategy();
+	void initStrategy(autoSetting &);
 	//
 	/* send orders */
 	void SendNewOrders( const cString& instrumentID );
@@ -94,7 +96,7 @@ private:
 	int m_nRequestID;
 	bool m_runAutoTrade;
 	map< cString, double > m_closedPnL;
-
+	// ≤ﬂ¬‘¿‡
 	cStrategyTemplate m_strategy;
 };
 

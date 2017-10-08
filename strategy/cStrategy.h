@@ -77,6 +77,7 @@ public:
 	void RegisterPositionCollectionPtr(cPositionCollectionPtr p){m_pPositionC = p;};
 	void RegisterOrderCollectionPtr(cOrderCollectionPtr p){m_pOrderC = p;}
 	void RegisterTradeCollectionPtr(cTradeCollectionPtr p){m_pTradeC = p;}
+	void RegisterTxtDir(string tradeDayDir, string oneMinuteDataDir){ m_tradeDayDir = tradeDayDir; m_oneMinuteDataDir = oneMinuteDataDir; }
 //	void RegisterTradePlatForm(cTradingPlatform *p){m_pTradePlatform = p;}
 protected:
 	// base collection
@@ -98,6 +99,10 @@ protected:
 	string m_strategyName;
 
 	int m_timeSpan;
+	//txt database dir
+	string m_tradeDayDir;
+	string m_oneMinuteDataDir;
+
 private:
 	
 	DWORD AutoTrading();

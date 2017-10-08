@@ -320,6 +320,18 @@ int IniFile::ReadInt(const string &section, const string &key, int value)
 	in >> ret;
 	return ret;
 }
+double IniFile::ReadDouble(const string &section, const string &key, double value)
+{
+	string str = ReadString(section, key, "");
+	if ("" == str)
+	{
+		return value;
+	}
+	istringstream in(str.c_str());
+	double ret = 0;
+	in >> ret;
+	return ret;
+}
 
 
 bool IniFile::WriteInt(const string &section, const string &key, int value)

@@ -87,7 +87,6 @@ struct mongoSetting
 	char mongoHost[50];// Host地址
 	int mongoPort;// 端口
 	bool mongoLogging;// 
-
 	//string m_read_contract;//合约代码
 	mongoSetting(){
 		memset(this,0,sizeof(mongoSetting));
@@ -97,7 +96,26 @@ struct mongoSetting
 	}
 };
 
-int ParseSettingJson(AccountParam&,mongoSetting&);
+struct autoSetting
+{
+	char tradeDayDir[125];// 交易日路径
+	char dataBaseDir[125];// 数据路径
+	char inst[25]; // strategy Trading Inst
+	char startDate[25];
+	char endDate[25];
+	double para1;
+	double para2;
+	double para3;
+	double para4;
+	autoSetting(){
+		memset(this, 0, sizeof(autoSetting));
+	}
+	void reset(){
+		memset(this, 0, sizeof(autoSetting));
+	}
+};
+
+int ParseSettingJson(AccountParam&,mongoSetting&,autoSetting&);
 
 
 

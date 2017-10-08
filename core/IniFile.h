@@ -11,6 +11,7 @@ public:
 	bool ReadFile(void);
 	string ReadString(const string &section, const string &key, const string &value);
 	int    ReadInt(const string &section, const string &key, int value);
+	double ReadDouble(const string &section, const string &key, double value);
 	bool WriteString(const string &section, const string &key, const string &value);
 	bool WriteInt(const string &section, const string &key, int value);
 	bool RemoveSection(const string &section);

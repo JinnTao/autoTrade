@@ -32,7 +32,8 @@ void autotrade_trade()
 		//-------------------------------------读取基本配置---------------------------------------
 		AccountParam ctpAccount;
 		mongoSetting mongoDbSetting;
-		ParseSettingJson(ctpAccount,mongoDbSetting);
+		autoSetting autoTradeSetting;
+		ParseSettingJson(ctpAccount,mongoDbSetting,autoTradeSetting);
 		
 
 		//-------------------------------------行情前置接口--------------------------------------
@@ -61,6 +62,7 @@ void autotrade_trade()
 		pTradingPlatform->RegisterMarketDataEngine( pMdEngine );
 		pTradingPlatform->RegisterTraderSpi(  pTraderUserSpi);
 		pTradingPlatform->RegisterMdSpi(pMdUserSpi);
+		pTradingPlatform->initStrategy(autoTradeSetting);
 
 		cThread< cTradingPlatform >* pTradingThread = new cThread< cTradingPlatform >( pTradingPlatform.get(), &cTradingPlatform::AutoTrading );
 

@@ -2,19 +2,29 @@
 #include <cSystem.h>
 #include "IniFile.h"
 
-int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting){  
+int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSetting &autoTradeSetting){  
 	try{
 		IniFile ini("setting.ini");
-
+		// account information
 		strcpy_s(account.brokerId,sizeof(account.brokerId), ini.ReadString("account", "brokerID", "1").c_str());
 		strcpy_s(account.tdAddress,sizeof(account.tdAddress), ini.ReadString("account", "tdAddress", "1").c_str());
 		strcpy(account.passwd, ini.ReadString("account", "password", "1").c_str());
 		strcpy_s(account.mdAddress,sizeof(account.mdAddress), ini.ReadString("account", "mdAddress", "1").c_str());
 		strcpy_s(account.userId,sizeof(account.userId), ini.ReadString("account", "userID", "1").c_str());
-
+		// mongoDB
 		strcpy_s(mongoDbSetting.mongoHost,sizeof(mongoDbSetting.mongoHost), ini.ReadString("dbMongo", "mongoHost", "1").c_str());
 		mongoDbSetting.mongoPort =  ini.ReadInt("dbMongo", "mongoPort", 1);
 		mongoDbSetting.mongoLogging = ini.ReadInt("dbMongo", "mongoLogging", 1);
+		// txt database dir
+		strcpy_s(autoTradeSetting.dataBaseDir, sizeof(autoTradeSetting.dataBaseDir), ini.ReadString("dataBase", "dataBaseDir", "1").c_str());
+		strcpy_s(autoTradeSetting.tradeDayDir, sizeof(autoTradeSetting.tradeDayDir), ini.ReadString("dataBase", "tradeDayDir", "1").c_str());
+		strcpy_s(autoTradeSetting.startDate, sizeof(autoTradeSetting.startDate), ini.ReadString("dataBase", "startDate", "1").c_str());
+		strcpy_s(autoTradeSetting.endDate, sizeof(autoTradeSetting.endDate), ini.ReadString("dataBase", "endDate", "1").c_str());
+		// strategy
+		strcpy_s(autoTradeSetting.inst, sizeof(autoTradeSetting.inst), ini.ReadString("strategy", "inst", "1").c_str());
+		autoTradeSetting.para1 = ini.ReadDouble("strategy", "para1", 1);
+		// 
+
 		return 0;
 	}
 	catch (...){

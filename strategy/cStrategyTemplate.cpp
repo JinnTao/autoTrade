@@ -10,8 +10,6 @@ cStrategyTemplate::cStrategyTemplate(){
 	m_lastVolume = -1;
 	cStrategy::cStrategy();
 
-	m_inst = "rb1801";
-
 	m_oldState = false;
 }
 cStrategyTemplate::cStrategyTemplate(string name){
@@ -21,9 +19,15 @@ cStrategyTemplate::cStrategyTemplate(string name){
 cStrategyTemplate::~cStrategyTemplate(){
 
 }
+// 在策略类中完成数据文件名字的构成
+// 1、第一步 初始化策略时候 获取交易日列表（在tradingPlatforn中）
+// 2、轮询交易日列表生成文件名列表 （在init中）
+// 3、循环文件名列表初始化策略需要的数据 （同上）
+
 void cStrategyTemplate::init(){
 	if(m_close.size() == 0){
-		this->m_marketData->loadSeriesHistory("rb","2017","2017",DataFrequency::M1,DataType::Open,m_open,m_high,m_low,m_close,m_volume,100);
+		// Start Time 
+		this->m_marketData->loadSeriesHistory(m_oneMinuteDataDir,m_startDate,m_endDate,m_open,m_high,m_low,m_close,m_volume);
 	}
 	this->m_pMdSpi->SubscribeMarketData(m_inst);// trade 1801
 }

@@ -105,6 +105,7 @@ void cTradingPlatform::RegisterMdSpi( cMdSpi* p )
 	m_pMdSpi = p;
 }
 
+
 void cTradingPlatform::RegisterMarketDataEngine( cMarketDataCollectionPtr pMarketDataEngine )
 {
 	if( m_pMarketDataEngine.get() )
@@ -211,7 +212,7 @@ void cTradingPlatform::CancelPendingOrder( int orderID )
 	//}
 }
 
-void cTradingPlatform::initStrategy(){
+void cTradingPlatform::initStrategy(autoSetting & para){
 	this->m_strategy.RegisterMarketDataCollection(this->m_pMarketDataEngine);
 	this->m_strategy.RegisterTradeSpi(this->m_pTraderSpi);
 	this->m_strategy.RegisterMdSpi(this->m_pMdSpi);
@@ -219,7 +220,9 @@ void cTradingPlatform::initStrategy(){
 	this->m_strategy.RegisterOrderCollectionPtr(this->m_pOrders);
 	this->m_strategy.RegisterTradeCollectionPtr(this->m_pTrades);
 
-
+	this->m_strategy.RegisterTxtDir(string(para.tradeDayDir), string(para.dataBaseDir));
+	this->m_strategy.setInst(string(para.inst));
+	this->m_strategy.setInitDate(para.startDate, para.endDate);
 }
 
 DWORD cTradingPlatform::AutoTrading()
@@ -230,8 +233,6 @@ DWORD cTradingPlatform::AutoTrading()
 	int vol, mark = 0,orderNo;
 	cerr<<"--------------------Human-computer interaction function Start--------------------------------"<<endl;
 	cerr<<endl<<"OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancle seqNo£º";
-	//init strategy 
-	initStrategy();
 	//initial subcribe instrument
 	this->m_pMdSpi->SubscribeMarketData(this->m_pSubscribeInst);
 	while(true)
