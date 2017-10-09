@@ -118,10 +118,10 @@ void cTrade::setCommission(CThostFtdcInstrumentCommissionRateField*pCom,CThostFt
 			m_commission = m_volume * pCom->OpenRatioByVolume + m_price * m_volume * pCom->OpenRatioByMoney * pInstField->VolumeMultiple;
 		}
 		if(m_offsetFlag == THOST_FTDC_OF_CloseToday){
-			m_commission = m_volume * pCom->CloseRatioByVolume + m_price * m_volume * pCom->CloseRatioByMoney* pInstField->VolumeMultiple;
+			m_commission = m_volume * pCom->CloseTodayRatioByVolume + m_price * m_volume * pCom->CloseTodayRatioByMoney* pInstField->VolumeMultiple;
 		}
 		if(m_offsetFlag == THOST_FTDC_OF_CloseYesterday){
-			m_commission = m_volume * pCom->CloseTodayRatioByVolume + m_price * m_volume * pCom->CloseTodayRatioByMoney* pInstField->VolumeMultiple;
+			m_commission = m_volume * pCom->CloseRatioByVolume + m_price * m_volume * pCom->CloseRatioByMoney* pInstField->VolumeMultiple;
 		}
 	}else{
 		if(m_offsetFlag == THOST_FTDC_OF_Open){
