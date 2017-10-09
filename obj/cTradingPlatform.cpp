@@ -221,8 +221,33 @@ void cTradingPlatform::initStrategy(autoSetting & para){
 	this->m_strategy.RegisterTradeCollectionPtr(this->m_pTrades);
 
 	this->m_strategy.RegisterTxtDir(string(para.tradeDayDir), string(para.dataBaseDir));
+
+	this->readDay(string(para.tradeDayDir),this->m_tradeDayList);
+	this->m_pMarketDataEngine->setTradeDayList(&this->m_tradeDayList);
+	
 	this->m_strategy.setInst(string(para.inst));
 	this->m_strategy.setInitDate(para.startDate, para.endDate);
+}
+
+void cTradingPlatform::readDay(string fileName, map<string,int> &workDay){
+	ifstream file1(fileName,ios::in);	//以只读方式读入,读取原始数据
+	char dataline[512];//行数变量
+	string date;
+	int i = 1;
+	if(!file1){
+		cout<<"no such file!"<<endl;
+		//abort();
+		return;
+	}	
+	while(file1.getline(dataline,1024,'\n'))//while开始，读取一行1024够大？
+	{
+		//sscanf_s(dataline,"%s",date);
+		date = dataline;
+		workDay.insert(pair<string,int>(date,i));
+		i++;
+		//cout << date << endl;
+
+	}
 }
 
 DWORD cTradingPlatform::AutoTrading()

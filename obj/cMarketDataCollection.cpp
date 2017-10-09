@@ -53,11 +53,24 @@ void cMarketDataCollection::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField
 // 读取历史数据
 void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,string endDate,vector<double>& open,vector<double> &high,vector<double> &low,vector<double> &close,vector<double> &volume){
 	try{
+		auto iter = this->m_pTradeDayList->find(startDate);
+		
+		vector<string> fileNameList;
+		while(iter != this->m_pTradeDayList->end()){
+			fileNameList.push_back(iter->first);
+			if(iter != this->m_pTradeDayList->find(endDate)){
+				iter++;
+			}else{
+				break;
+			}
+
+		}
+
+
 		fstream dataFile;
 		string fileName = startDate;
 		string date,time;
 		double dOpen,dHigh,dLow,dClose,dVolume;
-
 		dataFile.open("dataBase/"+ inst +"/" + fileName + "_1m.txt", ios::_Nocreate | ios::in) ;
 		if(dataFile)
 		{

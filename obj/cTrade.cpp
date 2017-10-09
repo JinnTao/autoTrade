@@ -111,25 +111,26 @@ void cTrade::Print() const
 }
 
 void cTrade::setCommission(CThostFtdcInstrumentCommissionRateField*pCom,CThostFtdcInstrumentField *pInstField){
-	
-	//上期所单独处理
-	if(m_exchange == "SHFE"){
-		if(m_offsetFlag == THOST_FTDC_OF_Open){
-			m_commission = m_volume * pCom->OpenRatioByVolume + m_price * m_volume * pCom->OpenRatioByMoney * pInstField->VolumeMultiple;
-		}
-		if(m_offsetFlag == THOST_FTDC_OF_CloseToday){
-			m_commission = m_volume * pCom->CloseTodayRatioByVolume + m_price * m_volume * pCom->CloseTodayRatioByMoney* pInstField->VolumeMultiple;
-		}
-		if(m_offsetFlag == THOST_FTDC_OF_CloseYesterday){
-			m_commission = m_volume * pCom->CloseRatioByVolume + m_price * m_volume * pCom->CloseRatioByMoney* pInstField->VolumeMultiple;
-		}
-	}else{
-		if(m_offsetFlag == THOST_FTDC_OF_Open){
-			m_commission = m_volume * pCom->OpenRatioByVolume + m_price * m_volume * pCom->OpenRatioByMoney* pInstField->VolumeMultiple;
-		}
-		if(m_offsetFlag == THOST_FTDC_OF_Close){
-			m_commission = m_volume * pCom->CloseRatioByVolume + m_price * m_volume * pCom->CloseRatioByMoney* pInstField->VolumeMultiple;
-		}
+	if(pCom != NULL){
+		//上期所单独处理
+		if(m_exchange == "SHFE"){
+			if(m_offsetFlag == THOST_FTDC_OF_Open){
+				m_commission = m_volume * pCom->OpenRatioByVolume + m_price * m_volume * pCom->OpenRatioByMoney * pInstField->VolumeMultiple;
+			}
+			if(m_offsetFlag == THOST_FTDC_OF_CloseToday){
+				m_commission = m_volume * pCom->CloseTodayRatioByVolume + m_price * m_volume * pCom->CloseTodayRatioByMoney* pInstField->VolumeMultiple;
+			}
+			if(m_offsetFlag == THOST_FTDC_OF_CloseYesterday){
+				m_commission = m_volume * pCom->CloseRatioByVolume + m_price * m_volume * pCom->CloseRatioByMoney* pInstField->VolumeMultiple;
+			}
+		}else{
+			if(m_offsetFlag == THOST_FTDC_OF_Open){
+				m_commission = m_volume * pCom->OpenRatioByVolume + m_price * m_volume * pCom->OpenRatioByMoney* pInstField->VolumeMultiple;
+			}
+			if(m_offsetFlag == THOST_FTDC_OF_Close){
+				m_commission = m_volume * pCom->CloseRatioByVolume + m_price * m_volume * pCom->CloseRatioByMoney* pInstField->VolumeMultiple;
+			}
 		
+		}
 	}
 }

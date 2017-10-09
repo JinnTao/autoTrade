@@ -600,7 +600,8 @@ void cTraderSpi::ReqQryTrade(){
 void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){
 	if (!IsErrorRspInfo(pRspInfo) && pTrade){
 
-		this->m_tradeCollection->Add(pTrade,this->m_pInstCommissionMap->at(pTrade->InstrumentID),this->m_InstMeassageMap->at(pTrade->InstrumentID));
+		auto iter = (this->m_pInstCommissionMap->find(pTrade->InstrumentID) == this->m_pInstCommissionMap->end()? NULL : this->m_pInstCommissionMap->at(pTrade->InstrumentID));
+		this->m_tradeCollection->Add(pTrade,iter,this->m_InstMeassageMap->at(pTrade->InstrumentID));
 
 		if(bIsLast){
 			cerr<<"--------------------------------------------------------------------Trade list start"<<endl;
@@ -918,7 +919,8 @@ void cTraderSpi::OnRspOrderAction( CThostFtdcInputOrderActionField* pInputOrderA
 void cTraderSpi::OnRtnTrade( CThostFtdcTradeField* pTrade )
 {
 	/* update of m_tradeCollection */
-	m_tradeCollection->Add( pTrade,m_pInstCommissionMap->at(pTrade->InstrumentID),m_InstMeassageMap->at(pTrade->InstrumentID));
+	auto iter = (this->m_pInstCommissionMap->find(pTrade->InstrumentID) == this->m_pInstCommissionMap->end()? NULL : this->m_pInstCommissionMap->at(pTrade->InstrumentID));
+	m_tradeCollection->Add( pTrade,iter,m_InstMeassageMap->at(pTrade->InstrumentID));
 	int tradeID = atoi( pTrade->TradeID );
 	m_tradeCollection->PrintTrade( tradeID );
 

@@ -77,6 +77,8 @@ public:
 	void cancleOrder(string order,int seqNo);
 	void cancleAllOrder(string order,string tag);
 
+	void readDay(string fileName, map<string,int> &workDay);
+
 private:
 	cTraderSpi*	m_pTraderSpi;
 	cMdSpi* m_pMdSpi;
@@ -98,6 +100,8 @@ private:
 	map< cString, double > m_closedPnL;
 	// ≤ﬂ¬‘¿‡
 	cStrategyTemplate m_strategy;
+	// calendar day
+	map<string,int> m_tradeDayList;
 };
 
 typedef shared_ptr< cTradingPlatform > cTradingPlatformPtr;
