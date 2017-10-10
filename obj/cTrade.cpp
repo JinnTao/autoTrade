@@ -93,16 +93,16 @@ void cTrade::Print() const
 	switch( m_offsetFlag )
 	{
 	case '0':
-		printf( "Type:Open" );
+		printf( " Type:Open" );
 		break;
 	case '1':
-		printf( "Type:Close" );
+		printf( " Type:Close" );
 		break;
 	case '3':
-		printf( "Type:CloseToday" );
+		printf( " Type:CloseToday" );
 		break;
 	case '4':
-		printf( "Type:CloseYesterday" );
+		printf( " Type:CloseYesterday" );
 		break;
 	default:
 		break;

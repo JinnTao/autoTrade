@@ -91,7 +91,7 @@ private:
 	// Instrument base Message
 	map<string, CThostFtdcInstrumentField*>* m_pInstMessageMap;
 	// instrument Commission Rate
-	map<string, CThostFtdcInstrumentCommissionRateField*>* m_pInstCommissionRate;
+	map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>>* m_pInstCommissionRate;
 
 	shared_ptr<vector<string>> m_pSubscribeInst;
 

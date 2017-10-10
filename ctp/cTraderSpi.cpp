@@ -23,7 +23,7 @@ cTraderSpi::cTraderSpi( CThostFtdcTraderApi* pUserTraderApi,cMdSpi* pUserMdSpi,C
 	m_firs_inquiry_TradingAccount = true;//是否首次查询资金账号
 	m_firs_inquiry_Position = true;//是否首次查询投资者持仓
 	m_first_inquiry_Instrument = true;//是否首次查询合约
-
+	m_first_inquiry_commissionRate = true;// 是否首次查询
 	m_closeProfit = 0.0;//平仓盈亏
 	m_OpenProfit = 0.0;//浮动盈亏
 
@@ -483,27 +483,29 @@ void cTraderSpi::OnRspQryInstrument( CThostFtdcInstrumentField* pInstrument, CTh
 				m_first_inquiry_Instrument = false;
 				Sleep(1000);
 				SetEvent(g_hEvent);
-				m_itMap = m_InstMeassageMap->begin();
-				//First Start up
-				m_output.open("output/" + string(m_investorID)  + "_" + m_tradeDay + "_commission.txt", ios::_Nocreate | ios::in) ;
-				if(m_output){
-					while(!m_output.eof()){
-						//get Instrument List
-						CThostFtdcInstrumentCommissionRateField* instField = new CThostFtdcInstrumentCommissionRateField();
-						m_output >> instField->InstrumentID  >>
-							instField->CloseRatioByMoney		>>instField->CloseRatioByVolume>>
-							instField->CloseTodayRatioByMoney	>>instField->CloseTodayRatioByVolume>>
-							instField->OpenRatioByMoney			>>instField->OpenRatioByVolume ;
-						m_pInstCommissionMap->insert(pair<string, CThostFtdcInstrumentCommissionRateField*> (instField->InstrumentID, instField));
-					}
+				//m_itMap = m_InstMeassageMap->begin();
 
-					if(m_pInstCommissionMap->size()>10){
-						ReqQryTrade();
-						return;
-					}
-					
-				}
-				m_output.open("output/" + string(m_investorID)   + "_" + m_tradeDay + "_commission.txt", ios::app|ios::out) ;
+				////First Start up
+				//m_output.open("output/" + string(m_investorID)  + "_" + m_tradeDay + "_commission.txt", ios::_Nocreate | ios::in) ;
+				//if(m_output){
+				//	while(!m_output.eof()){
+				//		//get Instrument List
+				//		CThostFtdcInstrumentCommissionRateField* instField = new CThostFtdcInstrumentCommissionRateField();
+				//		m_output >> instField->InstrumentID  >>
+				//			instField->CloseRatioByMoney		>>instField->CloseRatioByVolume>>
+				//			instField->CloseTodayRatioByMoney	>>instField->CloseTodayRatioByVolume>>
+				//			instField->OpenRatioByMoney			>>instField->OpenRatioByVolume ;
+				//		m_pInstCommissionMap->insert(pair<string, CThostFtdcInstrumentCommissionRateField*> (instField->InstrumentID, instField));
+				//	}
+
+				//	if(m_pInstCommissionMap->size()>10){
+				//		ReqQryTrade();
+				//		return;
+				//	}
+				//	
+				//}
+				//m_output.open("output/" + string(m_investorID)   + "_" + m_tradeDay + "_commission.txt", ios::app|ios::out) ;
+
 				ReqQryInstrumentCommissionRate();
 
 			}
@@ -522,22 +524,28 @@ void cTraderSpi::ReqQryInstrumentCommissionRate(){
 	memset(&req, 0, sizeof(req));
 	strcpy(req.InvestorID, m_investorID);//investor Id
 	strcpy(req.BrokerID, m_brokerID);//broker Id
+	m_pInstCommissionMap->clear();
 	//cout << m_itMap->second->ExpireDate << " " << m_actionDay << (string(m_itMap->second->ExpireDate) == m_actionDay) << " " << string(m_itMap->second->InstrumentID).size() << endl;
 	//system("pause");
 	// 为了过滤组合合约 比如 XX-SR801&SR803 这个没必要查询手续费了。 交割日为当日的合约 查询会error，忽略
-	while (m_itMap != this->m_InstMeassageMap->end() &&
-		(string(m_itMap->second->ExpireDate) == m_actionDay ||
-		(!isValidInsturment(string(m_itMap->second->InstrumentID))))){
-		cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
-		m_itMap++;
-	}
-	// over QryTrade；
-	if (m_itMap == this->m_InstMeassageMap->end()){
-		ReqQryTrade();
-	}
-	strcpy(req.InstrumentID, m_itMap->second->InstrumentID);
+
+	//while (m_itMap != this->m_InstMeassageMap->end() &&
+	//	(string(m_itMap->second->ExpireDate) == m_actionDay ||
+	//	(!isValidInsturment(string(m_itMap->second->InstrumentID))))){
+	//	cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
+	//	m_itMap++;
+	//}
+	//// over QryTrade；
+	//if (m_itMap == this->m_InstMeassageMap->end()){
+	//	ReqQryTrade();
+	//}
+	//strcpy(req.InstrumentID, m_itMap->second->InstrumentID);
 	int iResult = m_pUserTraderApi->ReqQryInstrumentCommissionRate(&req, ++iRequestID);
-	cerr << cSystem::GetCurrentTimeBuffer() <<" Qry:" << req.InstrumentID << (( iResult == 0 ) ? "Success" : "Fail") << endl;
+	if(m_first_inquiry_commissionRate){
+		m_first_inquiry_commissionRate = false;
+		cerr << cSystem::GetCurrentTimeBuffer() <<" Qry:" << req.InstrumentID << (( iResult == 0 ) ? "Success" : "Fail") << endl;
+	}
+
 
 
 }
@@ -547,39 +555,46 @@ void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommission
 	if(!IsErrorRspInfo(pRspInfo) && pInstrumentCommissionRate )
 	{
 			//save all instrument message map
-			CThostFtdcInstrumentCommissionRateField* instField = new CThostFtdcInstrumentCommissionRateField();
-			memcpy(instField,pInstrumentCommissionRate, sizeof(CThostFtdcInstrumentCommissionRateField));
-			m_pInstCommissionMap->insert(pair<string, CThostFtdcInstrumentCommissionRateField*> (m_itMap->second->InstrumentID, instField));
-			m_output << m_itMap->second->InstrumentID<<" "  <<
-				instField->CloseRatioByMoney<<" "		<<instField->CloseRatioByVolume<<" "<<
-				instField->CloseTodayRatioByMoney<<" "	<<instField->CloseTodayRatioByVolume<<" "<<
-				instField->OpenRatioByMoney<<" "			<<instField->OpenRatioByVolume << endl;
+			shared_ptr<CThostFtdcInstrumentCommissionRateField> instField = make_shared<CThostFtdcInstrumentCommissionRateField>(*pInstrumentCommissionRate);
+			m_pInstCommissionMap->insert(pair<string, shared_ptr<CThostFtdcInstrumentCommissionRateField> > (pInstrumentCommissionRate->InstrumentID, instField));
+			
+
+
+			/*m_output << m_itMap->second->InstrumentID<<" "  <<
+			instField->CloseRatioByMoney<<" "		<<instField->CloseRatioByVolume<<" "<<
+			instField->CloseTodayRatioByMoney<<" "	<<instField->CloseTodayRatioByVolume<<" "<<
+			instField->OpenRatioByMoney<<" "			<<instField->OpenRatioByVolume << endl;*/
 			if(bIsLast){
 				Sleep(1000);
 				SetEvent(g_hEvent);
-				m_itMap++;
+				ReqQryTrade();
+				//m_itMap++;
 				
-				if(m_itMap != this->m_InstMeassageMap->end()){
-				//if(m_pInstCommissionMap->size() < 10){
-					ReqQryInstrumentCommissionRate();
-				}
-				else{
-					ReqQryTrade();
-				}
+				//if(m_itMap != this->m_InstMeassageMap->end()){
+				////if(m_pInstCommissionMap->size() < 10){
+				//	ReqQryInstrumentCommissionRate();
+				//}
+				//else{
+					//ReqQryTrade();
+			//	}
 			}
 	}
 	else
 	{
+
 		Sleep(1000);
 		SetEvent(g_hEvent);
-		cerr << "OnRsp::error" << endl;
-		m_itMap++;
-		if(m_itMap != this->m_InstMeassageMap->end()){
-			ReqQryInstrumentCommissionRate();
-		}
-		else{
-			ReqQryTrade();
-		}
+		cerr << "OnRspQryInstrumentCommissionRate::error" << endl;
+		ReqQryTrade();
+		//m_itMap++;
+		//if(m_itMap != this->m_InstMeassageMap->end()){
+		//	ReqQryInstrumentCommissionRate();
+		//}
+		//else{
+		//ReqQryTrade();
+		//}
+
+
 	}
 }
 
@@ -591,6 +606,8 @@ void cTraderSpi::ReqQryTrade(){
 	strcpy(req.InvestorID, this->m_investorID);//
 
 	int iResult = m_pUserTraderApi->ReqQryTrade(&req, ++iRequestID);
+	
+	this->m_tradeCollection->Clear();
 
 	char message[256];
 	sprintf( message, "%s:called cTraderSpi::ReqQryTrade: %s.", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
@@ -601,22 +618,34 @@ void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoFi
 	if (!IsErrorRspInfo(pRspInfo) && pTrade){
 
 		auto iter = (this->m_pInstCommissionMap->find(pTrade->InstrumentID) == this->m_pInstCommissionMap->end()? NULL : this->m_pInstCommissionMap->at(pTrade->InstrumentID));
-		this->m_tradeCollection->Add(pTrade,iter,this->m_InstMeassageMap->at(pTrade->InstrumentID));
+		if(iter == NULL){
+			string instName;
+			this->isValidInsturment(pTrade->InstrumentID,instName);
+			iter = (this->m_pInstCommissionMap->find(instName) == this->m_pInstCommissionMap->end()? NULL : this->m_pInstCommissionMap->at(instName));
+		}
+		this->m_tradeCollection->Add(pTrade,iter.get(),this->m_InstMeassageMap->at(pTrade->InstrumentID));
 
 		if(bIsLast){
 			cerr<<"--------------------------------------------------------------------Trade list start"<<endl;
 			this->m_tradeCollection->PrintAll();
 			cerr<<"--------------------------------------------------------------------Trade list end"<<endl;
-			Sleep(500);
-			cout<<"Trade Init Finish, start up MD:"<<endl;
-			m_pMDUserApi_td->Init();
+			if(m_first_inquiry_trade){
+				m_first_inquiry_trade = false;
+				Sleep(500);
+				cout<<"Trade Init Finish, start up MD:"<<endl;
+				m_pMDUserApi_td->Init();
+			}
+
 			SetEvent(g_hEvent);
 		}
 	}else{
 		cerr<<"Error or no trade"<<endl;
-		Sleep(500);
-		cerr<<"Trade Init Finish, start up MD:"<<endl;
-		m_pMDUserApi_td->Init();
+		if(m_first_inquiry_trade){
+			m_first_inquiry_trade = false;
+			Sleep(500);
+			cerr<<"Trade Init Finish, start up MD:"<<endl;
+			m_pMDUserApi_td->Init();
+		}
 		SetEvent(g_hEvent);
 	}
 
@@ -920,7 +949,7 @@ void cTraderSpi::OnRtnTrade( CThostFtdcTradeField* pTrade )
 {
 	/* update of m_tradeCollection */
 	auto iter = (this->m_pInstCommissionMap->find(pTrade->InstrumentID) == this->m_pInstCommissionMap->end()? NULL : this->m_pInstCommissionMap->at(pTrade->InstrumentID));
-	m_tradeCollection->Add( pTrade,iter,m_InstMeassageMap->at(pTrade->InstrumentID));
+	m_tradeCollection->Add( pTrade,iter.get(),m_InstMeassageMap->at(pTrade->InstrumentID));
 	int tradeID = atoi( pTrade->TradeID );
 	m_tradeCollection->PrintTrade( tradeID );
 
@@ -1055,7 +1084,7 @@ void cTraderSpi::RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>
 
 	m_InstMeassageMap = p; 
 }
-void cTraderSpi::RegisterInstCommissionMap( map<string,CThostFtdcInstrumentCommissionRateField*>*p )
+void cTraderSpi::RegisterInstCommissionMap( map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>>*p )
 { 
 	if( m_pInstCommissionMap )
 		m_pInstCommissionMap = NULL;
@@ -1070,7 +1099,7 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 	strcpy(instId,inst.c_str());
 
 	//double miniChangeTick = m_instMessage_map[inst.c_str()]->PriceTick * 3; // 对手盘 最小变动价格 保证成交
-	double BuyPrice, SellPrice;// 卖出价 买入价
+	double BuyPrice = orderPrice, SellPrice = orderPrice;// 卖出价 买入价
 	// make market price order
 	if(orderPrice == 0){
 		cMarketData *p;
@@ -1264,13 +1293,18 @@ bool cTraderSpi::subscribeInst(TThostFtdcInstrumentIDType instrumentName,bool su
 }
 
 
-bool cTraderSpi::isValidInsturment(string inst){
+bool cTraderSpi::isValidInsturment(string inst,string& instName){
 
-	char cstr[] = "cu1709";
 	std::regex pattern("[a-zA-Z]{1,2}[0-9]{3,4}");
-	std::match_results<std::string::const_iterator> result;
-	bool valid = regex_match(inst, result, pattern);
 
+	std::match_results<std::string::const_iterator> result;
+
+	bool valid = regex_match(inst, result, pattern);
+	char instCName[3]= {};
+	if(valid){
+		sscanf(inst.c_str(),"%[a-zA-Z]{1,2}",instCName);
+	}
+	instName = string(instCName);
 	return valid;
 
 }

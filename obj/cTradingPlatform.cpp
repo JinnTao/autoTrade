@@ -49,7 +49,7 @@ cTradingPlatform::cTradingPlatform()
 	m_pTrades = make_shared< cTradeCollection >();
 	m_pSubscribeInst = make_shared<vector<string>>();
 	m_pInstMessageMap = new map<string, CThostFtdcInstrumentField*>();
-	m_pInstCommissionRate = new map<string, CThostFtdcInstrumentCommissionRateField*>();
+	m_pInstCommissionRate = new map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>>();
 
 //	m_pInstMessageMap = make_shared<map<string,CThostFtdcInstrumentField*>>();
 }
@@ -290,7 +290,8 @@ DWORD cTradingPlatform::AutoTrading()
 			this->m_pOrders->PrintPendingOrders();
 		}
 		else if(str == "trade"){
-			this->m_pTrades->PrintAll();
+			// 首先查询手续费 再查询成交
+			this->m_pTraderSpi->ReqQryInstrumentCommissionRate();
 		}else if(str == "help"){
 			cerr<<"OrderList: show | order| trade | stop | run |close |buy/sell open/close inst vol price -> ";
 		}

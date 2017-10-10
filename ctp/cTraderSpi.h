@@ -81,7 +81,7 @@ public:
 	void RegisterTradeCollection( cTradeCollectionPtr p );
 	void RegisterSubscribeInstList(shared_ptr<vector<string>> p);
 	void RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>* p );
-	void RegisterInstCommissionMap(map<string,CThostFtdcInstrumentCommissionRateField*>*p);
+	void RegisterInstCommissionMap(map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>> *p);
 	void ReqQryInstrument();
 
 	void ReqQryInstrument_all();
@@ -113,7 +113,7 @@ public:
 
 	const sTradingAccountInfo* GetTradingAccountInfo() const { return m_accountInfo; }
 
-	void cTraderSpi::saveInstrumentField(CThostFtdcInstrumentField* instField);
+	void saveInstrumentField(CThostFtdcInstrumentField* instField);
 
 	void showPositionDetail();
 
@@ -129,7 +129,7 @@ public:
 
 	bool subscribeInst(TThostFtdcInstrumentIDType instrumentName,bool tag);
 
-	bool isValidInsturment(string inst);
+	bool isValidInsturment(string inst,string& instName);
 
 
 	void cancleAllPendingOrder();
@@ -171,7 +171,7 @@ private:
 	map<string, CThostFtdcInstrumentField*>* m_InstMeassageMap;
 
 	//
-	map<string,CThostFtdcInstrumentCommissionRateField*>*m_pInstCommissionMap;
+	map<string,shared_ptr<CThostFtdcInstrumentCommissionRateField>>*m_pInstCommissionMap;
 
 	void ReqUserLogin();
 	void ReqSettlementInfoConfirm();
@@ -180,7 +180,7 @@ private:
 
 	TThostFtdcBrokerIDType	m_brokerID;
 	TThostFtdcInvestorIDType m_investorID;
-	char	m_password[252];
+	char m_password[252];
 
 	bool m_genLog;
 	cString m_logFile;
@@ -192,6 +192,7 @@ private:
 	bool m_firs_inquiry_TradingAccount;//是否首次查询资金账号
 	bool m_firs_inquiry_Position;//是否首次查询投资者持仓
 	bool m_first_inquiry_Instrument;//是否首次查询合约
+	bool m_first_inquiry_commissionRate;//是否首次查询手续费
 	
 	vector<CThostFtdcOrderField*> m_orderList;//委托记录，全部合约
 	vector<CThostFtdcOrderField*> m_pendOrderList;//挂单记录，全部合约
