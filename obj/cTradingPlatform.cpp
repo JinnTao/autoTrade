@@ -291,7 +291,7 @@ DWORD cTradingPlatform::AutoTrading()
 		}
 		else if(str == "trade"){
 			// 首先查询手续费 再查询成交
-			this->m_pTraderSpi->ReqQryInstrumentCommissionRate();
+			this->m_pTraderSpi->ReqQryInstrumentCommissionRate(true);
 		}else if(str == "help"){
 			cerr<<"OrderList: show | order| trade | stop | run |close |buy/sell open/close inst vol price -> ";
 		}

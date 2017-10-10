@@ -2,6 +2,8 @@
 #include <cTraderSpi.h>
 
 #include <cTrade.h>
+#define ROHON 1
+#undef  ROHON
 extern HANDLE g_hEvent;
 bool IsFlowControl( int iResult )
 {
@@ -483,30 +485,36 @@ void cTraderSpi::OnRspQryInstrument( CThostFtdcInstrumentField* pInstrument, CTh
 				m_first_inquiry_Instrument = false;
 				Sleep(1000);
 				SetEvent(g_hEvent);
-				//m_itMap = m_InstMeassageMap->begin();
+				//融航需要指定合约
+				#ifdef  ROHON
+					m_itMap = m_InstMeassageMap->begin();
 
-				////First Start up
-				//m_output.open("output/" + string(m_investorID)  + "_" + m_tradeDay + "_commission.txt", ios::_Nocreate | ios::in) ;
-				//if(m_output){
-				//	while(!m_output.eof()){
-				//		//get Instrument List
-				//		CThostFtdcInstrumentCommissionRateField* instField = new CThostFtdcInstrumentCommissionRateField();
-				//		m_output >> instField->InstrumentID  >>
-				//			instField->CloseRatioByMoney		>>instField->CloseRatioByVolume>>
-				//			instField->CloseTodayRatioByMoney	>>instField->CloseTodayRatioByVolume>>
-				//			instField->OpenRatioByMoney			>>instField->OpenRatioByVolume ;
-				//		m_pInstCommissionMap->insert(pair<string, CThostFtdcInstrumentCommissionRateField*> (instField->InstrumentID, instField));
-				//	}
+					//First Start up
+					m_output.open("output/" + string(m_investorID)  + "_" + m_tradeDay + "_commission.txt", ios::_Nocreate | ios::in) ;
+					if(m_output){
+						while(!m_output.eof()){
+							//get Instrument List
+							shared_ptr<CThostFtdcInstrumentCommissionRateField> instField = make_shared<CThostFtdcInstrumentCommissionRateField>();
+							m_output >> instField->InstrumentID  >>
+								instField->CloseRatioByMoney		>>instField->CloseRatioByVolume>>
+								instField->CloseTodayRatioByMoney	>>instField->CloseTodayRatioByVolume>>
+								instField->OpenRatioByMoney			>>instField->OpenRatioByVolume ;
+							m_pInstCommissionMap->insert(pair<string, shared_ptr<CThostFtdcInstrumentCommissionRateField> > (instField->InstrumentID, instField));
+						}
 
-				//	if(m_pInstCommissionMap->size()>10){
-				//		ReqQryTrade();
-				//		return;
-				//	}
-				//	
-				//}
-				//m_output.open("output/" + string(m_investorID)   + "_" + m_tradeDay + "_commission.txt", ios::app|ios::out) ;
+						if(m_pInstCommissionMap->size()>10){
+							ReqQryTrade();
+							return;
+						}
+					
+					}
+					m_output.open("output/" + string(m_investorID)   + "_" + m_tradeDay + "_commission.txt", ios::app|ios::out) ;
 
-				ReqQryInstrumentCommissionRate();
+					ReqQryInstrumentCommissionRate();
+				#else
+					ReqQryInstrumentCommissionRate();
+				#endif //  ROHON
+
 
 			}
 
@@ -518,66 +526,76 @@ void cTraderSpi::OnRspQryInstrument( CThostFtdcInstrumentField* pInstrument, CTh
 
 }
 // 这种循环查询 手续费的方式：因为接口一次只能查询一个，为了方便，查询出来的结果 保存到txt中，第二次启动时直接从文件读取，速度就快很多，但是第一次查询需要花费10Min
-void cTraderSpi::ReqQryInstrumentCommissionRate(){
+void cTraderSpi::ReqQryInstrumentCommissionRate(bool qryTrade ){
+	#ifdef ROHON
+		if(qryTrade == true){
+			ReqQryTrade();
+			return;
+		}
+		CThostFtdcQryInstrumentCommissionRateField req;
+		memset(&req, 0, sizeof(req));
+		strcpy(req.InvestorID, m_investorID);//investor Id
+		strcpy(req.BrokerID, m_brokerID);//broker Id
 
-	CThostFtdcQryInstrumentCommissionRateField req;
-	memset(&req, 0, sizeof(req));
-	strcpy(req.InvestorID, m_investorID);//investor Id
-	strcpy(req.BrokerID, m_brokerID);//broker Id
-	m_pInstCommissionMap->clear();
-	//cout << m_itMap->second->ExpireDate << " " << m_actionDay << (string(m_itMap->second->ExpireDate) == m_actionDay) << " " << string(m_itMap->second->InstrumentID).size() << endl;
-	//system("pause");
-	// 为了过滤组合合约 比如 XX-SR801&SR803 这个没必要查询手续费了。 交割日为当日的合约 查询会error，忽略
+		//m_pInstCommissionMap->clear();
+		//cout << m_itMap->second->ExpireDate << " " << m_actionDay << (string(m_itMap->second->ExpireDate) == m_actionDay) << " " << string(m_itMap->second->InstrumentID).size() << endl;
+		//system("pause");
 
-	//while (m_itMap != this->m_InstMeassageMap->end() &&
-	//	(string(m_itMap->second->ExpireDate) == m_actionDay ||
-	//	(!isValidInsturment(string(m_itMap->second->InstrumentID))))){
-	//	cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
-	//	m_itMap++;
-	//}
-	//// over QryTrade；
-	//if (m_itMap == this->m_InstMeassageMap->end()){
-	//	ReqQryTrade();
-	//}
-	//strcpy(req.InstrumentID, m_itMap->second->InstrumentID);
-	int iResult = m_pUserTraderApi->ReqQryInstrumentCommissionRate(&req, ++iRequestID);
-	if(m_first_inquiry_commissionRate){
-		m_first_inquiry_commissionRate = false;
+		// 为了过滤组合合约 比如 XX-SR801&SR803 这个没必要查询手续费了。 交割日为当日的合约 查询会error，忽略
+		string instName;
+		while (m_itMap != this->m_InstMeassageMap->end() &&
+			(string(m_itMap->second->ExpireDate) == m_actionDay ||
+			(!isValidInsturment(string(m_itMap->second->InstrumentID),instName)))){
+				cerr << "ignore: " << m_itMap->second->InstrumentID << endl;
+				m_itMap++;
+		}
+		// over QryTrade；
+		if (m_itMap == this->m_InstMeassageMap->end()){
+			ReqQryTrade();
+		}
+		strcpy(req.InstrumentID, m_itMap->second->InstrumentID);
+		int iResult = m_pUserTraderApi->ReqQryInstrumentCommissionRate(&req, ++iRequestID);
 		cerr << cSystem::GetCurrentTimeBuffer() <<" Qry:" << req.InstrumentID << (( iResult == 0 ) ? "Success" : "Fail") << endl;
-	}
+	#else
+		CThostFtdcQryInstrumentCommissionRateField req;
+		memset(&req, 0, sizeof(req));
+		strcpy(req.InvestorID, m_investorID);//investor Id
+		strcpy(req.BrokerID, m_brokerID);//broker Id
+		m_pInstCommissionMap->clear();
+		int iResult = m_pUserTraderApi->ReqQryInstrumentCommissionRate(&req, ++iRequestID);
+
+		if(m_first_inquiry_commissionRate){
+			m_first_inquiry_commissionRate = false;
+			cerr << cSystem::GetCurrentTimeBuffer() <<" Qry:" << req.InstrumentID << (( iResult == 0 ) ? "Success" : "Fail") << endl;
+		}
+	#endif // ROHON
 
 
 
 }
 
 void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-	
+#ifdef  ROHON
 	if(!IsErrorRspInfo(pRspInfo) && pInstrumentCommissionRate )
 	{
-			//save all instrument message map
-			shared_ptr<CThostFtdcInstrumentCommissionRateField> instField = make_shared<CThostFtdcInstrumentCommissionRateField>(*pInstrumentCommissionRate);
-			m_pInstCommissionMap->insert(pair<string, shared_ptr<CThostFtdcInstrumentCommissionRateField> > (pInstrumentCommissionRate->InstrumentID, instField));
-			
-
-
-			/*m_output << m_itMap->second->InstrumentID<<" "  <<
+		//save all instrument message map
+		shared_ptr<CThostFtdcInstrumentCommissionRateField> instField = make_shared<CThostFtdcInstrumentCommissionRateField>(*pInstrumentCommissionRate);
+		m_pInstCommissionMap->insert(pair<string, shared_ptr<CThostFtdcInstrumentCommissionRateField> > (pInstrumentCommissionRate->InstrumentID, instField));
+		m_output << m_itMap->second->InstrumentID<<" "  <<
 			instField->CloseRatioByMoney<<" "		<<instField->CloseRatioByVolume<<" "<<
 			instField->CloseTodayRatioByMoney<<" "	<<instField->CloseTodayRatioByVolume<<" "<<
-			instField->OpenRatioByMoney<<" "			<<instField->OpenRatioByVolume << endl;*/
-			if(bIsLast){
-				Sleep(1000);
-				SetEvent(g_hEvent);
-				ReqQryTrade();
-				//m_itMap++;
-				
-				//if(m_itMap != this->m_InstMeassageMap->end()){
-				////if(m_pInstCommissionMap->size() < 10){
-				//	ReqQryInstrumentCommissionRate();
-				//}
-				//else{
-					//ReqQryTrade();
-			//	}
+			instField->OpenRatioByMoney<<" "			<<instField->OpenRatioByVolume << endl;
+		if(bIsLast){
+			Sleep(1000);
+			SetEvent(g_hEvent);
+			m_itMap++;
+			if(m_itMap != this->m_InstMeassageMap->end()){
+				ReqQryInstrumentCommissionRate();
 			}
+			else{
+				ReqQryTrade();
+			}
+		}
 	}
 	else
 	{
@@ -585,17 +603,38 @@ void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommission
 		Sleep(1000);
 		SetEvent(g_hEvent);
 		cerr << "OnRspQryInstrumentCommissionRate::error" << endl;
-		ReqQryTrade();
-		//m_itMap++;
-		//if(m_itMap != this->m_InstMeassageMap->end()){
-		//	ReqQryInstrumentCommissionRate();
-		//}
-		//else{
-		//ReqQryTrade();
-		//}
+		m_itMap++;
+		if(m_itMap != this->m_InstMeassageMap->end()){
+			ReqQryInstrumentCommissionRate();
+		}
+		else{
+			ReqQryTrade();
+		}
 
 
 	}
+#else
+	if(!IsErrorRspInfo(pRspInfo) && pInstrumentCommissionRate )
+	{
+		//save all instrument message map
+		shared_ptr<CThostFtdcInstrumentCommissionRateField> instField = make_shared<CThostFtdcInstrumentCommissionRateField>(*pInstrumentCommissionRate);
+		m_pInstCommissionMap->insert(pair<string, shared_ptr<CThostFtdcInstrumentCommissionRateField> > (pInstrumentCommissionRate->InstrumentID, instField));
+		if(bIsLast){
+			Sleep(1000);
+			SetEvent(g_hEvent);
+			ReqQryTrade();
+		}
+	}
+	else
+	{
+		Sleep(1000);
+		SetEvent(g_hEvent);
+		cerr << "OnRspQryInstrumentCommissionRate::error" << endl;
+		ReqQryTrade();
+	}
+#endif //  ROHON
+
+
 }
 
 void cTraderSpi::ReqQryTrade(){

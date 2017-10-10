@@ -53,6 +53,7 @@ void cMarketDataCollection::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField
 // 读取历史数据
 void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,string endDate,vector<double>& open,vector<double> &high,vector<double> &low,vector<double> &close,vector<double> &volume){
 	try{
+		
 		auto iter = this->m_pTradeDayList->find(startDate);
 		
 		vector<string> fileNameList;
@@ -66,25 +67,27 @@ void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,strin
 
 		}
 
-
-		fstream dataFile;
-		string fileName = startDate;
-		string date,time;
-		double dOpen,dHigh,dLow,dClose,dVolume;
-		dataFile.open("dataBase/"+ inst +"/" + fileName + "_1m.txt", ios::_Nocreate | ios::in) ;
-		if(dataFile)
-		{
-			while(!dataFile.eof()){
-				dataFile >> date >> time>> dOpen >> dHigh>> dLow>>dClose>>dVolume;
-				cerr << date<< " " << time<< " " << dOpen<< " "  << dHigh << " "<< dLow << " "<< dClose<< " " << dVolume <<endl;
-				open.push_back(dOpen);
-				high.push_back(dHigh);
-				low.push_back(dLow);
-				close.push_back(dClose);
-				volume.push_back(dVolume);
+		for(auto i = fileNameList.begin();i!= fileNameList.end();i++){
+			fstream dataFile;
+			string date,time;
+			double dOpen,dHigh,dLow,dClose,dVolume;
+			dataFile.open( inst +"/" + *i + "_1m.txt", ios::_Nocreate | ios::in) ;
+			if(dataFile)
+			{
+				while(!dataFile.eof()){
+					dataFile >> date >> time>> dOpen >> dHigh>> dLow>>dClose>>dVolume;
+					cerr << date<< " " << time<< " " << dOpen<< " "  << dHigh << " "<< dLow << " "<< dClose<< " " << dVolume <<endl;
+					open.push_back(dOpen);
+					high.push_back(dHigh);
+					low.push_back(dLow);
+					close.push_back(dClose);
+					volume.push_back(dVolume);
+				}
+				dataFile.close();	
 			}
-			dataFile.close();	
+
 		}
+
 
 	}
 	catch(...){

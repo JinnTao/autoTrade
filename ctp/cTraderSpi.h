@@ -101,7 +101,7 @@ public:
 
 	void ReqOrderAction( shared_ptr<cOrder> pOrder );
 
-	void ReqQryInstrumentCommissionRate();
+	void ReqQryInstrumentCommissionRate(bool qryTrade = false);
 
 	void Close();
 

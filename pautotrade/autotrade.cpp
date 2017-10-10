@@ -9,6 +9,9 @@ HANDLE g_hEvent;//ÊÂ¼þ¾ä±ú
 
 int iRequestID = 0;//¶©µ¥±àºÅ
 
+#define  ROHON  0
+
+
 int main()
 {
 
