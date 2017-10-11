@@ -13,6 +13,7 @@ class cTraderSpi;
 #include <cTradeCollection.h>
 #include <cPositionCollection.h>
 #include "cStrategyTemplate.h"
+#include "cStrategyBayes.h"
 #include "autotrade_config.h"
 
 class cTradingPlatform
@@ -100,6 +101,7 @@ private:
 	map< cString, double > m_closedPnL;
 	// ≤ﬂ¬‘¿‡
 	cStrategyTemplate m_strategy;
+	cStrategyBayes m_strategyBayes;
 	// calendar day
 	map<string,int> m_tradeDayList;
 };
