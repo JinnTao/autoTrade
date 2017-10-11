@@ -23,7 +23,8 @@ int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSet
 		// strategy
 		strcpy_s(autoTradeSetting.inst, sizeof(autoTradeSetting.inst), ini.ReadString("strategy", "inst", "1").c_str());
 		autoTradeSetting.para1 = ini.ReadDouble("strategy", "para1", 1);
-		// 
+		// KingKeltner
+
 
 		return 0;
 	}
