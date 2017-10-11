@@ -107,6 +107,21 @@ struct autoSetting
 	double para2;
 	double para3;
 	double para4;
+
+	//kingKeltNer
+	//;计算通道中值的窗口数
+	double kkLength = 11
+	//;计算通道宽度的偏差
+	double kkDev = 1.6
+	//;移动止损
+	double trailingPrcnt = 0.8
+	//;每次交易的数量
+	double fixedSize = 1
+	//;初始化数据所用的天数
+	double initDays = 10
+
+
+
 	autoSetting(){
 		memset(this, 0, sizeof(autoSetting));
 	}
