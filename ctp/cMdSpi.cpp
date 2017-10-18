@@ -155,7 +155,7 @@ void cMdSpi::SubscribeMarketData(char *instIdList)
 
 	int ret=m_pUserMdApi->SubscribeMarketData(pInstId, len);
 
-	//cerr<<" Request SubscribeMarketData.. "<<((ret == 0) ? "success" : "fail")<< endl;
+	cerr<<"=> Request SubscribeMarketData " << pInstId <<((ret == 0) ? " success" : " fail")<< endl;
 
 	SetEvent(g_hEvent);
 }

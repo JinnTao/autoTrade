@@ -119,7 +119,7 @@ public:
 
 	void ReqOrderInsert(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir, TThostFtdcCombOffsetFlagType kpp,TThostFtdcPriceType price,   TThostFtdcVolumeType vol);
 
-	void insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol,double orderPrice);
+	void insertOrder(string inst, DIRECTION dire, OFFSETFLAG flag, int vol, double orderPrice, int priceTick = 0);
 
 	void StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol);
 

@@ -28,7 +28,7 @@ void autotrade_trade()
 		printf( "\n" );
 		printf( "running process to automatically trade with self-defined strategies...\n" );
 		//-------------------------------------easyLogging-----------------------------------------
-		el::Configurations conf("conf/easyLog.conf");
+		el::Configurations conf("D:\\AutoTrade\\trade\\CodeLib\\utility\\easylogging\\easyLog.conf");
 		el::Loggers::reconfigureAllLoggers(conf);
 
 

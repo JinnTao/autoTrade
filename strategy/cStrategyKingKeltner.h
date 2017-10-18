@@ -12,9 +12,9 @@ public:
 	virtual void run();
 	void on5MBar();
 
-	virtual void onOrder(cOrderPtr	);
+	virtual void onOrder(cOrderPtr) {};
 
-	virtual void onTrade(cTradePtr );
+	virtual void onTrade(cTradePtr) {};
 
 	bool isTradeTime();
 

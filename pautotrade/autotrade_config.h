@@ -6,7 +6,7 @@
 #include <map>
 #include <cSystem.h>
 #include <ThostFtdcMdApi.h>
-
+#include <memory>
 //
 struct sATGeneralConfig
 {
@@ -75,6 +75,7 @@ struct AccountParam
 	//string m_read_contract;//合约代码
 	AccountParam(){
 		memset(this,0,sizeof(AccountParam));
+		
 	}
 	void reset(){
 		memset(this,0,sizeof(AccountParam));
@@ -110,15 +111,15 @@ struct autoSetting
 
 	//kingKeltNer
 	//;计算通道中值的窗口数
-	double kkLength = 11
+	double kkLength;// = 11
 	//;计算通道宽度的偏差
-	double kkDev = 1.6
+	double kkDev;// = 1.6
 	//;移动止损
-	double trailingPrcnt = 0.8
+	double trailingPrcnt;// = 0.8
 	//;每次交易的数量
-	double fixedSize = 1
+	double fixedSize;// = 1
 	//;初始化数据所用的天数
-	double initDays = 10
+	double initDays;// = 10
 
 
 

@@ -654,7 +654,7 @@ void cTraderSpi::ReqQryTrade(){
 }
 
 void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){
-	if (!IsErrorRspInfo(pRspInfo) && pTrade){
+	if (!IsErrorRspInfo(pRspInfo) && pTrade && strlen(pTrade->InvestorID) != 0){
 
 		auto iter = (this->m_pInstCommissionMap->find(pTrade->InstrumentID) == this->m_pInstCommissionMap->end()? NULL : this->m_pInstCommissionMap->at(pTrade->InstrumentID));
 		if(iter == NULL){
@@ -956,7 +956,7 @@ void cTraderSpi::OnRspOrderInsert( CThostFtdcInputOrderField* pInputOrder, CThos
 // order insertion return
 void cTraderSpi::OnRtnOrder( CThostFtdcOrderField* pOrder )
 {
-	if(pOrder){
+	if(pOrder && !strcmp(pOrder->InsertDate,this->m_investorID)){
 		m_orderCollection->Add( pOrder );
 		if( !IsMyOrder( pOrder ) ){
 			cerr << " Other:";
@@ -1130,7 +1130,7 @@ void cTraderSpi::RegisterInstCommissionMap( map<string,shared_ptr< CThostFtdcIns
 
 	m_pInstCommissionMap = p; 
 }
-void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol,double orderPrice){
+void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol,double orderPrice,int priceTick ){
 	TThostFtdcInstrumentIDType    instId;
 	TThostFtdcDirectionType       dir;//方向,'0'买，'1'卖
 	TThostFtdcCombOffsetFlagType  kpp;//开平，"0"开，"1"平,"3"平今
@@ -1154,10 +1154,10 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 		switch (dire)
 		{
 		case buy:
-			BuyPrice = lastprice + this->m_InstMeassageMap->at(inst)->PriceTick;
+			BuyPrice = lastprice + (1 + priceTick) * this->m_InstMeassageMap->at(inst)->PriceTick;
 			break;
 		case sell:
-			SellPrice =  lastprice - this->m_InstMeassageMap->at(inst)->PriceTick;
+			SellPrice =  lastprice - (1 + priceTick) * this->m_InstMeassageMap->at(inst)->PriceTick;
 			break;
 		}
 	}
