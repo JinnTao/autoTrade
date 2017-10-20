@@ -18,8 +18,10 @@ public:
 
 	bool isTradeTime();
 
-	void setInst(string inst){ this->m_inst = inst; }
-	void setInitDate(string startDate, string endDate){ this->m_startDate = startDate; this->m_endDate = endDate; }
+	void setInst(string inst) { this->m_inst = inst; };
+	void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; };
+	
+	bool keltner(vector<double> inData, double kkLength, double kkDev,double &kkUp,double &kkDown);
 private:
 
 	vector<double> m_open;
@@ -44,11 +46,17 @@ private:
 	// init data 
 	string m_startDate;
 	string m_endDate;
+
+	//策略输入参数
+	double m_kkLength;
+	double m_kkDev;
+
+
 	// 策略参数变量
-	double kkUp;
-	double kkDown;
-	double intraTradeHigh;
-	double intraTradeLow;
+	double m_kkUp;
+	double m_kkDown;
+	double m_intraTradeHigh;
+	double m_intraTradeLow;
 
 
 };
