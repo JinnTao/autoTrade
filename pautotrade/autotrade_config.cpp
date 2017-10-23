@@ -24,7 +24,11 @@ int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSet
 		strcpy_s(autoTradeSetting.inst, sizeof(autoTradeSetting.inst), ini.ReadString("strategy", "inst", "1").c_str());
 		autoTradeSetting.para1 = ini.ReadDouble("strategy", "para1", 1);
 		// KingKeltner
-
+		autoTradeSetting.kkLength = ini.ReadDouble("KingKeltner", "kkLength", 1);
+		autoTradeSetting.kkDev = ini.ReadDouble("KingKeltner", "kkDev", 1);
+		autoTradeSetting.trailingPrcnt = ini.ReadDouble("KingKeltner", "trailingPrcnt", 1);
+		autoTradeSetting.fixedSize = ini.ReadDouble("KingKeltner", "fixedSize", 1);
+		autoTradeSetting.initDays = ini.ReadDouble("KingKeltner", "initDays", 1);
 
 		return 0;
 	}

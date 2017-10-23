@@ -20,8 +20,8 @@ public:
 
 	bool isTradeTime();
 
-	void setInst(string inst){ this->m_inst = inst; }
-	void setInitDate(string startDate, string endDate){ this->m_startDate = startDate; this->m_endDate = endDate; }
+	virtual void setInst(string inst){ this->m_inst = inst; }
+	virtual void setInitDate(string startDate, string endDate){ this->m_startDate = startDate; this->m_endDate = endDate; }
 private:
 
 	vector<double> m_open;

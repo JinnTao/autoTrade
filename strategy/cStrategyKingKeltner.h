@@ -1,5 +1,6 @@
 #pragma once
 #include "cstrategy.h"
+
 class cStrategyKingKeltner :
 	public cStrategy
 {
@@ -18,10 +19,10 @@ public:
 
 	bool isTradeTime();
 
-	void setInst(string inst) { this->m_inst = inst; };
-	void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; };
+	virtual void setInst(string inst) { this->m_inst = inst; };
+	virtual void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; };
 	
-	bool keltner(vector<double> inData, double kkLength, double kkDev,double &kkUp,double &kkDown);
+	bool keltner( int kkLength, double kkDev,double &kkUp,double &kkDown);
 private:
 
 	vector<double> m_open;

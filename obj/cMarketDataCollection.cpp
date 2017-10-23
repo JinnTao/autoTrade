@@ -83,6 +83,12 @@ void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,strin
 					close.push_back(dClose);
 					volume.push_back(dVolume);
 				}
+				// 弹出最后一个，因为上面会多加一个
+				open.pop_back();
+				high.pop_back();
+				low.pop_back();
+				close.pop_back();
+				volume.pop_back();
 				dataFile.close();	
 			}
 

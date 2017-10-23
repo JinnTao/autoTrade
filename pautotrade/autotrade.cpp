@@ -65,7 +65,7 @@ void autotrade_trade()
 		pTradingPlatform->RegisterMarketDataEngine( pMdEngine );
 		pTradingPlatform->RegisterTraderSpi(  pTraderUserSpi);
 		pTradingPlatform->RegisterMdSpi(pMdUserSpi);
-		pTradingPlatform->initStrategy(autoTradeSetting);
+		pTradingPlatform->RegisterParameters(&autoTradeSetting);
 
 		cThread< cTradingPlatform >* pTradingThread = new cThread< cTradingPlatform >( pTradingPlatform.get(), &cTradingPlatform::AutoTrading );
 

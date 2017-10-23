@@ -11,18 +11,11 @@
 cMarketData::cMarketData(string id)
 {
     this->m_id = id;
+	this->m_length = 100;
 }
 
 
 
-
-cMarketData::cMarketData( const cMarketData& in )
-{
-    yr_assert( this != & in );
-    m_id = in.m_id;
-    
-
-}
 
 
 cMarketData::~cMarketData()
@@ -41,15 +34,25 @@ CThostFtdcDepthMarketDataField cMarketData::getLastMarketData()
 void cMarketData::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField* pDepthMarketData )
 {
 	unique_lock<std::mutex> guard(_mtx);
-    CThostFtdcDepthMarketDataField marketData;
+    // Data initial
+	CThostFtdcDepthMarketDataField marketData;
     memset(&marketData,0,sizeof(CThostFtdcDepthMarketDataField));
     //strcpy(&marketData,pDepthMarketData);
     memcpy(&marketData,pDepthMarketData,sizeof(CThostFtdcDepthMarketDataField));
 
+	// Save Data
     m_lastMarketData = marketData;
+
     this->m_marketDepthVector.push_back(marketData);
 
     m_lastPriceSeries.push_back(marketData.LastPrice);
-    //cerr << pDepthMarketData->InstrumentID << " " << pDepthMarketData->LastPrice << endl;
 
+
+	// erase Data
+	if (this->m_marketDepthVector.size() > m_length){
+		this->m_marketDepthVector.erase(this->m_marketDepthVector.begin());
+
+		this->m_lastPriceSeries.erase(this->m_lastPriceSeries.begin());
+	}
+	
 }

@@ -14,6 +14,7 @@ class cTraderSpi;
 #include <cPositionCollection.h>
 #include "cStrategyTemplate.h"
 #include "cStrategyBayes.h"
+#include "cStrategyKingKeltner.h"
 #include "autotrade_config.h"
 
 class cTradingPlatform
@@ -25,11 +26,10 @@ public:
 	void RegisterTraderSpi( cTraderSpi* pTraderSpi );
 	void RegisterMdSpi( cMdSpi* p );
 	void RegisterMarketDataEngine( cMarketDataCollectionPtr pMarketDataEngine );
-
-
 	void RegisterStrategy( cStrategyPtr pStrategy );
-	
-	void initStrategy(autoSetting &);
+	void RegisterParameters(autoSetting *p);
+
+
 	//
 	/* send orders */
 	void SendNewOrders( const cString& instrumentID );
@@ -79,6 +79,8 @@ public:
 	void cancleAllOrder(string order,string tag);
 
 	void readDay(string fileName, map<string,int> &workDay);
+	//init
+	void initStrategy(cStrategy *, autoSetting &);
 
 private:
 	cTraderSpi*	m_pTraderSpi;
@@ -100,10 +102,13 @@ private:
 	bool m_runAutoTrade;
 	map< cString, double > m_closedPnL;
 	// ≤ﬂ¬‘¿‡
-	cStrategyTemplate m_strategy;
-	cStrategyBayes m_strategyBayes;
+	//cStrategyTemplate m_strategy;
+	cStrategyKingKeltner m_strategyKingKeltner; // cancle comment cause Bug
+	//cStrategyBayes m_strategyBayes;
 	// calendar day
 	map<string,int> m_tradeDayList;
+
+	autoSetting* m_pAutoSetting;
 };
 
 typedef shared_ptr< cTradingPlatform > cTradingPlatformPtr;

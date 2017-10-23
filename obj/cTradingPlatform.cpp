@@ -145,7 +145,11 @@ void cTradingPlatform::RegisterStrategy( cStrategyPtr pStrategy )
 }
 
 
+void cTradingPlatform::RegisterParameters(autoSetting *p)
+{
+	this->m_pAutoSetting = p;
 
+}
 void cTradingPlatform::SendNewOrder( cOrder* pOrder )
 {
 	
@@ -212,21 +216,22 @@ void cTradingPlatform::CancelPendingOrder( int orderID )
 	//}
 }
 
-void cTradingPlatform::initStrategy(autoSetting & para){
-	this->m_strategy.RegisterMarketDataCollection(this->m_pMarketDataEngine);
-	this->m_strategy.RegisterTradeSpi(this->m_pTraderSpi);
-	this->m_strategy.RegisterMdSpi(this->m_pMdSpi);
-	this->m_strategy.RegisterPositionCollectionPtr(this->m_pPositions);
-	this->m_strategy.RegisterOrderCollectionPtr(this->m_pOrders);
-	this->m_strategy.RegisterTradeCollectionPtr(this->m_pTrades);
+void cTradingPlatform::initStrategy(cStrategy* pStrategy,autoSetting & para){
+	pStrategy->RegisterMarketDataCollection(this->m_pMarketDataEngine);
+	pStrategy->RegisterTradeSpi(this->m_pTraderSpi);
+	pStrategy->RegisterMdSpi(this->m_pMdSpi);
+	pStrategy->RegisterPositionCollectionPtr(this->m_pPositions);
+	pStrategy->RegisterOrderCollectionPtr(this->m_pOrders);
+	pStrategy->RegisterTradeCollectionPtr(this->m_pTrades);
+	pStrategy->RegisterTxtDir(string(para.tradeDayDir), string(para.dataBaseDir));
+	pStrategy->RegisterAutoSetting(&para);
 
-	this->m_strategy.RegisterTxtDir(string(para.tradeDayDir), string(para.dataBaseDir));
 
 	this->readDay(string(para.tradeDayDir),this->m_tradeDayList);
 	this->m_pMarketDataEngine->setTradeDayList(&this->m_tradeDayList);
 	
-	this->m_strategy.setInst(string(para.inst));
-	this->m_strategy.setInitDate(para.startDate, para.endDate);
+	pStrategy->setInst(string(para.inst));
+	pStrategy->setInitDate(para.startDate, para.endDate);
 }
 
 void cTradingPlatform::readDay(string fileName, map<string,int> &workDay){
@@ -260,6 +265,8 @@ DWORD cTradingPlatform::AutoTrading()
 	cerr<<endl<<"OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancle seqNo£º";
 	//initial subcribe instrument
 	this->m_pMdSpi->SubscribeMarketData(this->m_pSubscribeInst);
+	this->initStrategy(&m_strategyKingKeltner,*(this->m_pAutoSetting));
+
 	while(true)
 	{
 		//std::cin>>str;
@@ -280,11 +287,13 @@ DWORD cTradingPlatform::AutoTrading()
 		}
 		else if(str == "run")
 		{			
-			m_strategy.start();
+//			m_strategy.start();
+			m_strategyKingKeltner.start();
 		}
 		else if(str == "stop")
 		{
-			m_strategy.stop();
+		//	m_strategy.stop();
+			m_strategyKingKeltner.stop();
 		}
 		else if(str == "order"){
 			this->m_pOrders->PrintPendingOrders();

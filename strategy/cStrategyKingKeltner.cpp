@@ -3,6 +3,15 @@
 
 cStrategyKingKeltner::cStrategyKingKeltner(void)
 {
+	m_candleMinute = -1;
+	m_lastOpen = -1;
+	m_lastHigh = -1;
+	m_lastLow = -1;
+	m_lastClose = -1;
+	m_lastVolume = -1;
+	cStrategy::cStrategy();
+
+	m_oldState = false;
 }
 
 
@@ -70,18 +79,21 @@ void cStrategyKingKeltner::run(){
 
 void cStrategyKingKeltner::on5MBar(){
 	// =================================================================  指标计算 =================================================
-	int outBegIdx[100] = {};
-	int outNBElement[100] = {};
-	double outReal[100] = {};
-	TA_RSI(m_close.size() - 14, m_close.size() - 1, &m_close[0], 14, outBegIdx, outNBElement, outReal);
+	double up, down;
+	if (!keltner(this->m_pAutoSetting->kkLength, this->m_pAutoSetting->kkDev, up, down)) {
+		return;
+	}
+
 	
 	//=============================================================取消前面所有未成交单 ==============================================
 	this->m_pTradeSpi->cancleMyPendingOrder();
 
 	// ==============================================================日志输出========================================================
-	double rsiValue = outReal[0];
-	cout << cSystem::GetCurrentTimeBuffer() << " RSI: " << rsiValue << " " << m_lastOpen << " " << m_lastHigh << " " << m_lastLow << " " << m_lastClose << endl;
+	//double rsiValue = outReal[0];
+	cout << cSystem::GetCurrentTimeBuffer() << " up: " << up << " down: " << down << " " << m_lastOpen << " " << m_lastHigh << " " << m_lastLow << " " << m_lastClose << endl;
 	// ===========================================================下单逻辑============================================================
+
+
 	int longPos = this->m_pPositionC.get()->getHolding_long(m_inst);
 	int shortPos = this->m_pPositionC.get()->getHolding_short(m_inst);
 
@@ -109,6 +121,7 @@ void cStrategyKingKeltner::on5MBar(){
 
 
 bool cStrategyKingKeltner::isTradeTime() {
+	return true;
 	DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2330 = 2330;
 	cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
 	DateTimeFormat hour = nowDateTime.Hour();
@@ -139,20 +152,30 @@ bool cStrategyKingKeltner::isTradeTime() {
 
 }
 
-bool cStrategyKingKeltner::keltner(vector<double> inData, double kkLength, double kkDev, double& kkUp,double &kkDown) {
-	double mid = 0, atr = 0;
-	int outBegIdx_SMA[100] = {};
-	int outNBElement_SMA[100] = {};
-	double outReal_SMA[100] = {};
+bool cStrategyKingKeltner::keltner( int kkLength, double kkDev, double& kkUp,double &kkDown) {
+	try {
+		double mid = 0, atr = 0;
+		int outBegIdx_SMA[100] = {};
+		int outNBElement_SMA[100] = {};
+		double outReal_SMA[100] = {};
 
-	int outBegIdx_ATR[100] = {};
-	int outNBElement_ATR[100] = {};
-	double outReal_ATR[100] = {};
+		int outBegIdx_ATR[100] = {};
+		int outNBElement_ATR[100] = {};
+		double outReal_ATR[100] = {};
+		// 输出的值 在out_real中的最后一个数据中，前提要求输入数据从old到new
+		TA_SMA(m_close.size() - kkLength, m_close.size(), &m_close[0], kkLength, outBegIdx_SMA, outNBElement_SMA, outReal_SMA);
 
-	TA_SMA(inData.size() - kkLength, inData.size(), &m_close[0], kkLength, outBegIdx_SMA, outNBElement_SMA, outReal_SMA);
+		TA_ATR(m_close.size() - kkLength, m_close.size(), &m_high[0], &m_low[0], &m_close[0], kkLength, outBegIdx_ATR, outNBElement_ATR, outReal_ATR);
+
+		kkUp = outReal_SMA[kkLength - 1] + outReal_ATR[kkLength - 1] * kkDev;
+
+		kkDown = outReal_SMA[kkLength - 1] - outReal_ATR[kkLength - 1] * kkDev;
+		return true;
+	}
+	catch (...) {
+		
+		return false;
 	
-	TA_ATR(inData.size() - kkLength, inData.size(), &m_high[0], &m_low[0], &m_close[0], kkLength, outBegIdx_ATR, outNBElement_ATR, outReal_ATR);
-
-
+	}
 
 }

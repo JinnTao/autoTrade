@@ -19,7 +19,6 @@ class cMarketData
 {
 public:
     cMarketData(string);
-    cMarketData( const cMarketData& );
     ~cMarketData();
     // get methods
     string GetID() const { return m_id; }
@@ -30,11 +29,16 @@ public:
     void OnRtnDepthMarketData( CThostFtdcDepthMarketDataField* pDepthMarketData );
 protected:
     string m_id;				// contract code
-    vector<CThostFtdcDepthMarketDataField> m_marketDepthVector;
+    // save DataFieldVector
+	vector<CThostFtdcDepthMarketDataField> m_marketDepthVector;
+	// save last close series data
     vector<double> m_lastPriceSeries;
+
     CThostFtdcDepthMarketDataField m_lastMarketData;
     mutex _mtx;//  locks access to marketData
 private:
+	int m_length;
+
 };
 
 typedef shared_ptr< cMarketData > cMarketDataPtr;
