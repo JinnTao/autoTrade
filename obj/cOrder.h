@@ -5,6 +5,8 @@
 #include <cString.h>
 #include <cTickTime.h>
 #include <ThostFtdcUserApiStruct.h>
+#include <chrono>
+#include <yr_structs.h>
 
 class cOrder
 {
@@ -108,5 +110,37 @@ private:
 };
 
 typedef shared_ptr< cOrder > cOrderPtr;
+
+class cStopOrder {
+public:
+	string instrument;
+	string orderType;
+	DIRECTION direction;
+	OFFSETFLAG offset;
+	
+	double price;
+	UINT volume;
+	string strategyName;
+	bool status;
+	size_t slipTickNum;
+	
+	std::chrono::system_clock::time_point orderTime;
+	
+	cStopOrder() {
+		instrument = "";
+		orderType = "";
+		direction = DIRECTION::buy;
+		offset = OFFSETFLAG::close;
+		price = 0;
+		volume = 0;
+		strategyName = "";
+		status = false;
+	}
+	~cStopOrder() {
+		
+	}
+};
+
+
 
 #endif

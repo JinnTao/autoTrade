@@ -9,6 +9,7 @@ cStrategyKingKeltner::cStrategyKingKeltner(void)
 	m_lastLow = -1;
 	m_lastClose = -1;
 	m_lastVolume = -1;
+	m_strategyName == "KingKeltner";
 	cStrategy::cStrategy();
 
 	m_oldState = false;
@@ -56,6 +57,7 @@ void cStrategyKingKeltner::run(){
 				m_volume.erase(m_volume.begin());
 			}
 			on5MBar();
+			// latest bar data
 			m_lastOpen = lastData.LastPrice;
 			m_lastHigh = lastData.LastPrice;
 			m_lastLow = lastData.LastPrice;
@@ -65,22 +67,41 @@ void cStrategyKingKeltner::run(){
 
 		}
 		else {
+			// update bar data
 			m_lastHigh = max(m_lastHigh, lastData.LastPrice);
+
 			m_lastLow = min(m_lastLow, lastData.LastPrice);
+
 			m_lastClose = lastData.LastPrice;
+
 			m_lastVolume += lastData.Volume;
 
 		}
+		// 处理停止单
+		this->processStopOrder(m_inst, m_lastClose);
 	}
 
 }
 
+void cStrategyKingKeltner::sendOcoOrder(double upPrice, double downPrice, int fixedSize) {
+	
+	//
+	//	发送OCO委托
 
+	//	OCO(One Cancel Other)委托：
+	//	1. 主要用于实现区间突破入场
+	//	2. 包含两个方向相反的停止单
+	//	3. 一个方向的停止单成交后会立即撤消另一个方向的
+	//
+	this->sendStopOrder(m_inst, DIRECTION::buy, OFFSETFLAG::open, upPrice, fixedSize, this->m_strategyName);
+	this->sendStopOrder(m_inst, DIRECTION::sell, OFFSETFLAG::open, downPrice, fixedSize, this->m_strategyName);
+
+}
 
 void cStrategyKingKeltner::on5MBar(){
 	// =================================================================  指标计算 =================================================
 	double up, down;
-	if (!keltner(this->m_pAutoSetting->kkLength, this->m_pAutoSetting->kkDev, up, down)) {
+	if (!keltner(int(this->m_pAutoSetting->kkLength), this->m_pAutoSetting->kkDev, up, down)) {
 		return;
 	}
 
@@ -97,25 +118,27 @@ void cStrategyKingKeltner::on5MBar(){
 	int longPos = this->m_pPositionC.get()->getHolding_long(m_inst);
 	int shortPos = this->m_pPositionC.get()->getHolding_short(m_inst);
 
-	int netPos = longPos - shortPos;
+	this->m_netPos = longPos - shortPos;
+
+
 
 	if (netPos == 0) {
-		if (rsiValue>90) {
-			this->m_pTradeSpi->insertOrder(m_inst, DIRECTION::sell, OFFSETFLAG::open, 1, 0, 1);
-		}
-		if (rsiValue<10) {
-			this->m_pTradeSpi->insertOrder(m_inst, DIRECTION::buy, OFFSETFLAG::open, 1, 0, 1);
-		}
+		this->m_intraTradeHigh = m_lastHigh;
+		this->m_intraTradeLow = m_lastLow;
+
+		this->sendOcoOrder(up, down, int(this->m_pAutoSetting->fixedSize));
+
 	}
 	else if (netPos > 0) {
-		if (rsiValue>50) {
-			this->m_pTradeSpi->insertOrder(m_inst, DIRECTION::sell, OFFSETFLAG::close, 1, 0, 1);
-		}
+		m_intraTradeHigh = max(m_lastHigh, m_intraTradeHigh);
+		m_intraTradeLow = m_lastLow;
+		this->sendStopOrder(m_inst, DIRECTION::sell, OFFSETFLAG::close, m_intraTradeHigh * (1 - m_pAutoSetting->trailingPrcnt / 100.0), UINT(m_pAutoSetting->fixedSize), this->m_strategyName);
+		
 	}
 	else if (netPos < 0) {
-		if (rsiValue<50) {
-			this->m_pTradeSpi->insertOrder(m_inst, DIRECTION::buy, OFFSETFLAG::close, 1, 0, 1);
-		}
+		m_intraTradeHigh = m_lastHigh;
+		m_intraTradeLow = min(m_lastLow, m_intraTradeLow);
+		this->sendStopOrder(m_inst, DIRECTION::buy, OFFSETFLAG::close, m_intraTradeHigh * (1 + m_pAutoSetting->trailingPrcnt / 100.0), UINT(m_pAutoSetting->fixedSize), this->m_strategyName);
 	}
 }
 
@@ -178,4 +201,8 @@ bool cStrategyKingKeltner::keltner( int kkLength, double kkDev, double& kkUp,dou
 	
 	}
 
+}
+
+void cStrategyKingKeltner::onTrade(CThostFtdcTradeField pTrade) {
+	
 }

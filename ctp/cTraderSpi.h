@@ -9,6 +9,7 @@
 #include <cMdSpi.h>
 #include <regex> // ÕıÔò
 #include <cMarketDataCollection.h>
+#include "cStrategy.h"
 
 using namespace std;
 extern int iRequestID;
@@ -138,7 +139,7 @@ public:
 
 	void RegisterMarketDataEngine(cMarketDataCollectionPtr p){ this->m_pMarketDataEngine = p;}
 
-
+	void RegisterStrategy(cStrategy *p) { m_strategyList.push_back(p); };
 private:
 	CThostFtdcTraderApi* m_pUserTraderApi;
 	cArray< cString > m_instrumentIDs;
@@ -169,6 +170,9 @@ private:
 
 	// Instrument detail Message Map	
 	map<string, CThostFtdcInstrumentField*>* m_InstMeassageMap;
+
+	// strategy List
+	std::list<cStrategy*> m_strategyList;
 
 	//
 	map<string,shared_ptr<CThostFtdcInstrumentCommissionRateField>>*m_pInstCommissionMap;

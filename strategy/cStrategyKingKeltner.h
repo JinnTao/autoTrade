@@ -15,7 +15,7 @@ public:
 
 	virtual void onOrder(cOrderPtr) {};
 
-	virtual void onTrade(cTradePtr) {};
+	virtual void onTrade(CThostFtdcTradeField) ;
 
 	bool isTradeTime();
 
@@ -23,6 +23,8 @@ public:
 	virtual void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; };
 	
 	bool keltner( int kkLength, double kkDev,double &kkUp,double &kkDown);
+
+	void sendOcoOrder(double upPrice, double downPrice, int fixedSize);
 private:
 
 	vector<double> m_open;
@@ -59,6 +61,13 @@ private:
 	double m_intraTradeHigh;
 	double m_intraTradeLow;
 
+	int m_netPos;
 
+	double m_orderBuyPirce;
+	double m_orderBuySize;
+	double m_orderSellPrice;
+	double m_orderSellSize;
+
+	double m_ocoOrderStaus;
 };
 

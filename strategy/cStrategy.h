@@ -66,13 +66,17 @@ public:
 
 	virtual void onOrder(cOrderPtr	){};
 
-	virtual void onTrade(cTradePtr ){};
+	virtual void onTrade(CThostFtdcTradeField ){};
 
 	virtual void run(){cerr << this->m_strategyName << " runing" << endl;};
 
 
 	virtual void setInst(string inst) { this->m_inst = inst; }
 	virtual void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; }
+
+	virtual void sendStopOrder(string inst, DIRECTION inDirection,OFFSETFLAG inOffset, double price, UINT volume, string strategy);
+
+	virtual void processStopOrder(string inst, double lastData);
 
 	// ***************************************************************************
 	void RegisterMarketDataCollection( cMarketDataCollectionPtr p ){m_marketData = p;}
@@ -94,6 +98,9 @@ protected:
 	cPositionCollectionPtr m_pPositionC;
 	cOrderCollectionPtr m_pOrderC;
 	cTradeCollectionPtr m_pTradeC;
+
+	//stop Order List
+	vector<cStopOrder> m_workingStopOrderList;
 	
 	//cTradingPlatform * m_pTradePlatform;
 

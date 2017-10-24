@@ -16,7 +16,7 @@ public:
 
 	virtual void onOrder(cOrderPtr) {};
 
-	virtual void onTrade(cTradePtr) {};
+	virtual void onTrade(CThostFtdcTradeField) {};
 
 	bool isTradeTime() {};
 

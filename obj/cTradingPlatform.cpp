@@ -232,6 +232,8 @@ void cTradingPlatform::initStrategy(cStrategy* pStrategy,autoSetting & para){
 	
 	pStrategy->setInst(string(para.inst));
 	pStrategy->setInitDate(para.startDate, para.endDate);
+
+	this->m_pTraderSpi->RegisterStrategy(pStrategy);
 }
 
 void cTradingPlatform::readDay(string fileName, map<string,int> &workDay){

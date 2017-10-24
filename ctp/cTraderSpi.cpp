@@ -994,8 +994,15 @@ void cTraderSpi::OnRtnTrade( CThostFtdcTradeField* pTrade )
 
 	///* update of m_positionDetail */
 	m_positionCollection->update( pTrade );
+
 	//subscirbe Instrument 
 	this->subscribeInst(pTrade->InstrumentID,true);
+
+	// 
+	for each (auto var in m_strategyList)
+	{
+		var->onTrade(pTrade);
+	}
 }
 
 
@@ -1138,7 +1145,8 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 	strcpy(instId,inst.c_str());
 
 	//double miniChangeTick = m_instMessage_map[inst.c_str()]->PriceTick * 3; // 对手盘 最小变动价格 保证成交
-	double BuyPrice = orderPrice, SellPrice = orderPrice;// 卖出价 买入价
+	double BuyPrice = orderPrice + priceTick * this->m_InstMeassageMap->at(inst)->PriceTick;;
+	double SellPrice = orderPrice - priceTick * this->m_InstMeassageMap->at(inst)->PriceTick;;// 卖出价 买入价
 	// make market price order
 	if(orderPrice == 0){
 		cMarketData *p;
