@@ -140,7 +140,7 @@ void cStrategyKingKeltner::on5MBar(){
 		this->sendStopOrder(m_inst, DIRECTION::buy, OFFSETFLAG::close, m_intraTradeLow * (1 + m_pAutoSetting->trailingPrcnt / 100.0), UINT(m_pAutoSetting->fixedSize), this->m_strategyName);
 	}
 
-		// ==============================================================日志输出========================================================
+	// ==============================================================日志输出========================================================
 	//double rsiValue = outReal[0];
 	cout << cSystem::GetCurrentTimeBuffer() << " netPos " << m_netPos << " up: " << up << " down: " << down << " lastPrice " << m_lastHigh << endl;
 	printStatus();
