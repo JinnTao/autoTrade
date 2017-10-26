@@ -1001,7 +1001,7 @@ void cTraderSpi::OnRtnTrade( CThostFtdcTradeField* pTrade )
 	// 
 	for each (auto var in m_strategyList)
 	{
-		var->onTrade(pTrade);
+		var->onTrade(*pTrade);
 	}
 }
 

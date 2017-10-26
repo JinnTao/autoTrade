@@ -20,28 +20,10 @@
 #include "cDateTime.h"
 #include "cSystem.h"
 
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd.lib")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdr.lib.lib")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//#pragma comment(lib,"CodeLib\\ta-lib\\lib\\ta_abstract_cdd")
-//
+class cTraderSpi;
+
+
+
 class cStrategy
 {
 private:
@@ -74,7 +56,7 @@ public:
 	virtual void setInst(string inst) { this->m_inst = inst; }
 	virtual void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; }
 
-	virtual void sendStopOrder(string inst, DIRECTION inDirection,OFFSETFLAG inOffset, double price, UINT volume, string strategy);
+	virtual void sendStopOrder(string inst, DIRECTION inDirection,OFFSETFLAG inOffset, double price, UINT volume, string strategy,int slipNum = 1);
 
 	virtual void processStopOrder(string inst, double lastData);
 

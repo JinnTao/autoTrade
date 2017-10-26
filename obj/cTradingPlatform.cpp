@@ -268,7 +268,7 @@ DWORD cTradingPlatform::AutoTrading()
 	//initial subcribe instrument
 	this->m_pMdSpi->SubscribeMarketData(this->m_pSubscribeInst);
 	this->initStrategy(&m_strategyKingKeltner,*(this->m_pAutoSetting));
-
+	this->m_pTraderSpi->RegisterMarketDataEngine(this->m_pMarketDataEngine);
 	while(true)
 	{
 		//std::cin>>str;

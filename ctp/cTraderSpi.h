@@ -16,6 +16,7 @@ extern int iRequestID;
 class cString;
 template< class T > class cArray;
 
+class cStrategy;
 
 class cTraderSpi : public CThostFtdcTraderSpi
 {

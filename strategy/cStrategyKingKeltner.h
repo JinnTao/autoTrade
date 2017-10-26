@@ -25,6 +25,8 @@ public:
 	bool keltner( int kkLength, double kkDev,double &kkUp,double &kkDown);
 
 	void sendOcoOrder(double upPrice, double downPrice, int fixedSize);
+
+	void printStatus();
 private:
 
 	vector<double> m_open;

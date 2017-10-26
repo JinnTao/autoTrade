@@ -9,9 +9,9 @@ cStrategyKingKeltner::cStrategyKingKeltner(void)
 	m_lastLow = -1;
 	m_lastClose = -1;
 	m_lastVolume = -1;
-	m_strategyName == "KingKeltner";
+	m_strategyName = "KingKeltner";
 	cStrategy::cStrategy();
-
+	m_netPos = 0;
 	m_oldState = false;
 }
 
@@ -56,6 +56,11 @@ void cStrategyKingKeltner::run(){
 				m_close.erase(m_close.begin());
 				m_volume.erase(m_volume.begin());
 			}
+			m_lastOpen = *(m_open.end()-1);
+			m_lastHigh = *(m_high.end()-1);
+			m_lastLow = *(m_low.end()-1);
+			m_lastClose = *(m_close.end()-1);
+			m_lastVolume = *(m_volume.end()-1);
 			on5MBar();
 			// latest bar data
 			m_lastOpen = lastData.LastPrice;
@@ -108,43 +113,42 @@ void cStrategyKingKeltner::on5MBar(){
 	
 	//=============================================================取消前面所有未成交单 ==============================================
 	this->m_pTradeSpi->cancleMyPendingOrder();
-
-	// ==============================================================日志输出========================================================
-	//double rsiValue = outReal[0];
-	cout << cSystem::GetCurrentTimeBuffer() << " up: " << up << " down: " << down << " " << m_lastOpen << " " << m_lastHigh << " " << m_lastLow << " " << m_lastClose << endl;
+	this->m_workingStopOrderList.clear();
 	// ===========================================================下单逻辑============================================================
-
 
 	int longPos = this->m_pPositionC.get()->getHolding_long(m_inst);
 	int shortPos = this->m_pPositionC.get()->getHolding_short(m_inst);
 
 	this->m_netPos = longPos - shortPos;
 
-
-
-	if (netPos == 0) {
+	if (m_netPos == 0) {
 		this->m_intraTradeHigh = m_lastHigh;
 		this->m_intraTradeLow = m_lastLow;
 
 		this->sendOcoOrder(up, down, int(this->m_pAutoSetting->fixedSize));
 
 	}
-	else if (netPos > 0) {
+	else if (m_netPos > 0) {
 		m_intraTradeHigh = max(m_lastHigh, m_intraTradeHigh);
 		m_intraTradeLow = m_lastLow;
 		this->sendStopOrder(m_inst, DIRECTION::sell, OFFSETFLAG::close, m_intraTradeHigh * (1 - m_pAutoSetting->trailingPrcnt / 100.0), UINT(m_pAutoSetting->fixedSize), this->m_strategyName);
 		
 	}
-	else if (netPos < 0) {
+	else if (m_netPos < 0) {
 		m_intraTradeHigh = m_lastHigh;
 		m_intraTradeLow = min(m_lastLow, m_intraTradeLow);
-		this->sendStopOrder(m_inst, DIRECTION::buy, OFFSETFLAG::close, m_intraTradeHigh * (1 + m_pAutoSetting->trailingPrcnt / 100.0), UINT(m_pAutoSetting->fixedSize), this->m_strategyName);
+		this->sendStopOrder(m_inst, DIRECTION::buy, OFFSETFLAG::close, m_intraTradeLow * (1 + m_pAutoSetting->trailingPrcnt / 100.0), UINT(m_pAutoSetting->fixedSize), this->m_strategyName);
 	}
+
+		// ==============================================================日志输出========================================================
+	//double rsiValue = outReal[0];
+	cout << cSystem::GetCurrentTimeBuffer() << " netPos " << m_netPos << " up: " << up << " down: " << down << " lastPrice " << m_lastHigh << endl;
+	printStatus();
+
 }
 
 
 bool cStrategyKingKeltner::isTradeTime() {
-	return true;
 	DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2330 = 2330;
 	cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
 	DateTimeFormat hour = nowDateTime.Hour();
@@ -152,10 +156,10 @@ bool cStrategyKingKeltner::isTradeTime() {
 
 	DateTimeFormat nowTime = hour * 100 + min;
 	bool newState;
-	if ((nowTime>s0900 && nowTime <s1015) ||
-		(nowTime>s1030 && nowTime <s1130) ||
-		(nowTime>s1330 && nowTime <s1500) ||
-		(nowTime>s2100 && nowTime <s2330)
+	if ((nowTime>=s0900 && nowTime <s1015) ||
+		(nowTime>=s1030 && nowTime <s1130) ||
+		(nowTime>=s1330 && nowTime <s1500) ||
+		(nowTime>=s2100 && nowTime <s2330)
 		)
 	{
 
@@ -204,5 +208,42 @@ bool cStrategyKingKeltner::keltner( int kkLength, double kkDev, double& kkUp,dou
 }
 
 void cStrategyKingKeltner::onTrade(CThostFtdcTradeField pTrade) {
-	
+	cerr << this->m_strategyName << " onTrade " << endl;
+	if (m_netPos != 0) {
+		if (m_netPos > 0) {
+			for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
+				if (i->instrument == m_inst && i->direction == DIRECTION::sell) {
+					i->status = false;
+					cerr << " cancle sell " << ((i->offset == OFFSETFLAG::close) ? " close  " : " open ") << " stop order" << endl;
+				}
+			}
+		}
+		if (m_netPos < 0) {
+			for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
+				if (i->instrument == m_inst && i->direction == DIRECTION::buy) {
+					i->status = false;
+					cerr << " cancle buy " << ((i->offset == OFFSETFLAG::close) ? " close  " : " open ") << " stop order" << endl;
+				}
+			}
+		}
+	}
+}
+
+void cStrategyKingKeltner::printStatus() {
+	for each (auto var in m_workingStopOrderList)
+	{
+		if(var.status){
+			time_t orderTimeT = std::chrono::system_clock::to_time_t(var.orderTime);
+
+			struct tm* ptm = localtime(&orderTimeT);
+			char date[60] = { 0 };
+			sprintf(date, "%d-%02d-%02d %02d:%02d:%02d",
+				(int)ptm->tm_year + 1900, (int)ptm->tm_mon + 1, (int)ptm->tm_mday,
+				(int)ptm->tm_hour, (int)ptm->tm_min, (int)ptm->tm_sec);
+			string orderDateTime = string(date);
+			std::cout << orderDateTime <<" " << var.instrument << " stop order " << ((var.direction == DIRECTION::buy) ? "buy" : "sell") << " " << ((var.offset == OFFSETFLAG::close) ? "close " : "open ") << var.price << " " << var.volume << " " << var.slipTickNum << " " << var.strategyName << endl;
+
+		}
+
+	}
 }

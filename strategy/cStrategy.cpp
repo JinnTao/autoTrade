@@ -48,7 +48,7 @@ void cStrategy::unInit(){
 		cerr << this->m_strategyName << " unInit" << endl;
 };
 
-void cStrategy::sendStopOrder(string inst,DIRECTION inDirection,OFFSETFLAG inOffset,double price,UINT volume ,string strategy) {
+void cStrategy::sendStopOrder(string inst,DIRECTION inDirection,OFFSETFLAG inOffset,double price,UINT volume ,string strategy,int slipNum) {
 	cStopOrder order;
 	order.instrument = inst;
 	order.direction = inDirection;
@@ -58,6 +58,7 @@ void cStrategy::sendStopOrder(string inst,DIRECTION inDirection,OFFSETFLAG inOff
 	order.strategyName = strategy;
 	order.orderType = "";
 	order.status = true;
+	order.slipTickNum = slipNum;
 	order.orderTime = std::chrono::system_clock::now();
 	// add order to working list
 	m_workingStopOrderList.push_back(order);
@@ -71,8 +72,9 @@ void cStrategy::processStopOrder(string inst, double lastPrice) {
 			bool shortTriggered = var->direction == DIRECTION::sell && lastPrice <= var->price;
 
 			if (longTriggered || shortTriggered) {
-				this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, var->price, var->slipTickNum);
-				m_workingStopOrderList.erase(var);
+				//this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, var->price, var->slipTickNum);
+				this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, 0, var->slipTickNum);
+				var->status = false;
 
 			}
 		}

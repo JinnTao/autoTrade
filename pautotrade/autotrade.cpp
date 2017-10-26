@@ -59,7 +59,7 @@ void autotrade_trade()
 		pTraderUserApi->SubscribePublicTopic( THOST_TERT_RESTART );	// subscribe public topic
 		pTraderUserApi->SubscribePrivateTopic( THOST_TERT_QUICK );	// subscribe private topic
 		pTraderUserApi->RegisterFront( ctpAccount.tdAddress ); 
-		pTraderUserSpi->RegisterMarketDataEngine( pMdEngine );
+		
 		//-----------------------------------------人机交互线程---------------------------------------------------------------------------------
 		cTradingPlatformPtr pTradingPlatform = make_shared< cTradingPlatform >();
 		pTradingPlatform->RegisterMarketDataEngine( pMdEngine );

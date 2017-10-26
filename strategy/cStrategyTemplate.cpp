@@ -35,7 +35,7 @@ void cStrategyTemplate::init(){
 void cStrategyTemplate::onOrder(cOrderPtr p){
 }
 
-void cStrategyTemplate::onTrade(cTradePtr p){
+void cStrategyTemplate::onTrade(CThostFtdcTradeField p){
 
 }
 void cStrategyTemplate::run(){
