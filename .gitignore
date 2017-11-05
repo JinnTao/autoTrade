@@ -33,7 +33,11 @@
 # Vs2017
 /.vs
 strategy/cStrategyTemplate.cpp
+.vs
 
 # config
 account.txt
+
+#build file
+build
 
