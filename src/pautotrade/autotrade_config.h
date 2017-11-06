@@ -85,7 +85,8 @@ struct AccountParam
 //保存读取的信息的结构体
 struct mongoSetting
 {
-	char mongoHost[50];// Host地址
+	char address[50];// Host地址
+    char database[50];
 	int mongoPort;// 端口
 	bool mongoLogging;// 
 	//string m_read_contract;//合约代码

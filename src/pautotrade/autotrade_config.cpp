@@ -12,7 +12,8 @@ int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSet
 		strcpy_s(account.mdAddress,sizeof(account.mdAddress), ini.ReadString("account", "mdAddress", "1").c_str());
 		strcpy_s(account.userId,sizeof(account.userId), ini.ReadString("account", "userID", "1").c_str());
 		// mongoDB
-		strcpy_s(mongoDbSetting.mongoHost,sizeof(mongoDbSetting.mongoHost), ini.ReadString("dbMongo", "mongoHost", "1").c_str());
+		strcpy_s(mongoDbSetting.address,sizeof(mongoDbSetting.address), ini.ReadString("dbMongo", "address", "1").c_str());
+        strcpy_s(mongoDbSetting.database, sizeof(mongoDbSetting.database), ini.ReadString("dbMongo", "database", "1").c_str());
 		mongoDbSetting.mongoPort =  ini.ReadInt("dbMongo", "mongoPort", 1);
 		mongoDbSetting.mongoLogging = ini.ReadInt("dbMongo", "mongoLogging", 1);
 		// txt database dir
