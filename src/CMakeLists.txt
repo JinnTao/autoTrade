@@ -23,8 +23,7 @@ include_directories(core
                     utility/ta-lib/include
                     utility/easylogging
                     utility/mongo
-                    utility
-                    ${CMAKE_CURRENT_SOURCE_DIR})
+                    utility)
             
 link_directories(ThostTraderApi
                  utility/ta-lib/lib
