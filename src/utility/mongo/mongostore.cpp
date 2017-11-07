@@ -1,5 +1,5 @@
 ﻿#include "mongostore.h"
-//#include "easylogging++.h"
+#include "easylogging++.h"
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/types.hpp>
@@ -22,11 +22,10 @@ int32 MongoStore::init(const mongoSetting& mongo_config) {
         client_ = {uri_};
         db_     = client_.database(string(mongo_config.database));
     } catch (const std::exception& e) {
-        //LOG(INFO)<< "MongoDb init failed! "<< e.what();
+        LOG(INFO)<< "MongoDb init failed! "<< e.what();
         return -1;
     }
 
-    return 0;
     return 0;
 }
 

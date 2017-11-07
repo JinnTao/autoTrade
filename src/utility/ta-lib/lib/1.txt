@@ -1,7 +1,7 @@
 1.txt
 HOLDER
 LIST.TXT
-ta_abstract_cdd.lib
-ta_common_cdd.lib
-ta_func_cdd.lib
-ta_libc_cdd.lib
+ta_abstract_cdd
+ta_common_cdd
+ta_func_cdd
+ta_libc_cdd
