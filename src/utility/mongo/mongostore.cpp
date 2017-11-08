@@ -39,6 +39,33 @@ int32 MongoStore::stop() {
     is_running_.store(false, std::memory_order_release);
     return 0;
 }
+bool MongoStore::getData(string collectionName,std::chrono::time_point<std::chrono::system_clock> sTimePoint,std::chrono::time_point<std::chrono::system_clock> eTimePoint, vector<double> &close, vector<double> &open, vector<double> &high, vector<double> &low, vector<double> &volume, vector<string> &dateTime) {
+    try {
+        using bsoncxx::builder::stream::close_array;
+        using bsoncxx::builder::stream::close_document;
+        using bsoncxx::builder::stream::document;
+        using bsoncxx::builder::stream::finalize;
+        using bsoncxx::builder::stream::open_array;
+        using bsoncxx::builder::stream::open_document;
+        mongocxx::collection coll = db_.collection(collectionName);
+        bsoncxx::builder::stream::document filter_builder;
+        mongocxx::options::find out;
+        filter_builder << "recordTime" << open_document << "gte" << bsoncxx::types::b_date(sTimePoint) << "lte" << bsoncxx::types::b_date(eTimePoint) << close_document << "recordTime" << -1 << finalize;
+        out.sort(filter_builder.view());
+        mongocxx::cursor cursor = coll.find({},out);
+        for (auto&& doc : cursor) {
+            double closePrice = doc["close"].get_double();
+            cout << closePrice << endl;
+            //std::cout << bsoncxx::to_json(doc) << std::endl;
+        }
+        return true;
+    
+    }
+    catch (const std::exception e) {
+        LOG(INFO) << "Mongo Query faild! " << e.what();
+        return false;
+    }
+}
 
 
 //void MongoStore::loop() {

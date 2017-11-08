@@ -8,6 +8,10 @@
 #include "cCandle.h"
 #include "cTick.h"
 #include "cHistoryMarketData.h"
+//#include "autotrade_config.h"
+#include "mongo\mongostore.h"
+
+
 
 using std::map;
 using std::vector;
@@ -34,7 +38,14 @@ public:
 	void loadSeriesHistory(string inst,string startDate,string endDate,vector<double>& open, vector<double>& high,vector<double> &low,vector<double>& close,vector<double> &volume);
 	vector<cCandle> loadCandleHistory(string inst,string startDate,string endDate,DataFrequency dataFrequency,DataType dataType);
 
+    // history series from old to newest; data from mongoDb
+    void loadHistoryFromMongo(string collection, string sDateTime,string eDateTime,vector<double>& open, vector<double>& high, vector<double> &low, vector<double>& close, vector<double> &volume);
+
+
 	void setTradeDayList(map<string,int> *p){m_pTradeDayList = p;}
+    void registerMongoSetting(mongoSetting *p) {
+        m_mongoStore.init(*p); 
+    }
 protected:
 
 	marketdataHandle _m_mkt_handle;
@@ -44,6 +55,7 @@ protected:
 	// trade date List
 	map<string,int> *m_pTradeDayList;
 private:
+   MongoStore m_mongoStore;
 	
 };
 

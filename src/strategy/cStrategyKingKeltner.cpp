@@ -24,7 +24,8 @@ cStrategyKingKeltner::~cStrategyKingKeltner(void)
 void cStrategyKingKeltner::init(){
 	if (m_close.size() == 0) {
 		// Start Time 
-		this->m_marketData->loadSeriesHistory(m_oneMinuteDataDir, m_startDate, m_endDate, m_open, m_high, m_low, m_close, m_volume);
+		//this->m_marketData->loadSeriesHistory(m_oneMinuteDataDir, m_startDate, m_endDate, m_open, m_high, m_low, m_close, m_volume);
+        this->m_marketData->loadHistoryFromMongo(m_pAutoSetting->collectionName,m_pAutoSetting->startDateTime,m_pAutoSetting->endDateTime, m_open, m_high, m_low, m_close, m_volume);
 	}
 	this->m_pMdSpi->SubscribeMarketData(m_inst);// trade 1801
 

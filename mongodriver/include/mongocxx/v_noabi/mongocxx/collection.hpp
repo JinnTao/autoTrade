@@ -325,7 +325,7 @@ class MONGOCXX_API collection {
     ///
     /// @throws mongocxx::logic_error if the options are invalid, or if the unsupported option
     /// modifiers "$query" or "$explain" are used.
-    ///
+    ///y
     /// @see https://docs.mongodb.com/master/core/read-operations-introduction/
     ///
     cursor find(bsoncxx::document::view_or_value filter,

@@ -26,8 +26,8 @@ public:
 	void RegisterTraderSpi( cTraderSpi* pTraderSpi );
 	void RegisterMdSpi( cMdSpi* p );
 	void RegisterMarketDataEngine( cMarketDataCollectionPtr pMarketDataEngine );
-	void RegisterStrategy( cStrategyPtr pStrategy );
-	void RegisterParameters(autoSetting *p);
+    void RegisterStrategy( cStrategyPtr pStrategy );
+    void RegisterParameters(autoSetting *pAutoSetting, mongoSetting *pMongoSetting);
 
 
 	//
@@ -109,6 +109,7 @@ private:
 	map<string,int> m_tradeDayList;
 
 	autoSetting* m_pAutoSetting;
+    mongoSetting* m_pMongoSetting;
 };
 
 typedef shared_ptr< cTradingPlatform > cTradingPlatformPtr;

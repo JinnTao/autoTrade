@@ -145,9 +145,11 @@ void cTradingPlatform::RegisterStrategy( cStrategyPtr pStrategy )
 }
 
 
-void cTradingPlatform::RegisterParameters(autoSetting *p)
+void cTradingPlatform::RegisterParameters(autoSetting *p,mongoSetting *pM)
 {
 	this->m_pAutoSetting = p;
+    this->m_pMongoSetting = pM;
+    this->m_pMarketDataEngine->registerMongoSetting(pM);
 
 }
 void cTradingPlatform::SendNewOrder( cOrder* pOrder )
@@ -232,7 +234,7 @@ void cTradingPlatform::initStrategy(cStrategy* pStrategy,autoSetting & para){
 	
 	pStrategy->setInst(string(para.inst));
 	pStrategy->setInitDate(para.startDate, para.endDate);
-
+    
 	this->m_pTraderSpi->RegisterStrategy(pStrategy);
 }
 

@@ -102,6 +102,8 @@ protected:
 
 	autoSetting *m_pAutoSetting;
 
+
+
 private:
 	
 	DWORD AutoTrading();
@@ -112,4 +114,3 @@ private:
 typedef shared_ptr< cStrategy > cStrategyPtr;
 
 #endif
-

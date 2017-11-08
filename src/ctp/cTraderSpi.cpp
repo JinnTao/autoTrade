@@ -4,6 +4,8 @@
 #include <cTrade.h>
 #define ROHON 1
 #undef  ROHON
+#define _CTP 1
+
 extern HANDLE g_hEvent;
 bool IsFlowControl( int iResult )
 {
@@ -61,7 +63,7 @@ void cTraderSpi::ReqUserLogin()
 	strcpy_s( req.UserID, sizeof( TThostFtdcInvestorIDType ), m_investorID );
 	strcpy( req.Password, m_password );
 
-	#ifdef _DEBUG
+	#ifdef _CTP
 
 		int iResult = m_pUserTraderApi->ReqUserLogin( &req, ++iRequestID );
 		char message[256];

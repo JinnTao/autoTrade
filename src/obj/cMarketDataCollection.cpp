@@ -105,3 +105,16 @@ vector<cCandle> cMarketDataCollection::loadCandleHistory(string inst,string star
 	vector<cCandle> t;
 	return t;
 }
+void cMarketDataCollection::loadHistoryFromMongo(string collection, string sDateTime, string eDateTime, vector<double>& open, vector<double>& high, vector<double> &low, vector<double>& close, vector<double> &volume) {
+    vector<string> dateTime;
+    int sYear, sMon, sDay, eYear, eMon, eDay;
+    int sH, sM, sS, eH, eM, eS;
+    sscanf_s(sDateTime.c_str(), "%4d%2d%2d-%2d:%2d:%2d", &sYear, &sMon, &sDay, &sH, &sM, &sS);
+    sscanf_s(eDateTime.c_str(), "%4d%2d%2d-%2d:%2d:%2d", &eYear, &eMon, &eDay, &eH, &eM, &eS);
+    std::tm sTimeTm{sS,sM,sH,sDay,sMon-1,sYear-1900};
+    std::tm eTimeTm{eS,eM,eH,eDay,eMon-1,eYear-1900};
+    std::chrono::time_point<std::chrono::system_clock> sDateTimePoint = std::chrono::system_clock::from_time_t(std::mktime(&sTimeTm));
+    std::chrono::time_point<std::chrono::system_clock> eDateTimePoint = std::chrono::system_clock::from_time_t(std::mktime(&eTimeTm));
+    m_mongoStore.getData(collection, sDateTimePoint, eDateTimePoint, close, open, high, low, volume, dateTime);
+
+}

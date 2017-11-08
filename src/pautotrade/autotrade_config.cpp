@@ -13,7 +13,7 @@ int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSet
 		strcpy_s(account.userId,sizeof(account.userId), ini.ReadString("account", "userID", "1").c_str());
 		// mongoDB
 		strcpy_s(mongoDbSetting.address,sizeof(mongoDbSetting.address), ini.ReadString("dbMongo", "address", "1").c_str());
-        strcpy_s(mongoDbSetting.database, sizeof(mongoDbSetting.database), ini.ReadString("dbMongo", "database", "1").c_str());
+        strcpy_s(mongoDbSetting.database, sizeof(mongoDbSetting.database), ini.ReadString("dbMongo", "dataBase", "1").c_str());
 		mongoDbSetting.mongoPort =  ini.ReadInt("dbMongo", "mongoPort", 1);
 		mongoDbSetting.mongoLogging = ini.ReadInt("dbMongo", "mongoLogging", 1);
 		// txt database dir
@@ -23,7 +23,10 @@ int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSet
 		strcpy_s(autoTradeSetting.endDate, sizeof(autoTradeSetting.endDate), ini.ReadString("dataBase", "endDate", "1").c_str());
 		// strategy
 		strcpy_s(autoTradeSetting.inst, sizeof(autoTradeSetting.inst), ini.ReadString("strategy", "inst", "1").c_str());
-		autoTradeSetting.para1 = ini.ReadDouble("strategy", "para1", 1);
+        // datasource
+        strcpy_s(autoTradeSetting.collectionName, sizeof(autoTradeSetting.collectionName), ini.ReadString("KingKeltner", "collectionName", "").c_str());
+        strcpy_s(autoTradeSetting.startDateTime, sizeof(autoTradeSetting.startDateTime), ini.ReadString("KingKeltner", "startDateTime", "").c_str());
+        strcpy_s(autoTradeSetting.endDateTime, sizeof(autoTradeSetting.endDateTime), ini.ReadString("KingKeltner", "endDateTime", "").c_str());
 		// KingKeltner
 		autoTradeSetting.kkLength = ini.ReadDouble("KingKeltner", "kkLength", 1);
 		autoTradeSetting.kkDev = ini.ReadDouble("KingKeltner", "kkDev", 1);

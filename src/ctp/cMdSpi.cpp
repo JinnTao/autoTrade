@@ -5,6 +5,8 @@
 
 using namespace std;
 
+#define _CTP
+
 extern HANDLE g_hEvent;
 #pragma warning(disable : 4996)
 
@@ -88,7 +90,7 @@ void cMdSpi::ReqUserLogin()
 	strcpy_s( req.UserID, sizeof( TThostFtdcInvestorIDType ), m_investorID );
 	strcpy( req.Password,  m_password );
 
-	#ifdef _DEBUG
+	#ifdef _CTP
 
 		int iResult = m_pUserMdApi->ReqUserLogin( &req, ++iRequestID );
 		char message[256];

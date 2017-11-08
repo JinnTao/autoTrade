@@ -105,10 +105,11 @@ struct autoSetting
 	char inst[25]; // strategy Trading Inst
 	char startDate[25];
 	char endDate[25];
-	double para1;
-	double para2;
-	double para3;
-	double para4;
+
+// dataSource
+    char startDateTime[150];
+    char endDateTime[150];
+    char collectionName[20];
 
 	//kingKeltNer
 	//;计算通道中值的窗口数
