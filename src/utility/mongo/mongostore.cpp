@@ -3,6 +3,7 @@
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/types.hpp>
+#include <bsoncxx/json.hpp>
 
 // initial easylogging
 //INITIALIZE_EASYLOGGINGPP
@@ -47,15 +48,26 @@ bool MongoStore::getData(string collectionName,std::chrono::time_point<std::chro
         using bsoncxx::builder::stream::finalize;
         using bsoncxx::builder::stream::open_array;
         using bsoncxx::builder::stream::open_document;
+        
+        using bsoncxx::builder::basic::kvp;
+
         mongocxx::collection coll = db_.collection(collectionName);
         bsoncxx::builder::stream::document filter_builder;
+        
+        
+        filter_builder << "recordTime" << open_document << "$gte" << bsoncxx::types::b_date(sTimePoint) << "$lte" << bsoncxx::types::b_date(sTimePoint) << close_document <<  finalize;
+        //filter_builder.view()
+        //cout << bsoncxx::to_json(filter_builder);
+        bsoncxx::builder::stream::document sort_filter;
+        sort_filter << "recordTime" << 1 << finalize;
         mongocxx::options::find out;
-        filter_builder << "recordTime" << open_document << "gte" << bsoncxx::types::b_date(sTimePoint) << "lte" << bsoncxx::types::b_date(eTimePoint) << close_document << "recordTime" << -1 << finalize;
-        out.sort(filter_builder.view());
-        mongocxx::cursor cursor = coll.find({},out);
+        out.sort(sort_filter.view());
+        
+        mongocxx::cursor cursor = coll.find(filter_builder.view());
         for (auto&& doc : cursor) {
             double closePrice = doc["close"].get_double();
-            cout << closePrice << endl;
+            cout << doc["actionDate"].get_utf8().value << " " << doc["actionTime"].get_utf8().value << " " << closePrice << endl;
+            
             //std::cout << bsoncxx::to_json(doc) << std::endl;
         }
         return true;
