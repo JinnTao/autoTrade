@@ -958,7 +958,7 @@ void cTraderSpi::OnRspOrderInsert( CThostFtdcInputOrderField* pInputOrder, CThos
 // order insertion return
 void cTraderSpi::OnRtnOrder( CThostFtdcOrderField* pOrder )
 {
-	if(pOrder && !strcmp(pOrder->InsertDate,this->m_investorID)){
+	if(pOrder && !strcmp(pOrder->InvestorID,this->m_investorID)){
 		m_orderCollection->Add( pOrder );
 		if( !IsMyOrder( pOrder ) ){
 			cerr << " Other:";
@@ -1150,27 +1150,27 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 	double BuyPrice = orderPrice + priceTick * this->m_InstMeassageMap->at(inst)->PriceTick;;
 	double SellPrice = orderPrice - priceTick * this->m_InstMeassageMap->at(inst)->PriceTick;;// 卖出价 买入价
 	// make market price order
-	if(orderPrice == 0){
-		cMarketData *p;
-		double lastprice = 0;
-		p = this->m_pMarketDataEngine->GetMarketDataHandle(inst);
-		if(p) {
-			lastprice = p->getLastMarketData().LastPrice;
-		}else{
-			cerr << "Inst Error" << endl;
-			this->m_pMdSpi->SubscribeMarketData(inst);
-			return;
-		}
-		switch (dire)
-		{
-		case buy:
-			BuyPrice = lastprice + (1 + priceTick) * this->m_InstMeassageMap->at(inst)->PriceTick;
-			break;
-		case sell:
-			SellPrice =  lastprice - (1 + priceTick) * this->m_InstMeassageMap->at(inst)->PriceTick;
-			break;
-		}
-	}
+    if(orderPrice == 0){
+	    cMarketData *p;
+	    double lastprice = 0;
+	    p = this->m_pMarketDataEngine->GetMarketDataHandle(inst);
+	    if(p) {
+		    lastprice = p->getLastMarketData().LastPrice;
+	    }else{
+		    cerr << "Inst Error" << endl;
+		    this->m_pMdSpi->SubscribeMarketData(inst);
+		    return;
+	    }
+	    switch (dire)
+	    {
+	    case buy:
+		    BuyPrice = lastprice + (1 + priceTick) * this->m_InstMeassageMap->at(inst)->PriceTick;
+		    break;
+	    case sell:
+		    SellPrice =  lastprice - (1 + priceTick) * this->m_InstMeassageMap->at(inst)->PriceTick;
+		    break;
+	    }
+    }
 
 	
 	//开仓

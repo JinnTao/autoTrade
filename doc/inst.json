@@ -1,0 +1,242 @@
+{
+    "instruments": {
+      "rb1801": {
+        "destination": "rb0000",
+        "mode": "mode2"
+      },
+     
+	  "al1712": {
+        "destination": "al0000",
+        "mode": "mode4"
+      },
+
+	  "cu1711": {
+        "destination": "cu0000",
+        "mode": "mode4"
+      },
+	  "pb1711": {
+        "destination": "pb0000",
+        "mode": "mode4"
+      },
+
+	  "ru1801": {
+        "destination": "ru0000",
+        "mode": "mode2"
+      },
+
+	  "bu1712": {
+        "destination": "bu0000",
+        "mode": "mode2"
+      },
+
+	  "hc1801": {
+        "destination": "hc0000",
+        "mode": "mode2"
+      },
+
+	  "ni1801": {
+        "destination": "ni0000",
+        "mode": "mode4"
+      },
+
+	  "sn1801": {
+        "destination": "sn0000",
+        "mode": "mode4"
+      },
+
+	  "zn1711": {
+        "destination": "zn0000",
+        "mode": "mode4"
+      },
+
+	  "au1712": {
+        "destination": "au0000",
+        "mode": "mode5"
+      },
+
+	  "ag1712": {
+        "destination": "ag0000",
+        "mode": "mode5"
+      },
+
+	  "cf801": {
+        "destination": "cf0000",
+        "mode": "mode3"
+      },
+
+	   "fg801": {
+        "destination": "fg0000",
+        "mode": "mode3"
+      },
+
+	   "ma801": {
+        "destination": "ma0000",
+        "mode": "mode3"
+      },
+
+	  "oi801": {
+        "destination": "oi0000",
+        "mode": "mode3"
+      },
+
+	   "sr801": {
+        "destination": "sr0000",
+        "mode": "mode3"
+      },
+
+	   "ta801": {
+        "destination": "ta0000",
+        "mode": "mode3"
+      },
+
+	   "rm801": {
+        "destination": "rm0000",
+        "mode": "mode3"
+      },
+	   "zc801": {
+        "destination": "zc0000",
+        "mode": "mode3"
+      },
+
+	   "a1801": {
+        "destination": "a0000",
+        "mode": "mode3"
+      },
+	   "c1801": {
+        "destination": "c0000",
+        "mode": "mode1"
+      },
+	   "j1801": {
+        "destination": "j0000",
+        "mode": "mode3"
+      },
+	   "l1801": {
+        "destination": "l0000",
+        "mode": "mode1"
+      },
+	   "m1801": {
+        "destination": "m0000",
+        "mode": "mode3"
+      },
+	   "p1801": {
+        "destination": "p0000",
+        "mode": "mode3"
+      },
+	   "v1801": {
+        "destination": "v0000",
+        "mode": "mode1"
+      },
+	   "pp1801": {
+        "destination": "pp0000",
+        "mode": "mode1"
+      },
+	   "y1801": {
+        "destination": "y0000",
+        "mode": "mode3"
+      },
+	   "i1801": {
+        "destination": "i0000",
+        "mode": "mode3"
+      },
+	   "jd1801": {
+        "destination": "jd0000",
+        "mode": "mode1"
+      },
+	   "cs1801": {
+        "destination": "cs0000",
+        "mode": "mode1"
+      },
+	   "jm1801": {
+        "destination": "jm0000",
+        "mode": "mode3"
+      }
+    },
+  "modes": {
+    "mode1": [
+      {
+        "begin": "01:00",
+        "end": "02:15"
+      },
+      {
+        "begin": "02:30",
+        "end": "03:30"
+      },
+      {
+        "begin": "05:30",
+        "end": "07:00"
+      }
+    ],
+    "mode2": [
+      {
+        "begin": "01:00",
+        "end": "02:15"
+      },
+      {
+        "begin": "02:30",
+        "end": "03:30"
+      },
+      {
+        "begin": "05:30",
+        "end": "07:00"
+      },
+      {
+        "begin": "13:00",
+        "end": "15:00"
+      }
+    ],
+    "mode3": [
+      {
+        "begin": "01:00",
+        "end": "02:15"
+      },
+      {
+        "begin": "02:30",
+        "end": "03:30"
+      },
+      {
+        "begin": "05:30",
+        "end": "07:00"
+      },
+      {
+        "begin": "13:00",
+        "end": "15:30"
+      }
+    ],
+    "mode4": [
+      {
+        "begin": "01:00",
+        "end": "02:15"
+      },
+      {
+        "begin": "02:30",
+        "end": "03:30"
+      },
+      {
+        "begin": "05:30",
+        "end": "07:00"
+      },
+      {
+        "begin": "13:00",
+        "end": "17:00"
+      }
+    ],
+    "mode5": [
+      {
+        "begin": "01:00",
+        "end": "02:15"
+      },
+      {
+        "begin": "02:30",
+        "end": "03:30"
+      },
+      {
+        "begin": "05:30",
+        "end": "07:00"
+      },
+      {
+        "begin": "13:00",
+        "end": "18:30"
+      }
+    ]
+  }
+  }
