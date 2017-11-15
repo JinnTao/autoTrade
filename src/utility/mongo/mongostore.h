@@ -22,7 +22,7 @@ public:
     int32_t init(const mongoSetting& mongo_config);
     int32_t start();
     int32_t stop();
-    bool getData(string collectionName, std::chrono::time_point<std::chrono::system_clock> sTimePoint, std::chrono::time_point<std::chrono::system_clock> eTimePoint, vector<double> &close, vector<double> &open, vector<double> &high, vector<double> &low, vector<double> &volume, vector<string> &dateTime);
+    bool getData(string collectionName, std::chrono::time_point<std::chrono::system_clock>& sTimePoint, std::chrono::time_point<std::chrono::system_clock>& eTimePoint, vector<double> &close, vector<double> &open, vector<double> &high, vector<double> &low, vector<double> &volume, vector<string> &dateTime);
 private:
     //void loop();
     //void process();

@@ -44,7 +44,7 @@ public:
 
 	void setTradeDayList(map<string,int> *p){m_pTradeDayList = p;}
     void registerMongoSetting(mongoSetting *p) {
-        m_mongoStore.init(*p); 
+       m_mongoStore.init(*p); 
     }
 protected:
 
@@ -54,6 +54,9 @@ protected:
 	
 	// trade date List
 	map<string,int> *m_pTradeDayList;
+
+    std::chrono::time_point<std::chrono::system_clock> m_sDateTimePoint;
+    std::chrono::time_point<std::chrono::system_clock> m_eDateTimePoint;
 private:
    MongoStore m_mongoStore;
 	

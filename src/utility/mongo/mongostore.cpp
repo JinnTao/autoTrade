@@ -40,7 +40,7 @@ int32 MongoStore::stop() {
     is_running_.store(false, std::memory_order_release);
     return 0;
 }
-bool MongoStore::getData(string collectionName,std::chrono::time_point<std::chrono::system_clock> sTimePoint,std::chrono::time_point<std::chrono::system_clock> eTimePoint, vector<double> &close, vector<double> &open, vector<double> &high, vector<double> &low, vector<double> &volume, vector<string> &dateTime) {
+bool MongoStore::getData(string collectionName,std::chrono::time_point<std::chrono::system_clock>& sTimePoint,std::chrono::time_point<std::chrono::system_clock>& eTimePoint, vector<double> &close, vector<double> &open, vector<double> &high, vector<double> &low, vector<double> &volume, vector<string> &dateTime) {
     try {
         using bsoncxx::builder::stream::close_array;
         using bsoncxx::builder::stream::close_document;
@@ -59,10 +59,11 @@ bool MongoStore::getData(string collectionName,std::chrono::time_point<std::chro
         eTimePoint = eTimePoint + 8 * one_hour;
         std::time_t endTime = std::chrono::system_clock::to_time_t(eTimePoint);
         std::time_t startTime = std::chrono::system_clock::to_time_t(sTimePoint);
-        
+        cout << collectionName << endl;
 
 
-        std::cout << " s " << std::ctime(&startTime) << " e " <<  std::ctime(&endTime) << endl;
+        std::cout << " s " << std::ctime(&startTime);
+        std::cout << " e " << std::ctime(&endTime) << endl;
         filter_builder << "recordTime" << open_document << "$gte" << bsoncxx::types::b_date(sTimePoint) << "$lte" << bsoncxx::types::b_date(eTimePoint) << close_document  ;
         bsoncxx::builder::stream::document sort_filter;
         sort_filter << "recordTime" << 1 ;
@@ -77,7 +78,8 @@ bool MongoStore::getData(string collectionName,std::chrono::time_point<std::chro
             high.push_back(doc["high"].get_double());
             low.push_back(doc["low"].get_double());
             open.push_back(doc["open"].get_double());
-            //volume.push_back(doc["volume"].get_double());
+            
+            volume.push_back(double(doc["volume"].get_int32()));
             
             LOG(INFO) << doc["actionDate"].get_utf8().value << " " << doc["actionTime"].get_utf8().value << " close " << doc["close"].get_double().value;
             //std::cout << bsoncxx::to_json(doc) << std::endl;
