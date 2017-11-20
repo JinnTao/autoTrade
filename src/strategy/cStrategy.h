@@ -19,7 +19,7 @@
 #include "cMdSpi.h"
 #include "cDateTime.h"
 #include "cSystem.h"
-
+#include <thread>
 class cTraderSpi;
 
 
@@ -112,7 +112,8 @@ protected:
 private:
 	
 	DWORD AutoTrading();
-
+    std::thread m_thread;
+    std::atomic<bool>    m_isRuning{ ATOMIC_FLAG_INIT };
 	cThread< cStrategy >* m_pTradingThread;
 };
 
