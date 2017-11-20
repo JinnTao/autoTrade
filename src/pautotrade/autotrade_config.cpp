@@ -23,6 +23,8 @@ int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSet
 		strcpy_s(autoTradeSetting.endDate, sizeof(autoTradeSetting.endDate), ini.ReadString("dataBase", "endDate", "1").c_str());
 		// strategy
 		strcpy_s(autoTradeSetting.inst, sizeof(autoTradeSetting.inst), ini.ReadString("strategy", "inst", "1").c_str());
+        strcpy_s(autoTradeSetting.lots, sizeof(autoTradeSetting.lots), ini.ReadString("strategy", "lots", "1").c_str());
+        strcpy_s(autoTradeSetting.timeMode, sizeof(autoTradeSetting.timeMode), ini.ReadString("strategy", "timeMode", "1").c_str());
         // datasource
         strcpy_s(autoTradeSetting.collectionName, sizeof(autoTradeSetting.collectionName), ini.ReadString("KingKeltner", "collectionName", "").c_str());
         strcpy_s(autoTradeSetting.startDateTime, sizeof(autoTradeSetting.startDateTime), ini.ReadString("KingKeltner", "startDateTime", "").c_str());

@@ -19,7 +19,7 @@ public:
 
 	bool isTradeTime();
 
-	virtual void setInst(string inst) { this->m_inst = inst; };
+    virtual void setInst(string inst);
 	virtual void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; };
 	
 	bool keltner( int kkLength, double kkDev,double &kkUp,double &kkDown);
@@ -27,6 +27,9 @@ public:
 	void sendOcoOrder(double upPrice, double downPrice, int fixedSize);
 
 	void printStatus();
+
+protected:
+
 private:
 
 	vector<double> m_open;
@@ -47,7 +50,7 @@ private:
 
 	bool m_oldState;
 
-	string m_inst;
+    std::map<std::string, int32> m_instLotsList;
 	// init data 
 	string m_startDate;
 	string m_endDate;

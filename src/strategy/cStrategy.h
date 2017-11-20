@@ -54,6 +54,8 @@ public:
 
 
 	virtual void setInst(string inst) { this->m_inst = inst; }
+    virtual void setlots(int lots) { this->m_lots = lots; }
+    virtual void setTimeMode(int timeMode) { this->m_timeMode = timeMode; }
 	virtual void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; }
 
 	virtual void sendStopOrder(string inst, DIRECTION inDirection,OFFSETFLAG inOffset, double price, UINT volume, string strategy,int slipNum = 1);
@@ -97,6 +99,9 @@ protected:
 	string m_oneMinuteDataDir;
 
 	string m_inst;
+    int m_lots;
+    int m_timeMode;
+
 	string m_startDate;
 	string m_endDate;
 

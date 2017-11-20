@@ -102,8 +102,9 @@ struct autoSetting
 {
 	char tradeDayDir[125];// 交易日路径
 	char dataBaseDir[125];// 数据路径
-	char inst[25]; // strategy Trading Inst
-	char startDate[25];
+	
+    
+    char startDate[25];
 	char endDate[25];
 
 // dataSource
@@ -123,6 +124,10 @@ struct autoSetting
 	//;初始化数据所用的天数
 	double initDays;// = 10
 
+    // strategy base Information
+    char inst[300]; // strategy Trading Inst
+    char lots[300]; // strategy Trading Inst lost
+    char timeMode[300]; // strategy Time filter mode
 
 
 	autoSetting(){

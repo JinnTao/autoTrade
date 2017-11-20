@@ -1,5 +1,5 @@
 #include "cStrategyKingKeltner.h"
-
+#include "easylogging\easylogging++.h"
 
 cStrategyKingKeltner::cStrategyKingKeltner(void)
 {
@@ -125,20 +125,20 @@ void cStrategyKingKeltner::on5MBar(){
 	if (m_netPos == 0) {
 		this->m_intraTradeHigh = m_lastHigh;
 		this->m_intraTradeLow = m_lastLow;
-
-		this->sendOcoOrder(up, down, int(this->m_pAutoSetting->fixedSize));
+        // according strategy config set trading lots
+		this->sendOcoOrder(up, down, int(m_lots));
 
 	}
 	else if (m_netPos > 0) {
 		m_intraTradeHigh = max(m_lastHigh, m_intraTradeHigh);
 		m_intraTradeLow = m_lastLow;
-		this->sendStopOrder(m_inst, DIRECTION::sell, OFFSETFLAG::close, m_intraTradeHigh * (1 - m_pAutoSetting->trailingPrcnt / 100.0), UINT(m_pAutoSetting->fixedSize), this->m_strategyName);
+		this->sendStopOrder(m_inst, DIRECTION::sell, OFFSETFLAG::close, m_intraTradeHigh * (1 - m_pAutoSetting->trailingPrcnt / 100.0), UINT(std::abs(m_netPos)), this->m_strategyName);
 		
 	}
 	else if (m_netPos < 0) {
 		m_intraTradeHigh = m_lastHigh;
 		m_intraTradeLow = min(m_lastLow, m_intraTradeLow);
-		this->sendStopOrder(m_inst, DIRECTION::buy, OFFSETFLAG::close, m_intraTradeLow * (1 + m_pAutoSetting->trailingPrcnt / 100.0), UINT(m_pAutoSetting->fixedSize), this->m_strategyName);
+		this->sendStopOrder(m_inst, DIRECTION::buy, OFFSETFLAG::close, m_intraTradeLow * (1 + m_pAutoSetting->trailingPrcnt / 100.0), UINT(std::abs(m_netPos)), this->m_strategyName);
 	}
 
 	// ==============================================================ÈÕÖ¾Êä³ö========================================================
@@ -248,3 +248,10 @@ void cStrategyKingKeltner::printStatus() {
 
 	}
 }
+
+void cStrategyKingKeltner::setInst(string inst) {
+    this->m_inst = inst;
+}
+
+
+

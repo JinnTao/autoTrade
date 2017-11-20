@@ -6,7 +6,11 @@
 
 #include <iostream>
 #include <string>
+#include "easylogging\easylogging++.h"
+
 using std::string;
+
+
 #ifndef _DEBUG
 #define _DEBUG 0
 #endif
@@ -217,25 +221,87 @@ void cTradingPlatform::CancelPendingOrder( int orderID )
 	//	m_pOrders->Remove( orderID );
 	//}
 }
+//×Ö·û´®·Ö¸îº¯Êý  
 
-void cTradingPlatform::initStrategy(cStrategy* pStrategy,autoSetting & para){
-	pStrategy->RegisterMarketDataCollection(this->m_pMarketDataEngine);
-	pStrategy->RegisterTradeSpi(this->m_pTraderSpi);
-	pStrategy->RegisterMdSpi(this->m_pMdSpi);
-	pStrategy->RegisterPositionCollectionPtr(this->m_pPositions);
-	pStrategy->RegisterOrderCollectionPtr(this->m_pOrders);
-	pStrategy->RegisterTradeCollectionPtr(this->m_pTrades);
-	pStrategy->RegisterTxtDir(string(para.tradeDayDir), string(para.dataBaseDir));
-	pStrategy->RegisterAutoSetting(&para);
+std::vector<std::string> cTradingPlatform::splitToStr(std::string str, std::string pattern)
+{
+    std::string::size_type pos;
+    std::vector<std::string> result;
+    str += pattern;//À©Õ¹×Ö·û´®ÒÔ·½±ã²Ù×÷  
+    int size = str.size();
+
+    for (int i = 0; i<size; i++)
+    {
+        pos = str.find(pattern, i);
+        if (pos<size)
+        {
+            std::string s = str.substr(i, pos - i);
+            result.push_back(s);
+            i = pos + pattern.size() - 1;
+        }
+    }
+    return result;
+}
 
 
-	this->readDay(string(para.tradeDayDir),this->m_tradeDayList);
-	this->m_pMarketDataEngine->setTradeDayList(&this->m_tradeDayList);
-	
-	pStrategy->setInst(string(para.inst));
-	pStrategy->setInitDate(para.startDate, para.endDate);
+std::vector<int32> cTradingPlatform::splitToInt(std::string str, std::string pattern)
+{
+    std::string::size_type pos;
+    std::vector<int32> result;
+    str += pattern;//À©Õ¹×Ö·û´®ÒÔ·½±ã²Ù×÷  
+    int size = str.size();
+
+    for (int i = 0; i<size; i++)
+    {
+        pos = str.find(pattern, i);
+        if (pos<size)
+        {
+            std::string s = str.substr(i, pos - i);
+            result.push_back(std::atoi(s.c_str()));
+            i = pos + pattern.size() - 1;
+        }
+    }
+    return result;
+}
+void cTradingPlatform::initStrategy(autoSetting & para){
     
-	this->m_pTraderSpi->RegisterStrategy(pStrategy);
+    std::vector<std::string> instList = this->splitToStr(std::string(para.inst),",");
+    std::vector<int32> lotsList = this->splitToInt(std::string(para.lots),",");
+    std::vector<int32> timeModeList = this->splitToInt(std::string(para.timeMode),",");
+
+    if (instList.size() != lotsList.size() || timeModeList.size() != lotsList.size()) {
+        LOG(ERROR) << " initStrategy  inst lot timeMode Error, init Strategy Failed";
+        return;
+    }
+    for (int i = 0;i < instList.size();i++) {
+        std::shared_ptr<cStrategyKingKeltner> pStrategy = std::make_shared<cStrategyKingKeltner>();
+        
+        pStrategy->RegisterMarketDataCollection(this->m_pMarketDataEngine);
+        pStrategy->RegisterTradeSpi(this->m_pTraderSpi);
+        pStrategy->RegisterMdSpi(this->m_pMdSpi);
+        pStrategy->RegisterPositionCollectionPtr(this->m_pPositions);
+        pStrategy->RegisterOrderCollectionPtr(this->m_pOrders);
+        pStrategy->RegisterTradeCollectionPtr(this->m_pTrades);
+        pStrategy->RegisterTxtDir(string(para.tradeDayDir), string(para.dataBaseDir));
+        pStrategy->RegisterAutoSetting(&para);
+
+
+        this->readDay(string(para.tradeDayDir), this->m_tradeDayList);
+        this->m_pMarketDataEngine->setTradeDayList(&this->m_tradeDayList);
+
+        pStrategy->setInst(instList[i]);
+        pStrategy->setlots(lotsList[i]);
+        pStrategy->setTimeMode(timeModeList[i]);
+        pStrategy->setInitDate(para.startDate, para.endDate);
+
+        this->m_pTraderSpi->RegisterStrategy(pStrategy.get());
+        this->m_StrategyKKList.push_back(pStrategy);
+    }
+
+
+
+
+
 }
 
 void cTradingPlatform::readDay(string fileName, map<string,int> &workDay){
@@ -269,7 +335,7 @@ DWORD cTradingPlatform::AutoTrading()
 	cerr<<endl<<"OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancle seqNo£º";
 	//initial subcribe instrument
 	this->m_pMdSpi->SubscribeMarketData(this->m_pSubscribeInst);
-	this->initStrategy(&m_strategyKingKeltner,*(this->m_pAutoSetting));
+	this->initStrategy(*(this->m_pAutoSetting));
 	this->m_pTraderSpi->RegisterMarketDataEngine(this->m_pMarketDataEngine);
 	while(true)
 	{
@@ -292,12 +358,17 @@ DWORD cTradingPlatform::AutoTrading()
 		else if(str == "run")
 		{			
 //			m_strategy.start();
-			m_strategyKingKeltner.start();
-		}
+            for (auto iter : m_StrategyKKList) {
+                iter->start();
+            }
+					}
 		else if(str == "stop")
 		{
 		//	m_strategy.stop();
-			m_strategyKingKeltner.stop();
+            for (auto iter : m_StrategyKKList) {
+                iter->stop();
+            }
+           
 		}
 		else if(str == "order"){
 			this->m_pOrders->PrintPendingOrders();

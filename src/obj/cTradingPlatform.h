@@ -80,8 +80,9 @@ public:
 
 	void readDay(string fileName, map<string,int> &workDay);
 	//init
-	void initStrategy(cStrategy *, autoSetting &);
-
+	void initStrategy(autoSetting &);
+    std::vector<std::string> cTradingPlatform::splitToStr(std::string str, std::string pattern);
+    std::vector<int32> cTradingPlatform::splitToInt(std::string str, std::string pattern);
 private:
 	cTraderSpi*	m_pTraderSpi;
 	cMdSpi* m_pMdSpi;
@@ -103,6 +104,7 @@ private:
 	map< cString, double > m_closedPnL;
 	// ≤ﬂ¬‘¿‡
 	//cStrategyTemplate m_strategy;
+    std::list<std::shared_ptr<cStrategyKingKeltner>> m_StrategyKKList;
 	cStrategyKingKeltner m_strategyKingKeltner; // cancle comment cause Bug
 	//cStrategyBayes m_strategyBayes;
 	// calendar day
