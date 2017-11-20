@@ -26,7 +26,7 @@ void cStrategyKingKeltner::init(){
 	if (m_close.size() == 0) {
 		// Start Time 
 		//this->m_marketData->loadSeriesHistory(m_oneMinuteDataDir, m_startDate, m_endDate, m_open, m_high, m_low, m_close, m_volume);
-        this->m_marketData->loadHistoryFromMongo(m_pAutoSetting->collectionName,m_pAutoSetting->startDateTime,m_pAutoSetting->endDateTime, m_open, m_high, m_low, m_close, m_volume);
+        this->m_marketData->loadHistoryFromMongo(m_collectionName,m_pAutoSetting->startDateTime,m_pAutoSetting->endDateTime, m_open, m_high, m_low, m_close, m_volume);
 	}
 	this->m_pMdSpi->SubscribeMarketData(m_inst);// trade 1801
 
@@ -151,36 +151,6 @@ void cStrategyKingKeltner::on5MBar(){
 }
 
 
-bool cStrategyKingKeltner::isTradeTime() {
-	DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2330 = 2330;
-	cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
-	DateTimeFormat hour = nowDateTime.Hour();
-	DateTimeFormat min = nowDateTime.Minute();
-
-	DateTimeFormat nowTime = hour * 100 + min;
-	bool newState;
-	if ((nowTime>=s0900 && nowTime <s1015) ||
-		(nowTime>=s1030 && nowTime <s1130) ||
-		(nowTime>=s1330 && nowTime <s1500) ||
-		(nowTime>=s2100 && nowTime <s2330)
-		)
-	{
-
-		newState = true;
-	}
-	else {
-
-		newState = false;
-	}
-	//if(m_oldState && newState){
-	//	cout << "tradeState open" << endl;
-	//}else{
-	//	cout << "tradeState open" << endl;
-
-	//}
-	return newState;
-
-}
 
 bool cStrategyKingKeltner::keltner( int kkLength, double kkDev, double& kkUp,double &kkDown) {
 	try {

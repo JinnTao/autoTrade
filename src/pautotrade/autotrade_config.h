@@ -128,7 +128,7 @@ struct autoSetting
     char inst[300]; // strategy Trading Inst
     char lots[300]; // strategy Trading Inst lost
     char timeMode[300]; // strategy Time filter mode
-
+    char collectionList[500]; // strategy collection name
 
 	autoSetting(){
 		memset(this, 0, sizeof(autoSetting));

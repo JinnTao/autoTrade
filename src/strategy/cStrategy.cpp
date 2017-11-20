@@ -91,7 +91,124 @@ void cStrategy::processStopOrder(string inst, double lastPrice) {
 		}
 
 	}
+}
+bool cStrategy::isTradeTime() {
 
 
+}
+bool cStrategy::mode1() {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500;
+    cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
+    DateTimeFormat hour = nowDateTime.Hour();
+    DateTimeFormat min = nowDateTime.Minute();
 
+    DateTimeFormat nowTime = hour * 100 + min;
+    bool newState;
+    if ((nowTime >= s0900 && nowTime <s1015) ||
+        (nowTime >= s1030 && nowTime <s1130) ||
+        (nowTime >= s1330 && nowTime <s1500) 
+        )
+    {
+
+        newState = true;
+    }
+    else {
+
+        newState = false;
+    }
+    return newState;
+}
+bool cStrategy::mode2() {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2300 = 2300;
+    cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
+    DateTimeFormat hour = nowDateTime.Hour();
+    DateTimeFormat min = nowDateTime.Minute();
+
+    DateTimeFormat nowTime = hour * 100 + min;
+    bool newState;
+    if ((nowTime >= s0900 && nowTime <s1015) ||
+        (nowTime >= s1030 && nowTime <s1130) ||
+        (nowTime >= s1330 && nowTime <s1500) ||
+        (nowTime >= s2100 && nowTime <s2300)
+        )
+    {
+
+        newState = true;
+    }
+    else {
+
+        newState = false;
+    }
+    return newState;
+}
+bool cStrategy::mode3() {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2330 = 2330;
+    cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
+    DateTimeFormat hour = nowDateTime.Hour();
+    DateTimeFormat min = nowDateTime.Minute();
+
+    DateTimeFormat nowTime = hour * 100 + min;
+    bool newState;
+    if ((nowTime >= s0900 && nowTime <s1015) ||
+        (nowTime >= s1030 && nowTime <s1130) ||
+        (nowTime >= s1330 && nowTime <s1500) ||
+        (nowTime >= s2100 && nowTime <s2330)
+        )
+    {
+
+        newState = true;
+    }
+    else {
+
+        newState = false;
+    }
+    return newState;
+}
+bool cStrategy::mode4() {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2359 = 2359,s0000 = 0,s0100 = 100;
+    cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
+    DateTimeFormat hour = nowDateTime.Hour();
+    DateTimeFormat min = nowDateTime.Minute();
+
+    DateTimeFormat nowTime = hour * 100 + min;
+    bool newState;
+    if ((nowTime >= s0900 && nowTime <s1015) ||
+        (nowTime >= s1030 && nowTime <s1130) ||
+        (nowTime >= s1330 && nowTime <s1500) ||
+        (nowTime >= s2100 && nowTime <s2359) ||
+        (nowTime >= s0000 && nowTime <s0100)
+        )
+    {
+
+        newState = true;
+    }
+    else {
+
+        newState = false;
+    }
+    return newState;
+}
+bool cStrategy::mode5() {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2359 = 2359, s0000 = 0, s0200 = 200;
+    cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
+    DateTimeFormat hour = nowDateTime.Hour();
+    DateTimeFormat min = nowDateTime.Minute();
+
+    DateTimeFormat nowTime = hour * 100 + min;
+    bool newState;
+    if ((nowTime >= s0900 && nowTime <s1015) ||
+        (nowTime >= s1030 && nowTime <s1130) ||
+        (nowTime >= s1330 && nowTime <s1500) ||
+        (nowTime >= s2100 && nowTime <s2359) ||
+        (nowTime >= s0000 && nowTime <s0200)
+        )
+    {
+
+        newState = true;
+    }
+    else {
+
+        newState = false;
+    }
+    return newState;
 }

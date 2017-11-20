@@ -268,8 +268,9 @@ void cTradingPlatform::initStrategy(autoSetting & para){
     std::vector<std::string> instList = this->splitToStr(std::string(para.inst),",");
     std::vector<int32> lotsList = this->splitToInt(std::string(para.lots),",");
     std::vector<int32> timeModeList = this->splitToInt(std::string(para.timeMode),",");
+    std::vector<std::string> collectionList = this->splitToStr(std::string(para.collectionList), ",");
 
-    if (instList.size() != lotsList.size() || timeModeList.size() != lotsList.size()) {
+    if (instList.size() != lotsList.size() || timeModeList.size() != lotsList.size()|| collectionList.size() != lotsList.size()){
         LOG(ERROR) << " initStrategy  inst lot timeMode Error, init Strategy Failed";
         return;
     }
@@ -293,6 +294,7 @@ void cTradingPlatform::initStrategy(autoSetting & para){
         pStrategy->setlots(lotsList[i]);
         pStrategy->setTimeMode(timeModeList[i]);
         pStrategy->setInitDate(para.startDate, para.endDate);
+        pStrategy->setCollectionName(collectionList[i]);
 
         this->m_pTraderSpi->RegisterStrategy(pStrategy.get());
         this->m_StrategyKKList.push_back(pStrategy);
