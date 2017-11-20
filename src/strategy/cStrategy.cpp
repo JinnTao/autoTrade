@@ -1,5 +1,5 @@
 #include <cStrategy.h>
-
+#include "easylogging\easylogging++.h"
 
 
 cStrategy::cStrategy()
@@ -43,7 +43,8 @@ DWORD cStrategy::AutoTrading(){
 	init();
 	while(this->m_isRuning.load(std::memory_order_relaxed)){
 		this->run();
-		Sleep(this->m_timeSpan);
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(500ms);
 
 	}
 	unInit();

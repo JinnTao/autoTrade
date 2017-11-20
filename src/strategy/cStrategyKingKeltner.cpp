@@ -1,6 +1,6 @@
 #include "cStrategyKingKeltner.h"
 #include "easylogging\easylogging++.h"
-
+#include "global.h"
 cStrategyKingKeltner::cStrategyKingKeltner(void)
 {
 	m_candleMinute = -1;
@@ -22,6 +22,7 @@ cStrategyKingKeltner::~cStrategyKingKeltner(void)
 }
 
 void cStrategyKingKeltner::init(){
+    std::lock_guard<std::mutex> lock(global::init_mutex);
 	if (m_close.size() == 0) {
 		// Start Time 
 		//this->m_marketData->loadSeriesHistory(m_oneMinuteDataDir, m_startDate, m_endDate, m_open, m_high, m_low, m_close, m_volume);
@@ -38,6 +39,7 @@ void cStrategyKingKeltner::unInit(){
 }
 
 void cStrategyKingKeltner::run(){
+    std::lock_guard<std::mutex> lock(global::run_mutex);
 	if (this->m_marketData->GetMarketDataHandle(m_inst) && isTradeTime()) {
 		CThostFtdcDepthMarketDataField lastData = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
 		int tickMinute = cDateTime(cSystem::GetCurrentTimeBuffer().c_str()).Minute();
@@ -86,7 +88,7 @@ void cStrategyKingKeltner::run(){
 		// 处理停止单
 		this->processStopOrder(m_inst, m_lastClose);
 	}
-
+    LOG(INFO) << m_inst;
 }
 
 void cStrategyKingKeltner::sendOcoOrder(double upPrice, double downPrice, int fixedSize) {
@@ -143,7 +145,7 @@ void cStrategyKingKeltner::on5MBar(){
 
 	// ==============================================================日志输出========================================================
 	//double rsiValue = outReal[0];
-	cout << cSystem::GetCurrentTimeBuffer() << " netPos " << m_netPos << " up: " << up << " down: " << down << " lastPrice " << m_lastHigh << endl;
+	LOG(INFO)  << " netPos " << m_netPos << " up: " << up << " down: " << down << " lastPrice " << m_lastHigh << endl;
 	printStatus();
 
 }
@@ -242,7 +244,7 @@ void cStrategyKingKeltner::printStatus() {
 				(int)ptm->tm_year + 1900, (int)ptm->tm_mon + 1, (int)ptm->tm_mday,
 				(int)ptm->tm_hour, (int)ptm->tm_min, (int)ptm->tm_sec);
 			string orderDateTime = string(date);
-			std::cout << orderDateTime <<" " << var.instrument << " stop order " << ((var.direction == DIRECTION::buy) ? "buy" : "sell") << " " << ((var.offset == OFFSETFLAG::close) ? "close " : "open ") << var.price << " " << var.volume << " " << var.slipTickNum << " " << var.strategyName << endl;
+			LOG(INFO) << orderDateTime <<" " << var.instrument << " stop order " << ((var.direction == DIRECTION::buy) ? "buy" : "sell") << " " << ((var.offset == OFFSETFLAG::close) ? "close " : "open ") << var.price << " " << var.volume << " " << var.slipTickNum << " " << var.strategyName << endl;
 
 		}
 

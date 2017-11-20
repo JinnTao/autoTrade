@@ -26,4 +26,5 @@ using std::string;
     TypeName() = delete;                         \
     DISALLOW_COPY_AND_ASSIGN(TypeName)
 
+
 #endif  // _COMMON_H_
