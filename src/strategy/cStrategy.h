@@ -20,6 +20,7 @@
 #include "cDateTime.h"
 #include "cSystem.h"
 #include <thread>
+#include <atomic>
 class cTraderSpi;
 
 

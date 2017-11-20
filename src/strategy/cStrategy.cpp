@@ -93,8 +93,22 @@ void cStrategy::processStopOrder(string inst, double lastPrice) {
 	}
 }
 bool cStrategy::isTradeTime() {
-
-
+    if (m_timeMode == 1) {
+        return mode1();
+    }
+    if (m_timeMode == 2) {
+        return mode2();
+    }
+    if (m_timeMode == 3) {
+        return mode3();
+    }
+    if (m_timeMode == 4) {
+        return mode4();
+    }
+    if (m_timeMode == 5) {
+        return mode5();
+    }
+    return false;
 }
 bool cStrategy::mode1() {
     DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500;

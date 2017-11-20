@@ -1,6 +1,6 @@
 #pragma once
 #include "cstrategy.h"
-
+#include "common.h"
 class cStrategyKingKeltner :
 	public cStrategy
 {

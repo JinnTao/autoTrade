@@ -51,7 +51,8 @@ protected:
 	marketdataHandle _m_mkt_handle;
 	
 	cHistoryMarketDataPtr m_historyMarketDataPtr;
-	
+    std::chrono::time_point<std::chrono::system_clock> m_sDateTimePoint;
+    std::chrono::time_point<std::chrono::system_clock> m_eDateTimePoint;
 	// trade date List
 	map<string,int> *m_pTradeDayList;
 private:

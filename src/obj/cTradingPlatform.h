@@ -16,7 +16,7 @@ class cTraderSpi;
 #include "cStrategyBayes.h"
 #include "cStrategyKingKeltner.h"
 #include "autotrade_config.h"
-
+#include "common.h"
 class cTradingPlatform
 {
 public:
