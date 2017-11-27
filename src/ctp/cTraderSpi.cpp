@@ -1,7 +1,7 @@
 #include <cSystem.h>
 #include <cTraderSpi.h>
-
 #include <cTrade.h>
+#include "easylogging\easylogging++.h"
 #define ROHON 1
 #undef  ROHON
 #define _CTP 1
@@ -878,6 +878,7 @@ void cTraderSpi::ReqOrderInsert(TThostFtdcInstrumentIDType instId,
 	req.IsAutoSuspend = 0;  //自动挂起标志:否	
 	req.UserForceClose = 0;   //用户强评标志:否
 	if(m_pUserTraderApi){
+        LOG(WARNING) << instId << dir << kpp << price << vol;
 		int iResult = m_pUserTraderApi->ReqOrderInsert(&req, ++iRequestID);
 		if(iResult !=0){
 			char message[256];
