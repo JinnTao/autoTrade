@@ -181,25 +181,33 @@ bool cStrategyKingKeltner::keltner( int kkLength, double kkDev, double& kkUp,dou
 }
 
 void cStrategyKingKeltner::onTrade(CThostFtdcTradeField pTrade) {
-	cerr << this->m_strategyName << " onTrade " << endl;
-	if (m_netPos != 0) {
-		if (m_netPos > 0) {
-			for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
-				if (i->instrument == m_inst && i->direction == DIRECTION::sell) {
-					i->status = false;
-					cerr << " cancle sell " << ((i->offset == OFFSETFLAG::close) ? " close  " : " open ") << " stop order" << endl;
-				}
-			}
-		}
-		if (m_netPos < 0) {
-			for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
-				if (i->instrument == m_inst && i->direction == DIRECTION::buy) {
-					i->status = false;
-					cerr << " cancle buy " << ((i->offset == OFFSETFLAG::close) ? " close  " : " open ") << " stop order" << endl;
-				}
-			}
-		}
-	}
+	
+    if (strcmp(pTrade.InstrumentID, m_inst.c_str()) != 0) {
+        LOG(INFO) << " not" << m_inst << " on trade";
+    }
+    else{
+        LOG(INFO) << this->m_strategyName << " onTrade " << endl;
+	    if (m_netPos != 0) {
+            if (m_netPos > 0) {
+                for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
+
+                    if (i->instrument == m_inst && i->direction == DIRECTION::sell) {
+                        i->status = false;
+                        LOG(INFO) << " cancle sell " << ((i->offset == OFFSETFLAG::close) ? " close  " : " open ") << " stop order" << endl;
+                    }
+                }
+            }
+            if (m_netPos < 0) {
+                for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
+                    if (i->instrument == m_inst && i->direction == DIRECTION::buy) {
+                        i->status = false;
+                        LOG(INFO) << " cancle buy " << ((i->offset == OFFSETFLAG::close) ? " close  " : " open ") << " stop order" << endl;
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 void cStrategyKingKeltner::printStatus() {
