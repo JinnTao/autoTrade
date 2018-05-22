@@ -102,18 +102,18 @@ void cStrategyTemplate::on1MBar(){
 		
 		if(netPos == 0){
 			if(rsiValue>90){
-				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::sell,OFFSETFLAG::open,1,0,1);
+				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::sell,OFFSETFLAG::open,1,0);
 			}
 			if(rsiValue<10){
-				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::buy,OFFSETFLAG::open,1,0,1);
+				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::buy,OFFSETFLAG::open,1,0);
 			}
 		}else if(netPos > 0){
 			if(rsiValue>50){
-				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::sell,OFFSETFLAG::close,1,0,1);
+				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::sell,OFFSETFLAG::close,1,0);
 			}
 		}else if(netPos < 0){
 			if(rsiValue<50){
-				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::buy,OFFSETFLAG::close,1,0,1);
+				this->m_pTradeSpi->insertOrder(m_inst,DIRECTION::buy,OFFSETFLAG::close,1,0);
 			}
 		}
 }

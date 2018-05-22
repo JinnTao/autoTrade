@@ -121,9 +121,9 @@ public:
 
 	void ReqOrderInsert(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir, TThostFtdcCombOffsetFlagType kpp,TThostFtdcPriceType price,   TThostFtdcVolumeType vol);
 
-	void insertOrder(string inst, DIRECTION dire, OFFSETFLAG flag, int vol, double orderPrice, int priceTick = 0);
+	void insertOrder(string inst, DIRECTION dire, OFFSETFLAG flag, int vol, double orderPrice, string tag = "");
 
-	void StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol);
+	void StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol,string tag = "");
 
 	char MapDirection(char src, bool toOrig);
 
@@ -222,6 +222,8 @@ private:
 	string m_tradeDay;
 	string m_actionDay;
 	bool m_qryStatus;
+
+
 
 	///
 	map<string,CThostFtdcInstrumentField*>::iterator m_itMap;// 用于查询合约

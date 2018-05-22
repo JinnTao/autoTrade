@@ -34,59 +34,59 @@ class cString;
 class cTickTime
 {
 public:
-	cTickTime();
-	cTickTime( const char* date, const char* time, int millisec = 0 );
-	cTickTime( const char* datetime, int millisec = 0 );
-	~cTickTime();
-	cTickTime( const cTickTime& );
-	cTickTime& operator = ( const cTickTime& );
+    cTickTime();
+    cTickTime( const char* date, const char* time, int millisec = 0 );
+    cTickTime( const char* datetime, int millisec = 0 );
+    ~cTickTime();
+    cTickTime( const cTickTime& );
+    cTickTime& operator = ( const cTickTime& );
 
-	bool operator == ( const cTickTime& ) const;
-	bool operator != ( const cTickTime& ) const;
-	bool operator < ( const cTickTime& ) const;
-	bool operator > ( const cTickTime& ) const;
-	bool operator >= ( const cTickTime& ) const;
-	bool operator <= ( const cTickTime& ) const;
+    bool operator == ( const cTickTime& ) const;
+    bool operator != ( const cTickTime& ) const;
+    bool operator < ( const cTickTime& ) const;
+    bool operator > ( const cTickTime& ) const;
+    bool operator >= ( const cTickTime& ) const;
+    bool operator <= ( const cTickTime& ) const;
 
-	cDate Date() const { return m_date; }
-	TickTimeFormat Year() const { return m_date.Year(); }
-	TickTimeFormat Month() const { return m_date.Month(); }
-	TickTimeFormat Day() const { return m_date.Day(); }
-	TickTimeFormat Hour() const { return m_hour; }
-	TickTimeFormat Minute() const { return m_minute; }
-	TickTimeFormat Second() const { return m_second; }
-	TickTimeFormat MilliSecond() const { return m_millisec; }
+    cDate Date() const { return m_date; }
+    TickTimeFormat Year() const { return m_date.Year(); }
+    TickTimeFormat Month() const { return m_date.Month(); }
+    TickTimeFormat Day() const { return m_date.Day(); }
+    TickTimeFormat Hour() const { return m_hour; }
+    TickTimeFormat Minute() const { return m_minute; }
+    TickTimeFormat Second() const { return m_second; }
+    TickTimeFormat MilliSecond() const { return m_millisec; }
 
-	void SetMilliSecond( int millisec ) { m_millisec = millisec; }
+    void SetMilliSecond( int millisec ) { m_millisec = millisec; }
 
-	bool IsWeekend() const { return m_date.IsWeekend(); }
-	bool IsHoliday() const { return m_date.IsHoliday(); }
+    bool IsWeekend() const { return m_date.IsWeekend(); }
+    bool IsHoliday() const { return m_date.IsHoliday(); }
 
-	cString TickTimeFullString() const;
-	cString DateString() const;
-	cString TimeString() const;
+    cString TickTimeFullString() const;
+    cString DateString() const;
+    cString TimeString() const;
 
-	double TickTimeToDouble() const;
-	static cTickTime DoubleToTickTime( double t );
-	
-	static void VectorToTickTime( const cVector&, cArray< cTickTime >& );
-	static void VectorToTickTimeString( const cVector&, cArray< cString >& );
+    double TickTimeToDouble() const;
+    static cTickTime DoubleToTickTime( double t );
+    
+    static void VectorToTickTime( const cVector&, cArray< cTickTime >& );
+    static void VectorToTickTimeString( const cVector&, cArray< cString >& );
 
-	static cString ToDateString( int, int, int );
-	static cString ToTimeString( int, int, int );
-	static TickTimeFormat JulianToGeorgian( TickTimeFormat );
-	static cString JulianToGeorgianString( TickTimeFormat );
-	static TickTimeFormat GeorgianToJulian( TickTimeFormat );
-	
-	static int TimeToSecInteger( double t );
+    static cString ToDateString( int, int, int );
+    static cString ToTimeString( int, int, int );
+    static TickTimeFormat JulianToGeorgian( TickTimeFormat );
+    static cString JulianToGeorgianString( TickTimeFormat );
+    static TickTimeFormat GeorgianToJulian( TickTimeFormat );
+    
+    static int TimeToSecInteger( double t );
 
 
 protected:
-	cDate m_date;
-	TickTimeFormat m_hour;
-	TickTimeFormat m_minute;
-	TickTimeFormat m_second;
-	TickTimeFormat m_millisec;
+    cDate m_date;
+    TickTimeFormat m_hour;
+    TickTimeFormat m_minute;
+    TickTimeFormat m_second;
+    TickTimeFormat m_millisec;
 };
 
 extern const cTickTime theTickTime;

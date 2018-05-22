@@ -45,7 +45,7 @@
  ***/
 #ifndef FD_DEFS_H
   #if defined( _MANAGED )
-    /* Int32, UInt32, Int64 and UInt64 are built-in for .NET */	
+    /* Int32, UInt32, Int64 and UInt64 are built-in for .NET */    
     #define INT_MIN (Int32::MinValue)
     #define INT_MAX (Int32::MaxValue)
   #elif defined( _JAVA )
@@ -72,8 +72,8 @@
         ||defined(__s390x__)\
         ||defined(__x86_64__)
        #define __64BIT__ 1
-    #endif		  
-		   
+    #endif          
+           
     #if !defined(__MACTYPES__)
         typedef signed int   Int32;
         typedef unsigned int UInt32;

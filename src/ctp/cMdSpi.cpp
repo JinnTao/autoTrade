@@ -97,7 +97,7 @@ void cMdSpi::ReqUserLogin()
 		sprintf( message, "%s:called cMdSpi::ReqUserLogin:%s", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
 		cout << message << endl;
 	#else
-		HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_Win32.dll"));
+		HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_x64.dll"));
 		DWORD errorID = GetLastError();
 		ccbf_secureApi_LoginMd ccbf_MdFuncInterface = (ccbf_secureApi_LoginMd)GetProcAddress(hInst,"ccbf_secureApi_LoginMd_After_CTP_OnConnected");
 		if(!ccbf_MdFuncInterface){

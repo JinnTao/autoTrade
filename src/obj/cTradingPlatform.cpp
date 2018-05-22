@@ -299,11 +299,6 @@ void cTradingPlatform::initStrategy(autoSetting & para){
         this->m_pTraderSpi->RegisterStrategy(pStrategy.get());
         this->m_StrategyKKList.push_back(pStrategy);
     }
-
-
-
-
-
 }
 
 void cTradingPlatform::readDay(string fileName, map<string,int> &workDay){
@@ -331,8 +326,9 @@ DWORD cTradingPlatform::AutoTrading()
 {
 
 	string str;
-	char dire[50],offset[50],inst[50],price[50],order[50],tag[50];
+	char dire[50],offset[50],inst[50],price[50],order[50];
 	int vol, mark = 0,orderNo;
+    char tag[10];
 	cerr<<"--------------------Human-computer interaction function Start--------------------------------"<<endl;
 	cerr<<endl<<"OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancle seqNo£º";
 	//initial subcribe instrument
@@ -341,10 +337,10 @@ DWORD cTradingPlatform::AutoTrading()
 	this->m_pTraderSpi->RegisterMarketDataEngine(this->m_pMarketDataEngine);
 	while(true)
 	{
-		//std::cin>>str;
-		memset(price,0,50);
-		memset(order,0,50);
-		memset(tag,0,50);
+        //std::cin>>str;
+        memset(price,0,50);
+        memset(order,0,50);
+        memset(tag,0,10);
 		vol = 0;
 		orderNo = 0;
 		getline(std::cin,str);
@@ -387,10 +383,10 @@ DWORD cTradingPlatform::AutoTrading()
 		else if(str.length() >7)
 		{
 			// insert order
-			sscanf(str.c_str(),"%s %s %s %d %s",dire,offset,inst,&vol,price);
+			sscanf(str.c_str(),"%s %s %s %d %s %c",dire,offset,inst,&vol,price,&tag);
 			double dPrice = atof(price);
 			if(vol!=0){
-				this->insertOrder(string(inst),string(dire),string(offset),vol,dPrice);
+				this->insertOrder(string(inst),string(dire),string(offset),vol,dPrice,tag);
 			}
 			// cancle order
 			sscanf(str.c_str(),"%s %d",order,&orderNo);
@@ -547,7 +543,7 @@ void cTradingPlatform::cancleAllOrder(string order,string tag){
 	//}
 }
 
-void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,double orderPrice){
+void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,double orderPrice,string tag){
 	// get parameters type
 	DIRECTION eDire;
 	OFFSETFLAG eFlag;
@@ -573,6 +569,6 @@ void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,
 
 	
 	// go into order
-	this->m_pTraderSpi->insertOrder(inst,eDire,eFlag,vol,orderPrice);
+	this->m_pTraderSpi->insertOrder(inst,eDire,eFlag,vol,orderPrice,tag);
 	_sleep(500);// wait 500ms for pTrader response.
 }

@@ -74,7 +74,7 @@ public:
 	void SetAutoTradeFlag( bool flag ) { m_runAutoTrade = flag; }
 	void ClearPlatform();
 	
-	void insertOrder(string inst,string dire,string flag, int vol,double orderPrice);
+	void insertOrder(string inst,string dire,string flag, int vol,double orderPrice,string tag);
 	void cancleOrder(string order,int seqNo);
 	void cancleAllOrder(string order,string tag);
 

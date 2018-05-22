@@ -32,48 +32,48 @@ class cString;
 class cDateTime
 {
 public:
-	cDateTime();
-	cDateTime( const char* date, const char* time );
-	cDateTime( const char* datetime );
-	~cDateTime();
-	cDateTime( const cDateTime& );
-	cDateTime& operator = ( const cDateTime& );
+    cDateTime();
+    cDateTime( const char* date, const char* time );
+    cDateTime( const char* datetime );
+    ~cDateTime();
+    cDateTime( const cDateTime& );
+    cDateTime& operator = ( const cDateTime& );
 
-	bool operator == ( const cDateTime& ) const;
-	bool operator != ( const cDateTime& ) const;
+    bool operator == ( const cDateTime& ) const;
+    bool operator != ( const cDateTime& ) const;
 
-	DateTimeFormat Date() const { return m_date; }
-	DateTimeFormat Year() const { return m_year; }
-	DateTimeFormat Month() const { return m_month; }
-	DateTimeFormat Day() const { return m_day; }
-	DateTimeFormat Hour() const { return m_hour; }
-	DateTimeFormat Minute() const { return m_minute; }
-	DateTimeFormat Second() const { return m_second; }
+    DateTimeFormat Date() const { return m_date; }
+    DateTimeFormat Year() const { return m_year; }
+    DateTimeFormat Month() const { return m_month; }
+    DateTimeFormat Day() const { return m_day; }
+    DateTimeFormat Hour() const { return m_hour; }
+    DateTimeFormat Minute() const { return m_minute; }
+    DateTimeFormat Second() const { return m_second; }
 
-	bool IsWeekend() const;
-	bool IsHoliday() const;
+    bool IsWeekend() const;
+    bool IsHoliday() const;
 
-	double DateTimeToDouble() const;
-	double DateTimeToDouble( const cDateTime& ) const;
-	static cDateTime DoubleToDateTime( double t );
-	static void VectorToDateTime( const cVector&, cArray< cDateTime >& );
-	static void VectorToDateTimeString( const cVector&, cArray< cString >& );
+    double DateTimeToDouble() const;
+    double DateTimeToDouble( const cDateTime& ) const;
+    static cDateTime DoubleToDateTime( double t );
+    static void VectorToDateTime( const cVector&, cArray< cDateTime >& );
+    static void VectorToDateTimeString( const cVector&, cArray< cString >& );
 
-	cString DateTimeFullString() const;
-	cString DateString() const;
-	cString TimeString() const;
-	static cString ToDateString( int, int, int );
-	static cString ToTimeString( int, int, int );
+    cString DateTimeFullString() const;
+    cString DateString() const;
+    cString TimeString() const;
+    static cString ToDateString( int, int, int );
+    static cString ToTimeString( int, int, int );
 
 
 protected:
-	DateTimeFormat m_date;
-	DateTimeFormat m_year;
-	DateTimeFormat m_month;
-	DateTimeFormat m_day;
-	DateTimeFormat m_hour;
-	DateTimeFormat m_minute;
-	DateTimeFormat m_second;
+    DateTimeFormat m_date;
+    DateTimeFormat m_year;
+    DateTimeFormat m_month;
+    DateTimeFormat m_day;
+    DateTimeFormat m_hour;
+    DateTimeFormat m_minute;
+    DateTimeFormat m_second;
 };
 
 

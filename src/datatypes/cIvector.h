@@ -17,91 +17,91 @@
 class cIvector
 {
 public:
-	// Constructors
-	cIvector() : size_(0), data_(NULL) {}
-	cIvector( int m );
-	cIvector( int value, int size );
-	cIvector( const cIvector& );
-	cIvector( const cIvector&, const cIvector& );
+    // Constructors
+    cIvector() : size_(0), data_(NULL) {}
+    cIvector( int m );
+    cIvector( int value, int size );
+    cIvector( const cIvector& );
+    cIvector( const cIvector&, const cIvector& );
 
-	~cIvector();
+    ~cIvector();
 
-	cIvector& operator = ( const cIvector& );
-	bool operator == ( const cIvector& ) const;
-	cIvector operator == ( int a ) const;
+    cIvector& operator = ( const cIvector& );
+    bool operator == ( const cIvector& ) const;
+    cIvector operator == ( int a ) const;
 
-	cIvector& operator &= ( const cIvector& );		// appends a vector to this
-	cIvector& operator &= ( int );					// appends an integer to this
+    cIvector& operator &= ( const cIvector& );        // appends a vector to this
+    cIvector& operator &= ( int );                    // appends an integer to this
 
-	bool AllEqual( const int i ) const;
-	int Max() const;
-	int Min() const;
-	int Sum() const;
-	int AbsSum() const;
-	int NotEqual( const int, const int ) const; // count number of elements not equal to value val
-	bool IsIncreasing() const;
-	bool IsIncreasingNonStrict() const;
-	void InsertWithoutResize( int n, int value, int location ); // insert element into vector without resizing: use with care
-	void insert( int loc, int value );	// insert element into vector
+    bool AllEqual( const int i ) const;
+    int Max() const;
+    int Min() const;
+    int Sum() const;
+    int AbsSum() const;
+    int NotEqual( const int, const int ) const; // count number of elements not equal to value val
+    bool IsIncreasing() const;
+    bool IsIncreasingNonStrict() const;
+    void InsertWithoutResize( int n, int value, int location ); // insert element into vector without resizing: use with care
+    void insert( int loc, int value );    // insert element into vector
 
-	void drop( int index, int howmany = 1 );
-	void push_back( const int value );
-	int BinarySum() const;
+    void drop( int index, int howmany = 1 );
+    void push_back( const int value );
+    int BinarySum() const;
 
-	friend cIvector operator && ( const cIvector&, const cIvector& );
-	friend ostream& operator << ( ostream& outfile, const cIvector& vec );
+    friend cIvector operator && ( const cIvector&, const cIvector& );
+    friend ostream& operator << ( ostream& outfile, const cIvector& vec );
 
-	int& operator[] ( int i )
-	{
-		yr_assert( i >= 0 && i < size_ );
-		return data_[i];
-	}
+    int& operator[] ( int i )
+    {
+        yr_assert( i >= 0 && i < size_ );
+        return data_[i];
+    }
 
-	int operator[] ( int i ) const
-	{
-		yr_assert( i >= 0 && i < size_ );
-		return data_[i];
-	}
+    int operator[] ( int i ) const
+    {
+        yr_assert( i >= 0 && i < size_ );
+        return data_[i];
+    }
 
-	int& operator[] ( const size_t i )
-	{
-		yr_assert( i >= 0 && i < static_cast<size_t>( size_ ) ); 
-		return data_[i];
-	}
+    int& operator[] ( const size_t i )
+    {
+        yr_assert( i >= 0 && i < static_cast<size_t>( size_ ) ); 
+        return data_[i];
+    }
 
-	int operator[] ( const size_t i ) const
-	{
-		yr_assert( i >= 0 && i < static_cast<size_t>( size_ ) );
-		return data_[i];
-	}
+    int operator[] ( const size_t i ) const
+    {
+        yr_assert( i >= 0 && i < static_cast<size_t>( size_ ) );
+        return data_[i];
+    }
 
-	void initialize( int val = 0 );
-	void resize( int newsize_ = 0 );
-	void resize( int newsize_, int value );
-	int interval( int t, int adj = 0, int last = 0 ) const;
-	int location( int t, int last = 0 );
-	cIvector& sortunique();
-	int getSize() const { return size_; }
-	operator int*() { return data_; }
-	operator const int*() const { return data_; }
+    void initialize( int val = 0 );
+    void resize( int newsize_ = 0 );
+    void resize( int newsize_, int value );
+    int interval( int t, int adj = 0, int last = 0 ) const;
+    int location( int t, int last = 0 );
+    cIvector& sortunique();
+    int getSize() const { return size_; }
+    operator int*() { return data_; }
+    operator const int*() const { return data_; }
 
-	static void Swap( cIvector& a, cIvector& b )
-	{
-		int* temp1 = a.data_;
-		a.data_ = b.data_;
-		b.data_ = temp1;
+    static void Swap( cIvector& a, cIvector& b )
+    {
+        int* temp1 = a.data_;
+        a.data_ = b.data_;
+        b.data_ = temp1;
 
-		int temp2 = a.size_;
-		a.size_ = b.size_;
-		b.size_ = temp2;
-	}
+        int temp2 = a.size_;
+        a.size_ = b.size_;
+        b.size_ = temp2;
+    }
 
 
 
 private:
-	void _allocate();
-	int* data_;
-	int size_;
+    void _allocate();
+    int* data_;
+    int size_;
 };
 
 inline int sum( const cIvector& i ) { return i.Sum(); }

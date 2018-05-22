@@ -24,20 +24,20 @@ public:
     string GetID() const { return m_id; }
     CThostFtdcDepthMarketDataField getLastMarketData() ;
     vector<CThostFtdcDepthMarketDataField> getMarketDepthSeries(){return m_marketDepthVector;}
-    vector<double>	getMarketLastSeries(){return m_lastPriceSeries;}
+    vector<double>    getMarketLastSeries(){return m_lastPriceSeries;}
 
     void OnRtnDepthMarketData( CThostFtdcDepthMarketDataField* pDepthMarketData );
 protected:
-    string m_id;				// contract code
+    string m_id;                // contract code
     // save DataFieldVector
-	vector<CThostFtdcDepthMarketDataField> m_marketDepthVector;
-	// save last close series data
+    vector<CThostFtdcDepthMarketDataField> m_marketDepthVector;
+    // save last close series data
     vector<double> m_lastPriceSeries;
 
     CThostFtdcDepthMarketDataField m_lastMarketData;
     mutex _mtx;//  locks access to marketData
 private:
-	int m_length;
+    int m_length;
 
 };
 

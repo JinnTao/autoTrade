@@ -9,20 +9,20 @@ template< class T >
 class cSortCompareUp
 {
 public:
-	int operator()( const T& i, const T& j )
-	{
-		return ( i < j );
-	}
+    int operator()( const T& i, const T& j )
+    {
+        return ( i < j );
+    }
 };
 
 template< class T >
 class cSortCompareDown
 {
 public:
-	int operator()( const T& i, const T& j )
-	{
-		return ( i < j );
-	}
+    int operator()( const T& i, const T& j )
+    {
+        return ( i < j );
+    }
 };
 
 // Templated function QSort which will call down to
@@ -35,78 +35,78 @@ public:
 template< class T >
 void QSort( T* array, int size, int direction )
 {
-	int threshold = 1000;
+    int threshold = 1000;
 
-	// For array more than threshold elements long, use qsort
-	if( size >= threshold )
-	{
-		if( direction > 0 )
-		{
-			cSortCompareUp< T > sortCompareUp;
-			sort( array, array + size, sortCompareUp );
-		}
-		else if( direction < 0 )
-		{
-			cSortCompareDown< T > sortCompareDown;
-			sort( array, array + size, sortCompareDown );
-		}
-		else
-			yr_error( "QSort direction must be non-zero" );
+    // For array more than threshold elements long, use qsort
+    if( size >= threshold )
+    {
+        if( direction > 0 )
+        {
+            cSortCompareUp< T > sortCompareUp;
+            sort( array, array + size, sortCompareUp );
+        }
+        else if( direction < 0 )
+        {
+            cSortCompareDown< T > sortCompareDown;
+            sort( array, array + size, sortCompareDown );
+        }
+        else
+            yr_error( "QSort direction must be non-zero" );
 
-		return;
-	}
+        return;
+    }
 
-	// This MUCH faster than the operating system "qsort"
-	// but only for small-ish arrays which are already almost sorted
-	int i = 0;
-	int j;
-	int end = size - 1;
-	T temp;
+    // This MUCH faster than the operating system "qsort"
+    // but only for small-ish arrays which are already almost sorted
+    int i = 0;
+    int j;
+    int end = size - 1;
+    T temp;
 
-	// This is a one-pass sort
-	// When we reach the end, we've finished
+    // This is a one-pass sort
+    // When we reach the end, we've finished
 
-	//
-	// Code is duplicated for speed
-	//
-	if( direction > 0 )
-	{
-		while( i < end )
-		{
-			j  = i;
-			if( array[i+1] < array[i] )
-			{
-				temp = array[i+1];
-				while( i >= 0 && temp < array[i] )
-				{
-					array[i+1] = array[i];
-					i--;
-				}
-				array[i+1] = temp;
-			}
-			i = j + 1;
-		}
-	}
-	else if( direction < 0 )
-	{
-		while( i < end )
-		{
-			j = i;
-			if( array[i+1] > array[i] )
-			{
-				temp = array[i+1];
-				while( i >=0 && temp > array[i] )
-				{
-					array[i+1] = array[i];
-					i--;
-				}
-				array[i+1] = temp;
-			}
-			i = j + 1;
-		}
-	}
-	else
-		yr_error( "QSort direction must be non-zero!" );
+    //
+    // Code is duplicated for speed
+    //
+    if( direction > 0 )
+    {
+        while( i < end )
+        {
+            j  = i;
+            if( array[i+1] < array[i] )
+            {
+                temp = array[i+1];
+                while( i >= 0 && temp < array[i] )
+                {
+                    array[i+1] = array[i];
+                    i--;
+                }
+                array[i+1] = temp;
+            }
+            i = j + 1;
+        }
+    }
+    else if( direction < 0 )
+    {
+        while( i < end )
+        {
+            j = i;
+            if( array[i+1] > array[i] )
+            {
+                temp = array[i+1];
+                while( i >=0 && temp > array[i] )
+                {
+                    array[i+1] = array[i];
+                    i--;
+                }
+                array[i+1] = temp;
+            }
+            i = j + 1;
+        }
+    }
+    else
+        yr_error( "QSort direction must be non-zero!" );
 }
 
 #endif

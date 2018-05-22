@@ -3,7 +3,7 @@
 #include <cTrade.h>
 #include "easylogging\easylogging++.h"
 #define ROHON 1
-#undef  ROHON
+//#undef  ROHON
 #define _CTP 1
 
 extern HANDLE g_hEvent;
@@ -72,7 +72,7 @@ void cTraderSpi::ReqUserLogin()
 
 	#else
 	//我们一般情况下 可以在debug模式下使用该程序，release是为了使用公司的加密解密dll 注意属性选择 无程序优化 - 多字节 同时 预处理为：WIN32;_SCL_SECURE_NO_WARNINGS
-		HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_Win32.dll"));
+		HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_x64.dll"));
 		DWORD errorId = GetLastError();
 		ccbf_secureApi_LoginTrader ccbf_traderFuncInterface = (ccbf_secureApi_LoginTrader)GetProcAddress(hInst,"ccbf_secureApi_LoginTrader_After_CTP_OnConnected");
 		if(!ccbf_traderFuncInterface)
@@ -554,6 +554,7 @@ void cTraderSpi::ReqQryInstrumentCommissionRate(bool qryTrade ){
 		// over QryTrade；
 		if (m_itMap == this->m_InstMeassageMap->end()){
 			ReqQryTrade();
+            return;
 		}
 		strcpy(req.InstrumentID, m_itMap->second->InstrumentID);
 		int iResult = m_pUserTraderApi->ReqQryInstrumentCommissionRate(&req, ++iRequestID);
@@ -1140,16 +1141,16 @@ void cTraderSpi::RegisterInstCommissionMap( map<string,shared_ptr< CThostFtdcIns
 
 	m_pInstCommissionMap = p; 
 }
-void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol,double orderPrice,int priceTick ){
+void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol,double orderPrice,string tag ){
 	TThostFtdcInstrumentIDType    instId;
 	TThostFtdcDirectionType       dir;//方向,'0'买，'1'卖
 	TThostFtdcCombOffsetFlagType  kpp;//开平，"0"开，"1"平,"3"平今
 	TThostFtdcPriceType           price;//价格，0是市价,上期所不支持
 	strcpy(instId,inst.c_str());
-
+    int priceTick = 2; //  默认两个price Tick;
 	//double miniChangeTick = m_instMessage_map[inst.c_str()]->PriceTick * 3; // 对手盘 最小变动价格 保证成交
-	double BuyPrice = orderPrice + priceTick * this->m_InstMeassageMap->at(inst)->PriceTick;;
-	double SellPrice = orderPrice - priceTick * this->m_InstMeassageMap->at(inst)->PriceTick;;// 卖出价 买入价
+    double BuyPrice = orderPrice;// +priceTick * this->m_InstMeassageMap->at(inst)->PriceTick;;
+    double SellPrice = orderPrice;//-priceTick * this->m_InstMeassageMap->at(inst)->PriceTick;;// 卖出价 买入价
 	// make market price order
     if(orderPrice == 0){
 	    cMarketData *p;
@@ -1198,18 +1199,18 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 		if(dire==DIRECTION::buy){
 			dir = '0';
 			price = BuyPrice;
-			this->StraitClose(instId, dir, price, vol);
+			this->StraitClose(instId, dir, price, vol,tag);
 		}
 		//卖出平仓
 		if(dire==DIRECTION::sell){
 			dir = '1';
 			price = SellPrice ;
-			this->StraitClose(instId, dir, price, vol);
+			this->StraitClose(instId, dir, price, vol,tag);
 		}
 	}
 
 }
-void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol){
+void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol,string tag){
 	TThostFtdcCombOffsetFlagType  kpp;//开平，"0"开，"1"平昨 平,"3"平今
 	// close Long
 	if(dir == '1'){
@@ -1221,24 +1222,41 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirecti
 		{
 			if(strcmp(m_InstMeassageMap->at(instId)->ExchangeID, "SHFE") == 0)
 			{
-				// close y than close t
-				int Yd_long =this->m_positionCollection->getYdLong(instId);
-				int Td_long =this->m_positionCollection->getTdLong(instId);
-				if(Yd_long > vol)
-				{
-					strcpy(kpp, "1");// close yP
-					ReqOrderInsert(instId, dir, kpp, price, vol);
-					
-				}
-				else
-				{
-					if(Yd_long>0){
-						strcpy(kpp, "1");//close yP
-						ReqOrderInsert(instId, dir, kpp, price, Yd_long);
-					}
-					strcpy(kpp, "3");//close tP
-					ReqOrderInsert(instId, dir, kpp, price, vol-Yd_long);
-				}
+                if (strcmp(tag.c_str(), "") != 0) {
+                    if (strcmp(tag.c_str(), "Y") == 0) {
+                        strcpy(kpp, "1");
+                    }
+                    else if (strcmp(tag.c_str(), "T") == 0) {
+                        strcpy(kpp, "3");
+                    }
+                    else {
+                        cerr << "close error command" << endl;
+                        return;
+                    }
+
+                    ReqOrderInsert(instId, dir, kpp, price, vol);
+
+                }
+                else {
+                    // close y than close t
+                    int Yd_long = this->m_positionCollection->getYdLong(instId);
+                    int Td_long = this->m_positionCollection->getTdLong(instId);
+                    if (Yd_long > vol)
+                    {
+                       strcpy(kpp, "1");// close yP
+                        ReqOrderInsert(instId, dir, kpp, price, vol);
+
+                    }
+                    else
+                    {
+                        if (Yd_long>0) {
+                            strcpy(kpp, "1");//close yP
+                            ReqOrderInsert(instId, dir, kpp, price, Yd_long);
+                        }
+                        strcpy(kpp, "3");//close tP
+                        ReqOrderInsert(instId, dir, kpp, price, vol - Yd_long);
+                    }
+                }
 
 			}
 			else
@@ -1262,25 +1280,42 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirecti
 		{
 			if(strcmp(m_InstMeassageMap->at(instId)->ExchangeID, "SHFE") == 0)
 			{
-				// close yP than tP
-				int Yd_short = this->m_positionCollection->getYdShort(instId);
-				int Td_short = this->m_positionCollection->getTdShort(instId);
+                if (strcmp(tag.c_str(), "") != 0) {
+                    if (strcmp(tag.c_str(), "Y") == 0) {
+                        strcpy(kpp, "1");
+                    }
+                    else if (strcmp(tag.c_str(), "T") == 0) {
+                        strcpy(kpp, "3");
+                    }
+                    else {
+                        cerr << "close error command" << endl;
+                        return;
+                    }
 
-				if(Yd_short >= vol)
-				{
-					strcpy(kpp, "1");//yP
-					ReqOrderInsert(instId, dir, kpp, price, vol);
-					
-				}
-				else// yd is not enough
-				{
-					if(Yd_short>0){
-						strcpy(kpp, "1");//yP
-						ReqOrderInsert(instId, dir, kpp, price, Yd_short);
-					}
-					strcpy(kpp, "3");//tP
-					ReqOrderInsert(instId, dir, kpp, price, vol-Yd_short);
-				}
+                    ReqOrderInsert(instId, dir, kpp, price, vol);
+                }
+                else {
+                    // close yP than tP
+                    int Yd_short = this->m_positionCollection->getYdShort(instId);
+                    int Td_short = this->m_positionCollection->getTdShort(instId);
+
+                    if (Yd_short >= vol)
+                    {
+                        strcpy(kpp, "1");//yP
+                        ReqOrderInsert(instId, dir, kpp, price, vol);
+
+                    }
+                    else// yd is not enough
+                    {
+                        if (Yd_short>0) {
+                            strcpy(kpp, "1");//yP
+                            ReqOrderInsert(instId, dir, kpp, price, Yd_short);
+                        }
+                        strcpy(kpp, "3");//tP
+                        ReqOrderInsert(instId, dir, kpp, price, vol - Yd_short);
+                    }
+
+                }
 
 			}
 			else

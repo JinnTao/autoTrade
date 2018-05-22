@@ -13,14 +13,14 @@ typedef const char* coutor;
 class coutorHandler
 {
 public:
-	coutorHandler( int line, char const* file );
-	~coutorHandler();
+    coutorHandler( int line, char const* file );
+    ~coutorHandler();
 
-	const char* throwThis( char const* fmt, ... );
+    const char* throwThis( char const* fmt, ... );
 
 private:
-	int _line;
-	char* _file;
+    int _line;
+    char* _file;
 };
 
 #define yr_error throw coutorHandler( __LINE__, __FILE__ ).throwThis

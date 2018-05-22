@@ -84,7 +84,7 @@ void cStrategy::processStopOrder(string inst, double lastPrice) {
 
 			if (longTriggered || shortTriggered) {
 				//this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, var->price, var->slipTickNum);
-				this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, 0, var->slipTickNum);
+				this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, 0);
 				var->status = false;
 
 			}

@@ -5,12 +5,12 @@
 class cNonCopyable
 {
 public:
-	cNonCopyable() {}
-	virtual ~cNonCopyable() {}
+    cNonCopyable() {}
+    virtual ~cNonCopyable() {}
 
 private:
-	cNonCopyable( const cNonCopyable& );
-	const cNonCopyable& operator = ( const cNonCopyable& );
+    cNonCopyable( const cNonCopyable& );
+    const cNonCopyable& operator = ( const cNonCopyable& );
 };
 
 #endif

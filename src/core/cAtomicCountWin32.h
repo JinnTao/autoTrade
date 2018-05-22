@@ -24,33 +24,33 @@
 class cAtomicCount : cNonCopyable
 {
 public:
-	explicit cAtomicCount( long v ) : m_count(v)
-	{
-	}
+    explicit cAtomicCount( long v ) : m_count(v)
+    {
+    }
 
-	long operator ++ ()
-	{
-		return InterlockedIncrement( const_cast<long*>( &m_count ) );
-	}
+    long operator ++ ()
+    {
+        return InterlockedIncrement( const_cast<long*>( &m_count ) );
+    }
 
-	long operator -- ()
-	{
-		return InterlockedDecrement( const_cast<long*>( &m_count ) );
-	}
+    long operator -- ()
+    {
+        return InterlockedDecrement( const_cast<long*>( &m_count ) );
+    }
 
-	int DecAndTest()
-	{
-		return InterlockedDecrement( const_cast<long*>( &m_count ) ) == 0;
-	}
+    int DecAndTest()
+    {
+        return InterlockedDecrement( const_cast<long*>( &m_count ) ) == 0;
+    }
 
-	operator long() const
-	{
-		return m_count;
-	}
+    operator long() const
+    {
+        return m_count;
+    }
 
 
 private:
-	volatile long m_count;
+    volatile long m_count;
 };
 
 #endif

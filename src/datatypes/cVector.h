@@ -27,368 +27,368 @@
 
 inline double VSum( int size, const double* data )
 {
-	double sum = 0.0;
-	for( const double *ptr = data, *ptr_end = data + size; ptr < ptr_end; ++ptr )
-		sum += *ptr;
+    double sum = 0.0;
+    for( const double *ptr = data, *ptr_end = data + size; ptr < ptr_end; ++ptr )
+        sum += *ptr;
 
-	return sum;
+    return sum;
 }
 
 
 class cVector
 {
 public:
-	// Constructors
-	cVector();
-	explicit cVector( int );
-	cVector( double, int );
-	cVector( const double*, int );
-	cVector( double*, int, bool );
-	cVector( const cVector& );
-	cVector( const cIvector& );
-	// creates a vector that concatenates data of 2 other vectors
-	cVector( const cVector&, const cVector& );
-	void initialize( double );
+    // Constructors
+    cVector();
+    explicit cVector( int );
+    cVector( double, int );
+    cVector( const double*, int );
+    cVector( double*, int, bool );
+    cVector( const cVector& );
+    cVector( const cIvector& );
+    // creates a vector that concatenates data of 2 other vectors
+    cVector( const cVector&, const cVector& );
+    void initialize( double );
 
-	// Destrcutor
-	~cVector();
+    // Destrcutor
+    ~cVector();
 
-	// operators
-	cVector& operator = ( const cVector& );
-	bool operator == ( const cVector& ) const;
-	bool operator != ( const cVector& ) const;
-	cVector& operator += ( const cVector& );
-	cVector& operator += ( double );
-	cVector& operator += ( int );
-	//
-	cVector& operator -= ( const cVector& );
-	cVector& operator -= ( double );
-	cVector& operator -= ( int );
-	//
-	cVector& operator *= ( const cVector& );
-	cVector& operator *= ( double );
-	cVector& operator *= ( int );
-	//
-	cVector& operator /= ( const cVector& );
-	cVector& operator /= ( double );
-	cVector& operator /= ( int );
-	//
-	// appends a vector to this
-	cVector& operator &= ( const cVector& );
-	cVector& operator &= ( double );
-	cVector operator - () const { return ( -1.0 ) * ( *this ); }
+    // operators
+    cVector& operator = ( const cVector& );
+    bool operator == ( const cVector& ) const;
+    bool operator != ( const cVector& ) const;
+    cVector& operator += ( const cVector& );
+    cVector& operator += ( double );
+    cVector& operator += ( int );
+    //
+    cVector& operator -= ( const cVector& );
+    cVector& operator -= ( double );
+    cVector& operator -= ( int );
+    //
+    cVector& operator *= ( const cVector& );
+    cVector& operator *= ( double );
+    cVector& operator *= ( int );
+    //
+    cVector& operator /= ( const cVector& );
+    cVector& operator /= ( double );
+    cVector& operator /= ( int );
+    //
+    // appends a vector to this
+    cVector& operator &= ( const cVector& );
+    cVector& operator &= ( double );
+    cVector operator - () const { return ( -1.0 ) * ( *this ); }
 
-	cVector& Min( double );
-	cVector& Max( double );
-	cVector& Min( const cVector& );
-	cVector& Max( const cVector& );
-	cVector& Fabs();
-	cVector& Exp();
-	cVector& Log( bool check_for_fuzz = true );
-	cVector& Sin();
-	cVector& ASin();
-	cVector& Cos();
-	cVector& Normal();
-	cVector& NormalInv();
-	cVector& Sqrt();
-	cVector& Sqr();
+    cVector& Min( double );
+    cVector& Max( double );
+    cVector& Min( const cVector& );
+    cVector& Max( const cVector& );
+    cVector& Fabs();
+    cVector& Exp();
+    cVector& Log( bool check_for_fuzz = true );
+    cVector& Sin();
+    cVector& ASin();
+    cVector& Cos();
+    cVector& Normal();
+    cVector& NormalInv();
+    cVector& Sqrt();
+    cVector& Sqr();
 
-	cVector& Pow( const cVector& );
-	cVector& Pow( double );
+    cVector& Pow( const cVector& );
+    cVector& Pow( double );
 
-	cVector& Inverse( double );
-	cVector& AddProduct( const double, const cVector& );
-	cVector& Divide( const cVector& );
-	cVector& DivideThisBy( const cVector&, double );
-	cVector& DivideThisBySmooth( const cVector&, double, double );
-	cVector& DivideThisBy( double, double );
+    cVector& Inverse( double );
+    cVector& AddProduct( const double, const cVector& );
+    cVector& Divide( const cVector& );
+    cVector& DivideThisBy( const cVector&, double );
+    cVector& DivideThisBySmooth( const cVector&, double, double );
+    cVector& DivideThisBy( double, double );
 
-	cVector Fabs( const cVector& );
-	cVector Max( const cVector&, const cVector& );
-	cVector Min( const cVector&, const cVector& );
-	cVector Max( const cVector&, double );
-	cVector Max( double, const cVector& );
-	cVector Min( const cVector&, double );
-	cVector Min( double, const cVector& );
+    cVector Fabs( const cVector& );
+    cVector Max( const cVector&, const cVector& );
+    cVector Min( const cVector&, const cVector& );
+    cVector Max( const cVector&, double );
+    cVector Max( double, const cVector& );
+    cVector Min( const cVector&, double );
+    cVector Min( double, const cVector& );
 
-	double Max() const;
-	double Min() const;
-	double Sum() const
-	{
-		return VSum( size_, data_ );
-	}
-	double Avg() const
-	{
-		return size_? Sum() / size_ : 0.0;
-	}
+    double Max() const;
+    double Min() const;
+    double Sum() const
+    {
+        return VSum( size_, data_ );
+    }
+    double Avg() const
+    {
+        return size_? Sum() / size_ : 0.0;
+    }
 
-	double Norm() const;	// sqrt of the sum of the squares of the elements
-	int interval( double t, int adj, int first = 0 ) const;	// returns leftmost peg
-	int location( double t, int first = 0 ) const;	// return closet peg
-	int upper_bound( double t ) const;	// returns highest position where t can be inserted (using insert() ) such that vector remains sorted
-	int lower_bound( double t ) const;	// returns closest position where t can be inserted (using insert() ) such that vector remains sorted
-	void Bounds( const double x, int& lower, int& upper ) const;	// finds bounds on the position of x within vector
-	void InsertWithoutResize( int, double, int );	// insert element into vector without resize: use with care
-	double Interp( int&, int, const cVector& xv, double x, int logInterp, double& delta ) const;	// liner log interp from zcurve
-	double Interp( int, const cVector& xv, double x, int logInterp = 0 ) const;
-	void insert( int, double );	// insert element into vector
-	void insert( int, int, double );	// insert elements into vector
-	void push_back( double );	// add as new last element
-	void drop( int );			// drops an element from a vector
-	void drop( int, int );		// drops a range of elements from a vector
+    double Norm() const;    // sqrt of the sum of the squares of the elements
+    int interval( double t, int adj, int first = 0 ) const;    // returns leftmost peg
+    int location( double t, int first = 0 ) const;    // return closet peg
+    int upper_bound( double t ) const;    // returns highest position where t can be inserted (using insert() ) such that vector remains sorted
+    int lower_bound( double t ) const;    // returns closest position where t can be inserted (using insert() ) such that vector remains sorted
+    void Bounds( const double x, int& lower, int& upper ) const;    // finds bounds on the position of x within vector
+    void InsertWithoutResize( int, double, int );    // insert element into vector without resize: use with care
+    double Interp( int&, int, const cVector& xv, double x, int logInterp, double& delta ) const;    // liner log interp from zcurve
+    double Interp( int, const cVector& xv, double x, int logInterp = 0 ) const;
+    void insert( int, double );    // insert element into vector
+    void insert( int, int, double );    // insert elements into vector
+    void push_back( double );    // add as new last element
+    void drop( int );            // drops an element from a vector
+    void drop( int, int );        // drops a range of elements from a vector
 
 
-	// Element operator
-	double& operator[] ( int i )
-	{
-		yr_assert( i >=0 && i < size_ );
-		return data_[i];
-	}
-	// Element operator - const version
-	const double& operator[] ( int i ) const
-	{
-		yr_assert( i >=0 && i < size_ );
-		return data_[i];
-	}
-	// Element operator - using size_t
-	double& operator[] ( const size_t i )
-	{
-		yr_assert( i < static_cast<size_t>( size_ ) );
-		return data_[i];
-	}
-	// Element operator - const version using size_t
-	const double& operator[] ( const size_t i ) const
-	{
-		yr_assert( i < static_cast<size_t>( size_ ) );
-		return data_[ i ];
-	}
-	
-	void clear()
-	{
-		resize( (int)0 );
-	}
+    // Element operator
+    double& operator[] ( int i )
+    {
+        yr_assert( i >=0 && i < size_ );
+        return data_[i];
+    }
+    // Element operator - const version
+    const double& operator[] ( int i ) const
+    {
+        yr_assert( i >=0 && i < size_ );
+        return data_[i];
+    }
+    // Element operator - using size_t
+    double& operator[] ( const size_t i )
+    {
+        yr_assert( i < static_cast<size_t>( size_ ) );
+        return data_[i];
+    }
+    // Element operator - const version using size_t
+    const double& operator[] ( const size_t i ) const
+    {
+        yr_assert( i < static_cast<size_t>( size_ ) );
+        return data_[ i ];
+    }
+    
+    void clear()
+    {
+        resize( (int)0 );
+    }
 
-	void resize( size_t newsize_ )
-	{
-		resize( (int)newsize_ );
-	}
+    void resize( size_t newsize_ )
+    {
+        resize( (int)newsize_ );
+    }
 
-	void resize( int newsize_ );
-	void resize( size_t newsize, double value, size_t exactSize = 0 )
-	{
-		resize( ( int )newsize, value, ( int )exactSize );
-	}
-	void resize_keep( int newSize, double value, int exactSize = 0 );
-	void resize( int, double, int exactSize = 0 );
-	void dirty_resize( int );
-	void exact_resize( int newsize_ = -1 );	// the default argument of -1 makes it resize the vector to its current apparent size
-	friend ostream& operator << ( ostream& outfile, const cVector& vec );
-	void reserve( int );
+    void resize( int newsize_ );
+    void resize( size_t newsize, double value, size_t exactSize = 0 )
+    {
+        resize( ( int )newsize, value, ( int )exactSize );
+    }
+    void resize_keep( int newSize, double value, int exactSize = 0 );
+    void resize( int, double, int exactSize = 0 );
+    void dirty_resize( int );
+    void exact_resize( int newsize_ = -1 );    // the default argument of -1 makes it resize the vector to its current apparent size
+    friend ostream& operator << ( ostream& outfile, const cVector& vec );
+    void reserve( int );
 
-	friend cVector operator + ( const cVector&, double );			// addition by scalar
-	friend cVector operator + ( double, const cVector& );			// addition by scalar
-	friend cVector operator + ( const cVector&, int );				// addition by integer
-	friend cVector operator + ( int, const cVector& );				// addition by integer
+    friend cVector operator + ( const cVector&, double );            // addition by scalar
+    friend cVector operator + ( double, const cVector& );            // addition by scalar
+    friend cVector operator + ( const cVector&, int );                // addition by integer
+    friend cVector operator + ( int, const cVector& );                // addition by integer
 
-	friend cVector operator && ( const cVector&, const cVector& );	// concatenation
-	friend cVector operator && ( double, const cVector& );			// concatenate vect to a double
-	friend cVector operator && ( const cVector&, double );			// concatenate double to vect
+    friend cVector operator && ( const cVector&, const cVector& );    // concatenation
+    friend cVector operator && ( double, const cVector& );            // concatenate vect to a double
+    friend cVector operator && ( const cVector&, double );            // concatenate double to vect
 
-	friend cVector operator - ( const cVector&, double );			// subtraction by scalar
-	friend cVector operator - ( double, const cVector& );			// subtraction by scalar
-	friend cVector operator - ( const cVector&, int );				// subtraction by integer
-	friend cVector operator - ( int, const cVector& );				// subtraction by integer
+    friend cVector operator - ( const cVector&, double );            // subtraction by scalar
+    friend cVector operator - ( double, const cVector& );            // subtraction by scalar
+    friend cVector operator - ( const cVector&, int );                // subtraction by integer
+    friend cVector operator - ( int, const cVector& );                // subtraction by integer
 
-	friend cVector operator * ( const cVector&, double );			// multiplication by scalar
-	friend cVector operator * ( double, const cVector& );			// multiplication by scalar
-	friend cVector operator * ( const cVector&, int );				// multiplication by integer
-	friend cVector operator * ( int, const cVector& );				// multiplication by integer
+    friend cVector operator * ( const cVector&, double );            // multiplication by scalar
+    friend cVector operator * ( double, const cVector& );            // multiplication by scalar
+    friend cVector operator * ( const cVector&, int );                // multiplication by integer
+    friend cVector operator * ( int, const cVector& );                // multiplication by integer
 
-	friend cVector operator / ( const cVector&, double );			// division by scalar
-	friend cVector operator / ( double, const cVector& );			// division by scalar
-	friend cVector operator / ( const cVector&, int );				// division by integer
-	friend cVector operator / ( int, const cVector& );				// division by integer
+    friend cVector operator / ( const cVector&, double );            // division by scalar
+    friend cVector operator / ( double, const cVector& );            // division by scalar
+    friend cVector operator / ( const cVector&, int );                // division by integer
+    friend cVector operator / ( int, const cVector& );                // division by integer
 
-	friend cVector operator > ( const cVector&, double );
-	friend cVector operator < ( const cVector&, double );
-	friend cVector operator >= ( const cVector&, double );
-	friend cVector operator <= ( const cVector&, double );
+    friend cVector operator > ( const cVector&, double );
+    friend cVector operator < ( const cVector&, double );
+    friend cVector operator >= ( const cVector&, double );
+    friend cVector operator <= ( const cVector&, double );
 
-	friend cVector operator > ( double, const cVector& );
-	friend cVector operator < ( double, const cVector& );
-	friend cVector operator >= ( double, const cVector& );
-	friend cVector operator <= ( double, const cVector& );
+    friend cVector operator > ( double, const cVector& );
+    friend cVector operator < ( double, const cVector& );
+    friend cVector operator >= ( double, const cVector& );
+    friend cVector operator <= ( double, const cVector& );
 
-	double getLast() const
-	{
-		yr_assert( size_ > 0 );
-		return data_[ size_-1 ];
-	}
+    double getLast() const
+    {
+        yr_assert( size_ > 0 );
+        return data_[ size_-1 ];
+    }
 
-	int getSize() const
-	{
-		return size_;
-	}
-	size_t size() const
-	{
-		return (size_t)size_;
-	}
-	operator double*()
-	{
-		return data_;
-	}
-	operator const double*() const
-	{
-		return data_;
-	}
-	double* data()
-	{
-		return data_;
-	}
-	const double* data() const
-	{
-		return data_;
-	}
+    int getSize() const
+    {
+        return size_;
+    }
+    size_t size() const
+    {
+        return (size_t)size_;
+    }
+    operator double*()
+    {
+        return data_;
+    }
+    operator const double*() const
+    {
+        return data_;
+    }
+    double* data()
+    {
+        return data_;
+    }
+    const double* data() const
+    {
+        return data_;
+    }
 
-	static int _real_size( int );
-	bool owns_data() const
-	{
-		return owns_data_;
-	}
+    static int _real_size( int );
+    bool owns_data() const
+    {
+        return owns_data_;
+    }
 
-	// STL-like functions
+    // STL-like functions
 
-	typedef double* iterator;
-	typedef const double* const_iterator;
+    typedef double* iterator;
+    typedef const double* const_iterator;
 
-	iterator begin()
-	{
-		return data_;
-	}
+    iterator begin()
+    {
+        return data_;
+    }
 
-	const_iterator begin() const
-	{
-		return data_;
-	}
+    const_iterator begin() const
+    {
+        return data_;
+    }
 
-	iterator end()
-	{
-		return data_ + size_;
-	}
+    iterator end()
+    {
+        return data_ + size_;
+    }
 
-	const_iterator end() const
-	{
-		return data_ + size_;
-	}
+    const_iterator end() const
+    {
+        return data_ + size_;
+    }
 
 //#if defined(GNU) || defined(WIN32)
-	typedef std::reverse_iterator<iterator> reverse_iterator;
-	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+    typedef std::reverse_iterator<iterator> reverse_iterator;
+    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 //#endif
 
-	reverse_iterator rbegin()
-	{
-		return ( reverse_iterator(end()) );
-	}
+    reverse_iterator rbegin()
+    {
+        return ( reverse_iterator(end()) );
+    }
 
-	const_reverse_iterator rbegin() const
-	{
-		return ( const_reverse_iterator(end()) );
-	}
+    const_reverse_iterator rbegin() const
+    {
+        return ( const_reverse_iterator(end()) );
+    }
 
-	reverse_iterator rend()
-	{
-		return ( reverse_iterator(begin()) );
-	}
+    reverse_iterator rend()
+    {
+        return ( reverse_iterator(begin()) );
+    }
 
-	const_reverse_iterator rend() const
-	{
-		return ( const_reverse_iterator(begin()) );
-	}
+    const_reverse_iterator rend() const
+    {
+        return ( const_reverse_iterator(begin()) );
+    }
 
-	void erase( iterator it_begin, iterator it_end );
-	void sort();	// sort the vector
-	cVector& sortunique();	// sort the vector and remove duplicates
-	cVector& remove_duplicates( double fuzz = FUZZ );
-	void Copy( const cVector& in, int size )
-	{
-		yr_assert( size >= 0 && size <= size_ && size <= in.size_ );
-		memcpy( data_, in.data(), size * sizeof( double ) );
-	}
+    void erase( iterator it_begin, iterator it_end );
+    void sort();    // sort the vector
+    cVector& sortunique();    // sort the vector and remove duplicates
+    cVector& remove_duplicates( double fuzz = FUZZ );
+    void Copy( const cVector& in, int size )
+    {
+        yr_assert( size >= 0 && size <= size_ && size <= in.size_ );
+        memcpy( data_, in.data(), size * sizeof( double ) );
+    }
 
-	static void Swap( cVector& a, cVector& b )
-	{
-		double* temp1 = a.data_;
-		a.data_ = b.data_;
-		b.data_ = temp1;
+    static void Swap( cVector& a, cVector& b )
+    {
+        double* temp1 = a.data_;
+        a.data_ = b.data_;
+        b.data_ = temp1;
 
-		int temp2 = a.size_;
-		a.size_ = b.size_;
-		b.size_ = temp2;
+        int temp2 = a.size_;
+        a.size_ = b.size_;
+        b.size_ = temp2;
 
-		temp2 = a.real_size;
-		a.real_size = b.real_size;
-		b.real_size = temp2;
+        temp2 = a.real_size;
+        a.real_size = b.real_size;
+        b.real_size = temp2;
 
-		bool b_temp = a.owns_data_;
-		a.owns_data_ = b.owns_data_;
-		b.owns_data_ = b_temp;
-	}
+        bool b_temp = a.owns_data_;
+        a.owns_data_ = b.owns_data_;
+        b.owns_data_ = b_temp;
+    }
 
-	void swapElements( int i, int j )
-	{
-		yr_assert( i >= 0 && i < size_ );
-		yr_assert( j >= 0 && j < size_ );
+    void swapElements( int i, int j )
+    {
+        yr_assert( i >= 0 && i < size_ );
+        yr_assert( j >= 0 && j < size_ );
 
-		const double tmp = data_[i];
-		data_[i] = data_[j];
-		data_[j] = tmp;
-	}
+        const double tmp = data_[i];
+        data_[i] = data_[j];
+        data_[j] = tmp;
+    }
 
-	cVector& merge( double, double tolerance = 0.0, bool replace = true );
-	cVector& merge( const cVector&, double tolerance = 0.0 );
+    cVector& merge( double, double tolerance = 0.0, bool replace = true );
+    cVector& merge( const cVector&, double tolerance = 0.0 );
 
-	void reverse()
-	{
-		if( getSize() <= 0 )
-			return;
-		std::reverse( data_, data_ + size_ );
-	}
+    void reverse()
+    {
+        if( getSize() <= 0 )
+            return;
+        std::reverse( data_, data_ + size_ );
+    }
 
-	int contains( double val, double tol = 0.0 ) const;
-	int find( const double val, const double tol = 0.0, const int start = 0 ) const;
+    int contains( double val, double tol = 0.0 ) const;
+    int find( const double val, const double tol = 0.0, const int start = 0 ) const;
 
-	int NumSmaller( int n, double x ) const; // counts number of elements less than x.
-	int FirstGreater( int n, double val, int first = 0 ) const; // finds first element greater than val
-	bool AllEqual( int n = 0, double fuzz = FUZZ ) const; // check if all elements are equals
-	bool IsIncreasing( int n ) const; // is the vector strictly increasing
-	bool IsIncreasingNonStrict( int n ) const;	// is the vector increasing
-	bool IsZeroVector() const;	// true if the vector is empty or contains all zeros (within FUZZ)
-	bool IsEqual( double x ) const;	// true if the vector is empty or contant equal to x.
-	bool IsSameSign() const;	// true if all elements are positive or all elements are negative
+    int NumSmaller( int n, double x ) const; // counts number of elements less than x.
+    int FirstGreater( int n, double val, int first = 0 ) const; // finds first element greater than val
+    bool AllEqual( int n = 0, double fuzz = FUZZ ) const; // check if all elements are equals
+    bool IsIncreasing( int n ) const; // is the vector strictly increasing
+    bool IsIncreasingNonStrict( int n ) const;    // is the vector increasing
+    bool IsZeroVector() const;    // true if the vector is empty or contains all zeros (within FUZZ)
+    bool IsEqual( double x ) const;    // true if the vector is empty or contant equal to x.
+    bool IsSameSign() const;    // true if all elements are positive or all elements are negative
 
 
 
 public:
-	static double* malloc_doubles( size_t s )
-	{
-		return new double[ s ];
-	}
+    static double* malloc_doubles( size_t s )
+    {
+        return new double[ s ];
+    }
 
-	static void free_doubles( double* p )
-	{
-		delete [] p;
-	}
+    static void free_doubles( double* p )
+    {
+        delete [] p;
+    }
 
 protected:
-	void _allocate( int s );
-	void _reallocate( int s, int exactSize = 0 );
-	void _reallocate_and_preserve( int s, double value, int exactSize = 0 );
+    void _allocate( int s );
+    void _reallocate( int s, int exactSize = 0 );
+    void _reallocate_and_preserve( int s, double value, int exactSize = 0 );
 
-	double *data_;
-	bool	owns_data_;
-	int		size_;
-	int		real_size;
+    double *data_;
+    bool    owns_data_;
+    int        size_;
+    int        real_size;
 };
 
 cVector operator + ( const cVector& lVec, const cVector& rVec );
@@ -403,12 +403,12 @@ cVector operator <= ( const cVector& lVec, const cVector& rVec );
 
 inline cVector merge( const cVector& a, double x, double tolerance = 0.0 )
 {
-	return cVector( a ).merge( x, tolerance );
+    return cVector( a ).merge( x, tolerance );
 }
 
 inline cVector merge( const cVector& a1, const cVector& a2, double tolerance = 0.0 )
 {
-	return cVector( a1 ).merge( a1, tolerance );
+    return cVector( a1 ).merge( a1, tolerance );
 }
 
 cVector power( const cVector& x, const double& exponent );

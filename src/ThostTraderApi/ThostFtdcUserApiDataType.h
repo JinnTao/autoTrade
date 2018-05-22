@@ -4,7 +4,7 @@
 ///@file ThostFtdcUserApiDataType.h
 ///@brief 定义了客户端接口使用的业务数据类型
 ///@history 
-///20060106	赵鸿昊		创建该文件
+///20060106    赵鸿昊        创建该文件
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef THOST_FTDCDATATYPE_H
@@ -12,9 +12,9 @@
 
 enum THOST_TE_RESUME_TYPE
 {
-	THOST_TERT_RESTART = 0,
-	THOST_TERT_RESUME,
-	THOST_TERT_QUICK
+    THOST_TERT_RESTART = 0,
+    THOST_TERT_RESUME,
+    THOST_TERT_QUICK
 };
 
 /////////////////////////////////////////////////////////////////////////

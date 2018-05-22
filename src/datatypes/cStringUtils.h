@@ -68,9 +68,9 @@ cString InvertFXString( const cString& str );
 /*
 // Operator for YRGridMath REL function
 enum eOperatorType {
-	singular_operator = -1,
-	or_operator,
-	and_operator
+    singular_operator = -1,
+    or_operator,
+    and_operator
 };
 
 // YRGridMath / OP:
@@ -80,64 +80,64 @@ enum eOperatorType {
 // Note: DO NOT use operator == on cVariants!!!
 class cRestrictionCriterion
 {
-	const eOperatorType _operatorType;
+    const eOperatorType _operatorType;
 
 public:
-	cRestrictionCriterion() : _operatorType( singular_operator ) {}
-	cRestrictionCriterion( const eOperatorType Operator ) : _operatorType( Operator ) {}
-	const eOperatorType& OperatorType() { return _operatorType; }
-	static cSharedPtr< cRestrictionCriterion > Create( const cString& criterionType );
-	virtual bool check( const cVariant& lhs, const cVariant& rhs ) const = 0;
+    cRestrictionCriterion() : _operatorType( singular_operator ) {}
+    cRestrictionCriterion( const eOperatorType Operator ) : _operatorType( Operator ) {}
+    const eOperatorType& OperatorType() { return _operatorType; }
+    static cSharedPtr< cRestrictionCriterion > Create( const cString& criterionType );
+    virtual bool check( const cVariant& lhs, const cVariant& rhs ) const = 0;
 };
 
 class cRCEQ : public cRestrictionCriterion
 {
-	cRCEQ() : cRestrictionCriterion( or_operator ) {}
-	virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
-	{
-		return lhs.ComparableTo( rhs ) ? ! lhs.LessThan( rhs ) && !rhs.LessThan( lhs ) : false;
-	}
+    cRCEQ() : cRestrictionCriterion( or_operator ) {}
+    virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
+    {
+        return lhs.ComparableTo( rhs ) ? ! lhs.LessThan( rhs ) && !rhs.LessThan( lhs ) : false;
+    }
 };
 
 class cRCLE : public cRestrictionCriterion
 {
-	virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
-	{
-		return !rhs.LessThan(lhs);
-	}
+    virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
+    {
+        return !rhs.LessThan(lhs);
+    }
 };
 
 class cRCGE : public cRestrictionCriterion
 {
-	virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
-	{
-		return !lhs.LessThan(rhs);
-	}
+    virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
+    {
+        return !lhs.LessThan(rhs);
+    }
 };
 
 class cRCLT : public cRestrictionCriterion
 {
-	virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
-	{
-		return lhs.LessThan(rhs);
-	}
+    virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
+    {
+        return lhs.LessThan(rhs);
+    }
 };
 
 class cRCGT : public cRestrictionCriterion
 {
-	virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
-	{
-		return rhs.LessThan(lhs);
-	}
+    virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
+    {
+        return rhs.LessThan(lhs);
+    }
 };
 
 class cRCNE : public cRestrictionCriterion
 {
-	cRCNE() : cRestrictionCriterion( and_operator ) {}
-	virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
-	{
-		return lhs.ComparableTo( rhs ) ? lhs.LessThan( rhs ) || rhs.LessThan( lhs ) : true;
-	}
+    cRCNE() : cRestrictionCriterion( and_operator ) {}
+    virtual bool check( const cVariant& lhs, const cVariant& rhs ) const
+    {
+        return lhs.ComparableTo( rhs ) ? lhs.LessThan( rhs ) || rhs.LessThan( lhs ) : true;
+    }
 };
 */
 
