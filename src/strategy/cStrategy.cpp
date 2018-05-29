@@ -5,16 +5,16 @@
 cStrategy::cStrategy()
 {
     //m_thread =  thread(&cStrategy::AutoTrading,this);
-	//m_pTradingThread = new cThread< cStrategy >( this, &cStrategy::AutoTrading );
-	m_timeSpan = 500;
+    //m_pTradingThread = new cThread< cStrategy >( this, &cStrategy::AutoTrading );
+    m_timeSpan = 500;
 }
 
 cStrategy::cStrategy( const string& strategyID )
 {
     //m_thread = thread(&cStrategy::AutoTrading, this);
-	//m_pTradingThread = new cThread< cStrategy >( this, &cStrategy::AutoTrading );
-	m_timeSpan = 500;
-	this->m_strategyName = strategyID;
+    //m_pTradingThread = new cThread< cStrategy >( this, &cStrategy::AutoTrading );
+    m_timeSpan = 500;
+    this->m_strategyName = strategyID;
 }
 
 cStrategy::~cStrategy( )
@@ -27,7 +27,7 @@ void cStrategy::start(){
     m_thread = std::thread(&cStrategy::AutoTrading, this);
 
     //m_thread.join();
-	//m_pTradingThread->Init();
+    //m_pTradingThread->Init();
 }
 
 void cStrategy::stop(){
@@ -35,62 +35,62 @@ void cStrategy::stop(){
     if (m_thread.joinable()) {
         m_thread.join();
     }
-	//this->m_status = false;
+    //this->m_status = false;
 }
 
 
 DWORD cStrategy::AutoTrading(){
-	init();
-	while(this->m_isRuning.load(std::memory_order_relaxed)){
-		this->run();
+    init();
+    while(this->m_isRuning.load(std::memory_order_relaxed)){
+        this->run();
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(500ms);
 
-	}
-	unInit();
-	return 0;
+    }
+    unInit();
+    return 0;
 
 }
 void cStrategy::init(){
-	cerr << this->m_strategyName << " init" << endl;
+    cerr << this->m_strategyName << " init" << endl;
 };
 
 void cStrategy::unInit(){
-		cerr << this->m_strategyName << " unInit" << endl;
+        cerr << this->m_strategyName << " unInit" << endl;
 };
 
 void cStrategy::sendStopOrder(string inst,DIRECTION inDirection,OFFSETFLAG inOffset,double price,UINT volume ,string strategy,int slipNum) {
-	cStopOrder order;
-	order.instrument = inst;
-	order.direction = inDirection;
-	order.offset = inOffset;
-	order.price = price;
-	order.volume = volume;
-	order.strategyName = strategy;
-	order.orderType = "";
-	order.status = true;
-	order.slipTickNum = slipNum;
-	order.orderTime = std::chrono::system_clock::now();
-	// add order to working list
-	m_workingStopOrderList.push_back(order);
+    cStopOrder order;
+    order.instrument = inst;
+    order.direction = inDirection;
+    order.offset = inOffset;
+    order.price = price;
+    order.volume = volume;
+    order.strategyName = strategy;
+    order.orderType = "";
+    order.status = true;
+    order.slipTickNum = slipNum;
+    order.orderTime = std::chrono::system_clock::now();
+    // add order to working list
+    m_workingStopOrderList.push_back(order);
 }
 
 void cStrategy::processStopOrder(string inst, double lastPrice) {
-	for(auto var =  m_workingStopOrderList.begin();var!=m_workingStopOrderList.end();var++)
-	{
-		if (inst == var->instrument && var->status) {
-			bool longTriggered = var->direction == DIRECTION::buy && lastPrice >= var->price;
-			bool shortTriggered = var->direction == DIRECTION::sell && lastPrice <= var->price;
+    for(auto var =  m_workingStopOrderList.begin();var!=m_workingStopOrderList.end();var++)
+    {
+        if (inst == var->instrument && var->status) {
+            bool longTriggered = var->direction == DIRECTION::buy && lastPrice >= var->price;
+            bool shortTriggered = var->direction == DIRECTION::sell && lastPrice <= var->price;
 
-			if (longTriggered || shortTriggered) {
-				//this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, var->price, var->slipTickNum);
-				this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, 0);
-				var->status = false;
+            if (longTriggered || shortTriggered) {
+                //this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, var->price, var->slipTickNum);
+                this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, 0);
+                var->status = false;
 
-			}
-		}
+            }
+        }
 
-	}
+    }
 }
 bool cStrategy::isTradeTime() {
     if (m_timeMode == 1) {

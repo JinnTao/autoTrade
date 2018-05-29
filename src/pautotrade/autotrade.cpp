@@ -53,8 +53,8 @@ void autotrade_trade()
         CThostFtdcTraderApi* pTraderUserApi = CThostFtdcTraderApi::CreateFtdcTraderApi(".\\TDflow\\");
         cTraderSpi* pTraderUserSpi = new cTraderSpi( pTraderUserApi,pMdUserSpi,pMdUserApi, ctpAccount.brokerId, ctpAccount.userId, ctpAccount.passwd );
         pTraderUserApi->RegisterSpi((CThostFtdcTraderSpi*) pTraderUserSpi );
-        pTraderUserApi->SubscribePublicTopic( THOST_TERT_RESTART );	// subscribe public topic
-        pTraderUserApi->SubscribePrivateTopic( THOST_TERT_QUICK );	// subscribe private topic
+        pTraderUserApi->SubscribePublicTopic( THOST_TERT_RESTART );    // subscribe public topic
+        pTraderUserApi->SubscribePrivateTopic( THOST_TERT_QUICK );    // subscribe private topic
         pTraderUserApi->RegisterFront( ctpAccount.tdAddress ); 
 
         //-----------------------------------------人机交互线程---------------------------------------------------------------------------------
