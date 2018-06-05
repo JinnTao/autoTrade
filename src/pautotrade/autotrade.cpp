@@ -1,7 +1,7 @@
 #include <autotrade.h>
 #include <autotrade_config.h>
 #include "easylogging++.h"
-
+#include "global.h"
 // initial easylogging
 INITIALIZE_EASYLOGGINGPP
 
@@ -11,9 +11,25 @@ int iRequestID = 0;//订单编号
 
 #define  ROHON  0
 
+namespace global{
 
-int main()
+    volatile std::sig_atomic_t is_running;
+
+}  // namespace
+
+extern "C" void signal_handler(int signal) {
+    LOG(INFO) << "Detect signal: " << signal << endl;
+    global::is_running = false;
+}
+
+
+int main(int32 argc,char ** argv)
 {
+    global::is_running = true;
+    std::signal(SIGTERM, signal_handler);
+    std::signal(SIGINT, signal_handler);
+
+
     autotrade_trade();
 
     return 0;
@@ -25,9 +41,7 @@ void autotrade_trade()
     {
         printf( "\n" );
         printf( "running process to automatically trade with self-defined strategies...\n" );
-        //-------------------------------------easyLogging-----------------------------------------
-        el::Configurations conf("easyLog.conf");
-        el::Loggers::reconfigureAllLoggers(conf);
+
 
         //std::cout << "1" << std::endl;
         //-------------------------------------读取基本配置---------------------------------------

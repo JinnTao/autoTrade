@@ -1,9 +1,6 @@
 #ifndef __CTRADINGPLATFORM_H__
 #define __CTRADINGPLATFORM_H__
 
-#include <yr_structs.h>
-
-
 class cString;
 class cTraderSpi;
 #include "cMdSpi.h"
