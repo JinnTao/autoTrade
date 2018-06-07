@@ -222,9 +222,6 @@ private:
     string m_tradeDay;
     string m_actionDay;
     bool m_qryStatus;
-
-
-
     ///
     map<string,CThostFtdcInstrumentField*>::iterator m_itMap;// 用于查询合约
     /// marketData
