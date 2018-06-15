@@ -80,11 +80,6 @@ public:
     void initStrategy(autoSetting &);
     std::vector<std::string> cTradingPlatform::splitToStr(std::string str, std::string pattern);
     std::vector<int32> cTradingPlatform::splitToInt(std::string str, std::string pattern);
-
-    int32 reConnect();
-
-
-
 private:
     cTraderSpi*    m_pTraderSpi;
     cMdSpi* m_pMdSpi;

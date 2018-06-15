@@ -589,19 +589,3 @@ void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,
     this->m_pTraderSpi->insertOrder(inst,eDire,eFlag,vol,orderPrice,tag);
     _sleep(500);// wait 500ms for pTrader response.
 }
-
-int32 cTradingPlatform::reConnect() {
-    try {
-
-
-    }
-    catch (std::exception& e) {
-        LOG(INFO) << "TradingPlatform reconnect failed :" << e.what();
-        return -1;
-    }
-    catch (...) {
-        LOG(INFO) << "TradingPlatform reconnect failed! ";
-        return -2;
-    }
-
-}
