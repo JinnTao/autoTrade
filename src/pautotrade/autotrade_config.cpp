@@ -1,77 +1,77 @@
 #include <autotrade_config.h>
 #include <cSystem.h>
-#include "IniFile.h"
-
-int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSetting &autoTradeSetting){  
-    try{
-        IniFile ini("setting.ini");
-        // account information
-        strcpy_s(account.brokerId,sizeof(account.brokerId), ini.ReadString("account", "brokerID", "1").c_str());
-        strcpy_s(account.tdAddress,sizeof(account.tdAddress), ini.ReadString("account", "tdAddress", "1").c_str());
-        strcpy(account.passwd, ini.ReadString("account", "password", "1").c_str());
-        strcpy_s(account.mdAddress,sizeof(account.mdAddress), ini.ReadString("account", "mdAddress", "1").c_str());
-        strcpy_s(account.userId,sizeof(account.userId), ini.ReadString("account", "userID", "1").c_str());
-        // mongoDB
-        strcpy_s(mongoDbSetting.address,sizeof(mongoDbSetting.address), ini.ReadString("dbMongo", "address", "1").c_str());
-        strcpy_s(mongoDbSetting.database, sizeof(mongoDbSetting.database), ini.ReadString("dbMongo", "dataBase", "1").c_str());
-        mongoDbSetting.mongoPort =  ini.ReadInt("dbMongo", "mongoPort", 1);
-        mongoDbSetting.mongoLogging = ini.ReadInt("dbMongo", "mongoLogging", 1);
-        // txt database dir
-        strcpy_s(autoTradeSetting.dataBaseDir, sizeof(autoTradeSetting.dataBaseDir), ini.ReadString("dataBase", "dataBaseDir", "1").c_str());
-        strcpy_s(autoTradeSetting.tradeDayDir, sizeof(autoTradeSetting.tradeDayDir), ini.ReadString("dataBase", "tradeDayDir", "1").c_str());
-        strcpy_s(autoTradeSetting.startDate, sizeof(autoTradeSetting.startDate), ini.ReadString("dataBase", "startDate", "1").c_str());
-        strcpy_s(autoTradeSetting.endDate, sizeof(autoTradeSetting.endDate), ini.ReadString("dataBase", "endDate", "1").c_str());
-        // strategy
-        strcpy_s(autoTradeSetting.inst, sizeof(autoTradeSetting.inst), ini.ReadString("strategy", "inst", "1").c_str());
-        strcpy_s(autoTradeSetting.lots, sizeof(autoTradeSetting.lots), ini.ReadString("strategy", "lots", "1").c_str());
-        strcpy_s(autoTradeSetting.timeMode, sizeof(autoTradeSetting.timeMode), ini.ReadString("strategy", "timeModes", "1").c_str());
-        strcpy_s(autoTradeSetting.collectionList, sizeof(autoTradeSetting.collectionList), ini.ReadString("strategy", "collectionList", "1").c_str());
-        // datasource
-        strcpy_s(autoTradeSetting.collectionName, sizeof(autoTradeSetting.collectionName), ini.ReadString("KingKeltner", "collectionName", "").c_str());
-        strcpy_s(autoTradeSetting.startDateTime, sizeof(autoTradeSetting.startDateTime), ini.ReadString("KingKeltner", "startDateTime", "").c_str());
-        strcpy_s(autoTradeSetting.endDateTime, sizeof(autoTradeSetting.endDateTime), ini.ReadString("KingKeltner", "endDateTime", "").c_str());
-        // KingKeltner
-        autoTradeSetting.kkLength = ini.ReadDouble("KingKeltner", "kkLength", 1);
-        autoTradeSetting.kkDev = ini.ReadDouble("KingKeltner", "kkDev", 1);
-        autoTradeSetting.trailingPrcnt = ini.ReadDouble("KingKeltner", "trailingPrcnt", 1);
-        autoTradeSetting.fixedSize = ini.ReadDouble("KingKeltner", "fixedSize", 1);
-        autoTradeSetting.initDays = ini.ReadDouble("KingKeltner", "initDays", 1);
-
-        return 0;
-    }
-    catch (...){
-        cout << "Parse Setting Error..." << endl;
-        system("pause");
-    }
-    return -1;
-
-  // 解析json用Json::Reader   
-  //Json::Reader reader;  
-  // Json::Value是一种很重要的类型，可以代表任意类型。如int, string, object, array...   
- // Json::Value root;         
-  
-  //std::ifstream is;  
-  //is.open ("CodeLib/config/setting.json", std::ios::binary );    
-  //if (reader.parse(is, root))  
-  //{  
-     // strcpy_s(account.brokerId,sizeof(account.brokerId),root["brokerID"].asString().c_str());
-     // strcpy_s(account.tdAddress,sizeof(account.tdAddress),root["tdAddress"].asString().c_str());
-     // strcpy_s(account.passwd,sizeof(account.passwd),root["password"].asString().c_str());
-     // strcpy_s(account.mdAddress,sizeof(account.mdAddress),root["mdAddress"].asString().c_str());
-     // strcpy_s(account.userId,sizeof(account.userId),root["userID"].asString().c_str());
-
-     // strcpy_s(mongoDbSetting.mongoHost,sizeof(mongoDbSetting.mongoHost),root["mongoHost"].asString().c_str());
-     // mongoDbSetting.mongoPort = root["mongoPort"].asInt();
-     // mongoDbSetting.mongoLogging = root["mongoLogging"].asBool();
-     // 
-  //} else{
-     // is.close();
-     // return -1;
-  //} 
-  //is.close();  
-  //return 0;  
-
-}  
+//#include "IniFile.h"
+//
+//int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSetting &autoTradeSetting){  
+//    try{
+//        IniFile ini("setting.ini");
+//        // account information
+//        strcpy_s(account.brokerId,sizeof(account.brokerId), ini.ReadString("account", "brokerID", "1").c_str());
+//        strcpy_s(account.tdAddress,sizeof(account.tdAddress), ini.ReadString("account", "tdAddress", "1").c_str());
+//        strcpy(account.passwd, ini.ReadString("account", "password", "1").c_str());
+//        strcpy_s(account.mdAddress,sizeof(account.mdAddress), ini.ReadString("account", "mdAddress", "1").c_str());
+//        strcpy_s(account.userId,sizeof(account.userId), ini.ReadString("account", "userID", "1").c_str());
+//        // mongoDB
+//        strcpy_s(mongoDbSetting.address,sizeof(mongoDbSetting.address), ini.ReadString("dbMongo", "address", "1").c_str());
+//        strcpy_s(mongoDbSetting.database, sizeof(mongoDbSetting.database), ini.ReadString("dbMongo", "dataBase", "1").c_str());
+//        mongoDbSetting.mongoPort =  ini.ReadInt("dbMongo", "mongoPort", 1);
+//        mongoDbSetting.mongoLogging = ini.ReadInt("dbMongo", "mongoLogging", 1);
+//        // txt database dir
+//        strcpy_s(autoTradeSetting.dataBaseDir, sizeof(autoTradeSetting.dataBaseDir), ini.ReadString("dataBase", "dataBaseDir", "1").c_str());
+//        strcpy_s(autoTradeSetting.tradeDayDir, sizeof(autoTradeSetting.tradeDayDir), ini.ReadString("dataBase", "tradeDayDir", "1").c_str());
+//        strcpy_s(autoTradeSetting.startDate, sizeof(autoTradeSetting.startDate), ini.ReadString("dataBase", "startDate", "1").c_str());
+//        strcpy_s(autoTradeSetting.endDate, sizeof(autoTradeSetting.endDate), ini.ReadString("dataBase", "endDate", "1").c_str());
+//        // strategy
+//        strcpy_s(autoTradeSetting.inst, sizeof(autoTradeSetting.inst), ini.ReadString("strategy", "inst", "1").c_str());
+//        strcpy_s(autoTradeSetting.lots, sizeof(autoTradeSetting.lots), ini.ReadString("strategy", "lots", "1").c_str());
+//        strcpy_s(autoTradeSetting.timeMode, sizeof(autoTradeSetting.timeMode), ini.ReadString("strategy", "timeModes", "1").c_str());
+//        strcpy_s(autoTradeSetting.collectionList, sizeof(autoTradeSetting.collectionList), ini.ReadString("strategy", "collectionList", "1").c_str());
+//        // datasource
+//        strcpy_s(autoTradeSetting.collectionName, sizeof(autoTradeSetting.collectionName), ini.ReadString("KingKeltner", "collectionName", "").c_str());
+//        strcpy_s(autoTradeSetting.startDateTime, sizeof(autoTradeSetting.startDateTime), ini.ReadString("KingKeltner", "startDateTime", "").c_str());
+//        strcpy_s(autoTradeSetting.endDateTime, sizeof(autoTradeSetting.endDateTime), ini.ReadString("KingKeltner", "endDateTime", "").c_str());
+//        // KingKeltner
+//        autoTradeSetting.kkLength = ini.ReadDouble("KingKeltner", "kkLength", 1);
+//        autoTradeSetting.kkDev = ini.ReadDouble("KingKeltner", "kkDev", 1);
+//        autoTradeSetting.trailingPrcnt = ini.ReadDouble("KingKeltner", "trailingPrcnt", 1);
+//        autoTradeSetting.fixedSize = ini.ReadDouble("KingKeltner", "fixedSize", 1);
+//        autoTradeSetting.initDays = ini.ReadDouble("KingKeltner", "initDays", 1);
+//
+//        return 0;
+//    }
+//    catch (...){
+//        cout << "Parse Setting Error..." << endl;
+//        system("pause");
+//    }
+//    return -1;
+//
+//  // 解析json用Json::Reader   
+//  //Json::Reader reader;  
+//  // Json::Value是一种很重要的类型，可以代表任意类型。如int, string, object, array...   
+// // Json::Value root;         
+//  
+//  //std::ifstream is;  
+//  //is.open ("CodeLib/config/setting.json", std::ios::binary );    
+//  //if (reader.parse(is, root))  
+//  //{  
+//     // strcpy_s(account.brokerId,sizeof(account.brokerId),root["brokerID"].asString().c_str());
+//     // strcpy_s(account.tdAddress,sizeof(account.tdAddress),root["tdAddress"].asString().c_str());
+//     // strcpy_s(account.passwd,sizeof(account.passwd),root["password"].asString().c_str());
+//     // strcpy_s(account.mdAddress,sizeof(account.mdAddress),root["mdAddress"].asString().c_str());
+//     // strcpy_s(account.userId,sizeof(account.userId),root["userID"].asString().c_str());
+//
+//     // strcpy_s(mongoDbSetting.mongoHost,sizeof(mongoDbSetting.mongoHost),root["mongoHost"].asString().c_str());
+//     // mongoDbSetting.mongoPort = root["mongoPort"].asInt();
+//     // mongoDbSetting.mongoLogging = root["mongoLogging"].asBool();
+//     // 
+//  //} else{
+//     // is.close();
+//     // return -1;
+//  //} 
+//  //is.close();  
+//  //return 0;  
+//
+//}  
 
 
 void autotrade_loadconfig_general( sATGeneralConfig& configs, cString& fileName )

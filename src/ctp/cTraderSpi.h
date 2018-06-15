@@ -21,6 +21,7 @@ class cStrategy;
 class cTraderSpi : public CThostFtdcTraderSpi
 {
 public:
+    cTraderSpi() = default;
     cTraderSpi( CThostFtdcTraderApi* pUserTraderApi, cMdSpi* pUserMdSpi,CThostFtdcMdApi* pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog = false );
     
     ~cTraderSpi();
@@ -121,7 +122,12 @@ public:
 
     void ReqOrderInsert(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir, TThostFtdcCombOffsetFlagType kpp,TThostFtdcPriceType price,   TThostFtdcVolumeType vol);
 
-    void insertOrder(string inst, DIRECTION dire, OFFSETFLAG flag, int vol, double orderPrice, string tag = "");
+    void insertOrder(string             inst,
+                     traderTag::DIRECTION dire,
+                     traderTag::OFFSETFLAG  flag,
+                     int                vol,
+                     double             orderPrice,
+                     string             tag = "");
 
     void StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol,string tag = "");
 
@@ -141,6 +147,13 @@ public:
     void RegisterMarketDataEngine(cMarketDataCollectionPtr p){ this->m_pMarketDataEngine = p;}
 
     void RegisterStrategy(cStrategy *p) { m_strategyList.push_back(p); };
+    
+    int32 init(const ctpConfig& ctp_config);
+    int32 stop();
+    int32 reConnect(const ctpConfig& ctp_config);
+
+
+
 private:
     CThostFtdcTraderApi* m_pUserTraderApi;
     cArray< cString > m_instrumentIDs;

@@ -15,7 +15,7 @@ MongoStore::~MongoStore() {
     is_running_.store(false, std::memory_order_release);
 }
 
-int32 MongoStore::init(const mongoSetting& mongo_config) {
+int32 MongoStore::init(const mongoConfig& mongo_config) {
     try {
         config_ = mongo_config;
         string address = string(mongo_config.address);

@@ -36,9 +36,10 @@ struct sTradingAccountInfo
 };
 
 //Direction Offset
+namespace traderTag {
 enum  DIRECTION{buy,sell};
 enum  OFFSETFLAG{open,close};
-
+}  // namespace traderTag
 
 #endif
 

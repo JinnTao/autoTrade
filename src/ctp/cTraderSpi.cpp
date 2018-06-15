@@ -5,7 +5,7 @@
 #define ROHON 1
 //#undef  ROHON
 #define _CTP 1
-
+//
 extern HANDLE g_hEvent;
 bool IsFlowControl( int iResult )
 {
@@ -1081,7 +1081,6 @@ bool cTraderSpi::IsMyOrder( CThostFtdcOrderField* pOrder )
     return( flag && ( pOrder->FrontID == m_FRONT_ID ) && ( pOrder->SessionID == m_SESSION_ID ) );
 }
 
-
 void cTraderSpi::GetInstrumentIDs( cArray< cString >& instrumentIDs ) const
 {
     for( int i = 0; i < m_instrumentIDs.getSize(); ++i )
@@ -1141,7 +1140,12 @@ void cTraderSpi::RegisterInstCommissionMap( map<string,shared_ptr< CThostFtdcIns
 
     m_pInstCommissionMap = p; 
 }
-void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol,double orderPrice,string tag ){
+void cTraderSpi::insertOrder(string             inst,
+                             traderTag::DIRECTION dire,
+                             traderTag::OFFSETFLAG  flag,
+                             int                vol,
+                             double             orderPrice,
+                             string             tag) {
     TThostFtdcInstrumentIDType    instId;
     TThostFtdcDirectionType       dir;//方向,'0'买，'1'卖
     TThostFtdcCombOffsetFlagType  kpp;//开平，"0"开，"1"平,"3"平今
@@ -1165,10 +1169,10 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
         }
         switch (dire)
         {
-        case buy:
+        case traderTag::DIRECTION::buy:
             BuyPrice = lastprice + (1 + priceTick) * this->m_InstMeassageMap->at(inst)->PriceTick;
             break;
-        case sell:
+        case traderTag::DIRECTION::sell:
             SellPrice =  lastprice - (1 + priceTick) * this->m_InstMeassageMap->at(inst)->PriceTick;
             break;
         }
@@ -1176,16 +1180,16 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
 
     
     //开仓
-    if(flag == OFFSETFLAG::open){
+    if (flag == traderTag::OFFSETFLAG::open) {
         //买入开仓
-        if( dire == DIRECTION::buy){
+        if (dire == traderTag::DIRECTION::buy) {
             dir = '0';
             strcpy_s(kpp, "0");
             price = BuyPrice;
             this->ReqOrderInsert(instId, dir, kpp, price, vol);
         }
         // 卖出开仓
-        if( dire == DIRECTION::sell){
+        if (dire == traderTag::DIRECTION::sell) {
             dir = '1';
             strcpy_s(kpp, "0");
             price = SellPrice;
@@ -1193,16 +1197,16 @@ void cTraderSpi::insertOrder(string inst,DIRECTION dire,OFFSETFLAG flag, int vol
             
         }
     }
-    if(flag == OFFSETFLAG::close){
+    if (flag == traderTag::OFFSETFLAG::close) {
     
         //买入平仓
-        if(dire==DIRECTION::buy){
+        if (dire == traderTag::DIRECTION::buy) {
             dir = '0';
             price = BuyPrice;
             this->StraitClose(instId, dir, price, vol,tag);
         }
         //卖出平仓
-        if(dire==DIRECTION::sell){
+        if (dire == traderTag::DIRECTION::sell) {
             dir = '1';
             price = SellPrice ;
             this->StraitClose(instId, dir, price, vol,tag);
@@ -1410,4 +1414,14 @@ void cTraderSpi::cancleMyPendingOrder(){
             this->ReqOrderAction(*it);
         }
     }
+}
+
+int32 cTraderSpi::init(const ctpConfig& ctp_config) {
+    return 0;
+}
+int32 cTraderSpi::stop() {
+    return 0;
+}
+int32 cTraderSpi::reConnect(const ctpConfig& ctp_config) {
+    return 0;
 }

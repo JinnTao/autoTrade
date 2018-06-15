@@ -101,8 +101,10 @@ void cStrategyKingKeltner::sendOcoOrder(double upPrice, double downPrice, int fi
     //    2. 包含两个方向相反的停止单
     //    3. 一个方向的停止单成交后会立即撤消另一个方向的
     //
-    this->sendStopOrder(m_inst, DIRECTION::buy, OFFSETFLAG::open, upPrice, fixedSize, this->m_strategyName);
-    this->sendStopOrder(m_inst, DIRECTION::sell, OFFSETFLAG::open, downPrice, fixedSize, this->m_strategyName);
+    this->sendStopOrder(
+        m_inst, traderTag::DIRECTION::buy, traderTag::OFFSETFLAG::open, upPrice, fixedSize, this->m_strategyName);
+    this->sendStopOrder(
+        m_inst, traderTag::DIRECTION::sell, traderTag::OFFSETFLAG::open, downPrice, fixedSize, this->m_strategyName);
 
 }
 
@@ -134,13 +136,23 @@ void cStrategyKingKeltner::on5MBar(){
     else if (m_netPos > 0) {
         m_intraTradeHigh = max(m_lastHigh, m_intraTradeHigh);
         m_intraTradeLow = m_lastLow;
-        this->sendStopOrder(m_inst, DIRECTION::sell, OFFSETFLAG::close, m_intraTradeHigh * (1 - m_pAutoSetting->trailingPrcnt / 100.0), UINT(std::abs(m_netPos)), this->m_strategyName);
+        this->sendStopOrder(m_inst,
+                            traderTag::DIRECTION::sell,
+                            traderTag::OFFSETFLAG::close,
+                            m_intraTradeHigh * (1 - m_pAutoSetting->trailingPrcnt / 100.0),
+                            UINT(std::abs(m_netPos)),
+                            this->m_strategyName);
         
     }
     else if (m_netPos < 0) {
         m_intraTradeHigh = m_lastHigh;
         m_intraTradeLow = min(m_lastLow, m_intraTradeLow);
-        this->sendStopOrder(m_inst, DIRECTION::buy, OFFSETFLAG::close, m_intraTradeLow * (1 + m_pAutoSetting->trailingPrcnt / 100.0), UINT(std::abs(m_netPos)), this->m_strategyName);
+        this->sendStopOrder(m_inst,
+                            traderTag::DIRECTION::buy,
+                            traderTag::OFFSETFLAG::close,
+                            m_intraTradeLow * (1 + m_pAutoSetting->trailingPrcnt / 100.0),
+                            UINT(std::abs(m_netPos)),
+                            this->m_strategyName);
     }
 
     // ==============================================================日志输出========================================================
@@ -191,17 +203,21 @@ void cStrategyKingKeltner::onTrade(CThostFtdcTradeField pTrade) {
             if (m_netPos > 0) {
                 for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
 
-                    if (i->instrument == m_inst && i->direction == DIRECTION::sell) {
+                    if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::sell) {
                         i->status = false;
-                        LOG(INFO) << " cancle sell " << ((i->offset == OFFSETFLAG::close) ? " close  " : " open ") << " stop order" << endl;
+                        LOG(INFO) << " cancle sell "
+                                  << ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open ")
+                                  << " stop order" << endl;
                     }
                 }
             }
             if (m_netPos < 0) {
                 for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
-                    if (i->instrument == m_inst && i->direction == DIRECTION::buy) {
+                    if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::buy) {
                         i->status = false;
-                        LOG(INFO) << " cancle buy " << ((i->offset == OFFSETFLAG::close) ? " close  " : " open ") << " stop order" << endl;
+                        LOG(INFO) << " cancle buy "
+                                  << ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open ")
+                                  << " stop order" << endl;
                     }
                 }
             }
@@ -222,7 +238,11 @@ void cStrategyKingKeltner::printStatus() {
                 (int)ptm->tm_year + 1900, (int)ptm->tm_mon + 1, (int)ptm->tm_mday,
                 (int)ptm->tm_hour, (int)ptm->tm_min, (int)ptm->tm_sec);
             string orderDateTime = string(date);
-            LOG(INFO) << orderDateTime <<" " << var.instrument << " stop order " << ((var.direction == DIRECTION::buy) ? "buy" : "sell") << " " << ((var.offset == OFFSETFLAG::close) ? "close " : "open ") << var.price << " " << var.volume << " " << var.slipTickNum << " " << var.strategyName << endl;
+            LOG(INFO) << orderDateTime << " " << var.instrument << " stop order "
+                      << ((var.direction == traderTag::DIRECTION::buy) ? "buy" : "sell") << " "
+                      << ((var.offset == traderTag::OFFSETFLAG::close) ? "close " : "open ") << var.price << " "
+                      << var.volume
+                      << " " << var.slipTickNum << " " << var.strategyName << endl;
 
         }
 

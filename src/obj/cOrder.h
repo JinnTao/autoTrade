@@ -115,8 +115,8 @@ class cStopOrder {
 public:
     string instrument;
     string orderType;
-    DIRECTION direction;
-    OFFSETFLAG offset;
+    traderTag::DIRECTION direction;
+    traderTag::OFFSETFLAG  offset;
     
     double price;
     UINT volume;
@@ -129,8 +129,8 @@ public:
     cStopOrder() {
         instrument = "";
         orderType = "";
-        direction = DIRECTION::buy;
-        offset = OFFSETFLAG::close;
+        direction    = traderTag::DIRECTION::buy;
+        offset       = traderTag::OFFSETFLAG::close;
         price = 0;
         volume = 0;
         strategyName = "";

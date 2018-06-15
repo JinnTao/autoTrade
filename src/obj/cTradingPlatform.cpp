@@ -7,7 +7,8 @@
 #include <iostream>
 #include <string>
 #include "easylogging\easylogging++.h"
-
+#include <io.h>
+#include "IniFile.h"
 using std::string;
 
 
@@ -37,30 +38,33 @@ bool CompareStringArray( const cArray< cString >& strArray1, const cArray< cStri
     return true;
 }
 
-cTradingPlatform::cTradingPlatform()
-: m_pTraderSpi( NULL )
-, m_nRequestID( 0 )
-, m_runAutoTrade( true )
-{
-    if( m_pMarketDataEngine.get() )
-        m_pMarketDataEngine.reset();
+//cTradingPlatform::cTradingPlatform()
+//: m_pTraderSpi( NULL )
+//, m_nRequestID( 0 )
+//, m_runAutoTrade( true )
+//{
+//    if( m_pMarketDataEngine.get() )
+//        m_pMarketDataEngine.reset();
+//
+//    if( m_pStrategy.get() )
+//        m_pStrategy.reset();
+//
+//    m_pPositions = make_shared< cPositionCollection >();
+//    m_pOrders = make_shared< cOrderCollection >();
+//    m_pTrades = make_shared< cTradeCollection >();
+//    m_pSubscribeInst = make_shared<vector<string>>();
+//    m_pInstMessageMap = new map<string, CThostFtdcInstrumentField*>();
+//    m_pInstCommissionRate = new map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>>();
+//
+////    m_pInstMessageMap = make_shared<map<string,CThostFtdcInstrumentField*>>();
+//}
 
-    if( m_pStrategy.get() )
-        m_pStrategy.reset();
+//cTradingPlatform::~cTradingPlatform()
+//{
+//    ClearPlatform();
+//}
+cTradingPlatform::cTradingPlatform(){
 
-    m_pPositions = make_shared< cPositionCollection >();
-    m_pOrders = make_shared< cOrderCollection >();
-    m_pTrades = make_shared< cTradeCollection >();
-    m_pSubscribeInst = make_shared<vector<string>>();
-    m_pInstMessageMap = new map<string, CThostFtdcInstrumentField*>();
-    m_pInstCommissionRate = new map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>>();
-
-//    m_pInstMessageMap = make_shared<map<string,CThostFtdcInstrumentField*>>();
-}
-
-cTradingPlatform::~cTradingPlatform()
-{
-    ClearPlatform();
 }
 
 void cTradingPlatform::RegisterTraderSpi( cTraderSpi* pTraderSpi )
@@ -149,10 +153,10 @@ void cTradingPlatform::RegisterStrategy( cStrategyPtr pStrategy )
 }
 
 
-void cTradingPlatform::RegisterParameters(autoSetting *p,mongoSetting *pM)
+void cTradingPlatform::RegisterParameters(ctpConfig *p,mongoConfig *pM)
 {
-    this->m_pAutoSetting = p;
-    this->m_pMongoSetting = pM;
+    //this->m_pAutoSetting = p;
+    //this->m_pMongoSetting = pM;
     this->m_pMarketDataEngine->registerMongoSetting(pM);
 
 }
@@ -263,7 +267,7 @@ std::vector<int32> cTradingPlatform::splitToInt(std::string str, std::string pat
     }
     return result;
 }
-void cTradingPlatform::initStrategy(autoSetting & para){
+void cTradingPlatform::initStrategy(strategyConfig & para){
     
     std::vector<std::string> instList = this->splitToStr(std::string(para.inst),",");
     std::vector<int32> lotsList = this->splitToInt(std::string(para.lots),",");
@@ -333,7 +337,7 @@ DWORD cTradingPlatform::AutoTrading()
     cerr<<endl<<"OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancle seqNo£º";
     //initial subcribe instrument
     this->m_pMdSpi->SubscribeMarketData(this->m_pSubscribeInst);
-    this->initStrategy(*(this->m_pAutoSetting));
+    this->initStrategy(this->strategyConfig_);
     this->m_pTraderSpi->RegisterMarketDataEngine(this->m_pMarketDataEngine);
     while(true)
     {
@@ -562,23 +566,23 @@ void cTradingPlatform::cancleAllOrder(string order,string tag){
 
 void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,double orderPrice,string tag){
     // get parameters type
-    DIRECTION eDire;
-    OFFSETFLAG eFlag;
+    traderTag::DIRECTION eDire;
+    traderTag::OFFSETFLAG eFlag;
     if(dire == "buy"){
-        eDire = DIRECTION::buy;
+        eDire = traderTag::DIRECTION::buy;
     }
     else if(dire == "sell"){
-        eDire =    DIRECTION::sell;
+        eDire =    traderTag::DIRECTION::sell;
     }else{
         cerr << "input parameter Error" << endl;
         return;
     }
     
     if(flag == "open"){
-        eFlag = OFFSETFLAG::open;
+        eFlag = traderTag::OFFSETFLAG::open;
     }
     else if(flag == "close"){
-        eFlag = OFFSETFLAG::close;;
+        eFlag = traderTag::OFFSETFLAG::close;;
     }else{
         cerr << "input parameter Error" << endl;
         return;
@@ -590,10 +594,163 @@ void cTradingPlatform::insertOrder(string inst,string dire,string flag, int vol,
     _sleep(500);// wait 500ms for pTrader response.
 }
 
+int32 cTradingPlatform::loadConfig(const string & config_file)
+{
+    try {
+        IniFile ini("setting.ini");
+
+        ini.ReadString("account", "brokerID", "1").copy(ctpConfig_.brokerId,sizeof ctpConfig_.brokerId);
+        ini.ReadString("account", "userID", "1").copy(ctpConfig_.userId, sizeof ctpConfig_.userId);
+        ini.ReadString("account", "password", "1").copy(ctpConfig_.passwd, sizeof ctpConfig_.passwd);
+        ini.ReadString("account", "tdAddress", "1").copy(ctpConfig_.tdAddress, sizeof ctpConfig_.tdAddress);
+        ini.ReadString("account", "mdAddress", "1").copy(ctpConfig_.mdAddress, sizeof ctpConfig_.mdAddress);
+        ini.ReadString("account", "mdFlowPath", "1").copy(ctpConfig_.md_flow_path_, sizeof ctpConfig_.md_flow_path_);
+        ini.ReadString("account", "tdFlowPath", "1").copy(ctpConfig_.td_flow_path_, sizeof ctpConfig_.td_flow_path_);
+
+        ini.ReadString("dbMongo", "address", "1").copy(mongoConfig_.address, sizeof mongoConfig_.address);
+        ini.ReadString("dbMongo", "dataBase", "1").copy(mongoConfig_.database, sizeof mongoConfig_.database);
+        mongoConfig_.mongoPort    = ini.ReadInt("dbMongo", "mongoPort", 1);
+        mongoConfig_.mongoLogging = ini.ReadInt("dbMongo", "mongoLogging", 1);
+
+        ini.ReadString("dataBase", "dataBaseDir", "1").copy(strategyConfig_.dataBaseDir, sizeof strategyConfig_.dataBaseDir);
+        ini.ReadString("dataBase", "tradeDayDir", "1").copy(strategyConfig_.tradeDayDir, sizeof strategyConfig_.tradeDayDir);
+        ini.ReadString("dataBase", "startDate", "1").copy(strategyConfig_.startDate, sizeof strategyConfig_.startDate);
+        ini.ReadString("dataBase", "endDate", "1").copy(strategyConfig_.endDate, sizeof strategyConfig_.endDate);
+
+        ini.ReadString("strategy", "inst", "1").copy(strategyConfig_.inst, sizeof strategyConfig_.inst);
+        ini.ReadString("strategy", "lots", "1").copy(strategyConfig_.lots, sizeof strategyConfig_.lots);
+        ini.ReadString("strategy", "timeModes", "1").copy(strategyConfig_.timeMode, sizeof strategyConfig_.timeMode);
+        ini.ReadString("strategy", "collectionList", "1").copy(strategyConfig_.collectionList, sizeof strategyConfig_.collectionList);
+        // KingKeltner
+        ini.ReadString("KingKeltner", "collectionName", "1").copy(strategyConfig_.collectionName, sizeof strategyConfig_.collectionName);
+        ini.ReadString("KingKeltner", "startDateTime", "1").copy(strategyConfig_.startDateTime, sizeof strategyConfig_.startDateTime);
+        ini.ReadString("KingKeltner", "endDateTime", "1").copy(strategyConfig_.endDateTime, sizeof strategyConfig_.endDateTime);
+
+        strategyConfig_.kkLength      = ini.ReadDouble("KingKeltner", "kkLength", 1);
+        strategyConfig_.kkDev         = ini.ReadDouble("KingKeltner", "kkDev", 1);
+        strategyConfig_.trailingPrcnt = ini.ReadDouble("KingKeltner", "trailingPrcnt", 1);
+        strategyConfig_.fixedSize     = ini.ReadDouble("KingKeltner", "fixedSize", 1);
+        strategyConfig_.initDays      = ini.ReadDouble("KingKeltner", "initDays", 1);
+
+
+        //strcpy_s(ctpConfig_.brokerId, sizeof(ctpConfig_.brokerId), ini.ReadString("account", "brokerID", "1").c_str());
+        //strcpy_s(ctpConfig_.tdAddress, sizeof(ctpConfig_.tdAddress), ini.ReadString("account", "tdAddress", "1").c_str());
+        //strcpy_s(ctpConfig_.passwd,sizeof(ctpConfig_.passwd), ini.ReadString("account", "password", "1").c_str());
+        //strcpy_s(ctpConfig_.mdAddress, sizeof(ctpConfig_.mdAddress), ini.ReadString("account", "mdAddress", "1").c_str());
+        //strcpy_s(ctpConfig_.userId, sizeof(ctpConfig_.userId), ini.ReadString("account", "userID", "1").c_str());
+        //// mongoDB
+        //strcpy_s(mongoConfig_.address, sizeof(mongoConfig_.address), ini.ReadString("dbMongo", "address", "1").c_str());
+        //strcpy_s(mongoConfig_.database, sizeof(mongoConfig_.database), ini.ReadString("dbMongo", "dataBase", "1").c_str());
+        //mongoConfig_.mongoPort = ini.ReadInt("dbMongo", "mongoPort", 1);
+        //mongoConfig_.mongoLogging = ini.ReadInt("dbMongo", "mongoLogging", 1);
+        //// txt database dir
+        //strcpy_s(strategyConfig_.dataBaseDir, sizeof(strategyConfig_.dataBaseDir), ini.ReadString("dataBase", "dataBaseDir", "1").c_str());
+        //strcpy_s(strategyConfig_.tradeDayDir, sizeof(strategyConfig_.tradeDayDir), ini.ReadString("dataBase", "tradeDayDir", "1").c_str());
+        //strcpy_s(strategyConfig_.startDate, sizeof(strategyConfig_.startDate), ini.ReadString("dataBase", "startDate", "1").c_str());
+        //strcpy_s(strategyConfig_.endDate, sizeof(strategyConfig_.endDate), ini.ReadString("dataBase", "endDate", "1").c_str());
+        //// strategy
+        //strcpy_s(strategyConfig_.inst, sizeof(strategyConfig_.inst), ini.ReadString("strategy", "inst", "1").c_str());
+        //strcpy_s(strategyConfig_.lots, sizeof(strategyConfig_.lots), ini.ReadString("strategy", "lots", "1").c_str());
+        //strcpy_s(strategyConfig_.timeMode, sizeof(strategyConfig_.timeMode), ini.ReadString("strategy", "timeModes", "1").c_str());
+        //strcpy_s(strategyConfig_.collectionList, sizeof(strategyConfig_.collectionList), ini.ReadString("strategy", "collectionList", "1").c_str());
+        //// datasource
+        //strcpy_s(strategyConfig_.collectionName, sizeof(strategyConfig_.collectionName), ini.ReadString("KingKeltner", "collectionName", "").c_str());
+        //strcpy_s(strategyConfig_.startDateTime, sizeof(strategyConfig_.startDateTime), ini.ReadString("KingKeltner", "startDateTime", "").c_str());
+        //strcpy_s(strategyConfig_.endDateTime, sizeof(strategyConfig_.endDateTime), ini.ReadString("KingKeltner", "endDateTime", "").c_str());
+        //// KingKeltner
+        //strategyConfig_.kkLength = ini.ReadDouble("KingKeltner", "kkLength", 1);
+        //strategyConfig_.kkDev = ini.ReadDouble("KingKeltner", "kkDev", 1);
+        //strategyConfig_.trailingPrcnt = ini.ReadDouble("KingKeltner", "trailingPrcnt", 1);
+        //strategyConfig_.fixedSize = ini.ReadDouble("KingKeltner", "fixedSize", 1);
+        //strategyConfig_.initDays = ini.ReadDouble("KingKeltner", "initDays", 1);
+        return 0;
+    }
+    catch (std::exception& e) {
+        LOG(ERROR) << "Errpr:" << e.what();
+        return -1;
+    }
+}
+
+int32 cTradingPlatform::createPath()
+{
+    try {
+        auto createFile = [this](std::string path) -> bool{
+            if (access(path.c_str(), 0) == -1) {
+#ifdef WIN32
+                int flag = mkdir(path.c_str());
+#endif // WIN32
+#ifdef linux
+                int flag = mkdir(path.c_str(), 0777);// 0777: the biggest access
+#endif // linux
+                if (flag == 0) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                return true;
+            }
+        };
+        if (!createFile(ctpConfig_.md_flow_path_)) {
+            LOG(ERROR) << "md flow path create failed";
+            return -1;
+        }
+        if (!createFile(ctpConfig_.td_flow_path_)) {
+            LOG(ERROR) << "td flow path create failed";
+            return -2;
+        }
+        return 0;
+        
+    }
+    catch (std::exception &e) {
+        LOG(ERROR) << "Error:" << e.what();
+        return -1;
+    }
+    
+}
+
+int32 cTradingPlatform::init()
+{
+    int32 init_result;
+    try {
+        //mongo store
+        //init_result = mongo_store_.init(mongoConfig_);
+        //if (init_result != 0){
+        //    LOG(ERROR) << "MongoDb init failed! Result:" << init_result;
+        //}
+        
+        init_result = ctp_md_spi_.init(ctpConfig_);
+        if (init_result != 0){
+            LOG(ERROR) << "md init failed! Result:" << init_result;
+            return -1;
+        }
+        
+        init_result = ctp_td_spi_.init(ctpConfig_);
+        if (init_result != 0){
+            LOG(ERROR) << "td init failed! Result:" << init_result;
+            return -2;
+        }
+        return 0;
+        
+        
+    
+    }
+    catch(std::exception &e){
+        LOG(ERROR) << "Init failed! " << e.what();
+        return -1;
+    }}
+
+int32 cTradingPlatform::start()
+{
+    return int32();
+}
+
 int32 cTradingPlatform::reConnect() {
     try {
 
-
+        return 0;
     }
     catch (std::exception& e) {
         LOG(INFO) << "TradingPlatform reconnect failed :" << e.what();
@@ -604,4 +761,8 @@ int32 cTradingPlatform::reConnect() {
         return -2;
     }
 
+}
+
+int32 cTradingPlatform::stop(){
+    return 0;
 }

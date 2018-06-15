@@ -19,7 +19,7 @@ public:
 
     MongoStore() = default;
     ~MongoStore();
-    int32_t init(const mongoSetting& mongo_config);
+    int32_t init(const mongoConfig& mongo_config);
     int32_t start();
     int32_t stop();
     bool getData(string collectionName, std::chrono::time_point<std::chrono::system_clock> sTimePoint, std::chrono::time_point<std::chrono::system_clock> eTimePoint, vector<double> &close, vector<double> &open, vector<double> &high, vector<double> &low, vector<double> &volume, vector<string> &dateTime);
@@ -30,7 +30,7 @@ private:
     static mongocxx::instance instance_;
 
     std::atomic<bool>    is_running_{ATOMIC_FLAG_INIT};
-    mongoSetting          config_;
+    mongoConfig          config_;
     mongocxx::uri        uri_;
     mongocxx::client     client_;
     mongocxx::database   db_;

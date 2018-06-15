@@ -59,7 +59,7 @@ void cStrategy::unInit(){
         cerr << this->m_strategyName << " unInit" << endl;
 };
 
-void cStrategy::sendStopOrder(string inst,DIRECTION inDirection,OFFSETFLAG inOffset,double price,UINT volume ,string strategy,int slipNum) {
+void cStrategy::sendStopOrder(string inst,traderTag::DIRECTION inDirection,traderTag::OFFSETFLAG inOffset,double price,UINT volume ,string strategy,int slipNum) {
     cStopOrder order;
     order.instrument = inst;
     order.direction = inDirection;
@@ -79,8 +79,8 @@ void cStrategy::processStopOrder(string inst, double lastPrice) {
     for(auto var =  m_workingStopOrderList.begin();var!=m_workingStopOrderList.end();var++)
     {
         if (inst == var->instrument && var->status) {
-            bool longTriggered = var->direction == DIRECTION::buy && lastPrice >= var->price;
-            bool shortTriggered = var->direction == DIRECTION::sell && lastPrice <= var->price;
+            bool longTriggered  = var->direction == traderTag::DIRECTION::buy && lastPrice >= var->price;
+            bool shortTriggered = var->direction == traderTag::DIRECTION::sell && lastPrice <= var->price;
 
             if (longTriggered || shortTriggered) {
                 //this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, var->price, var->slipTickNum);

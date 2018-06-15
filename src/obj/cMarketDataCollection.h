@@ -43,7 +43,7 @@ public:
 
 
     void setTradeDayList(map<string,int> *p){m_pTradeDayList = p;}
-    void registerMongoSetting(mongoSetting *p) {
+    void registerMongoSetting(mongoConfig *p) {
      //   m_mongoStore.init(*p); 
     }
 protected:

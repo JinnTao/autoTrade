@@ -62,52 +62,52 @@ struct sATTradeConfig
 
 
 void autotrade_loadconfig_trade( sATTradeConfig& configs );
-//保存读取的信息的结构体
-struct AccountParam
+
+
+struct ctpConfig
 {
-    TThostFtdcBrokerIDType    brokerId;//经纪公司代码
-    TThostFtdcInvestorIDType    userId;//用户名
-    char    passwd[252];//密码
+    TThostFtdcBrokerIDType    brokerId;
+    TThostFtdcInvestorIDType    userId;
+    char    passwd[252];
 
-    char mdAddress[50];//行情服务器地址
-    char tdAddress[50];//交易服务器地址
-
-    //string m_read_contract;//合约代码
-    AccountParam(){
-        memset(this,0,sizeof(AccountParam));
+    char mdAddress[50];
+    char tdAddress[50];
+    char md_flow_path_[50];
+    char td_flow_path_[50];
+    ctpConfig(){
+        memset(this,0,sizeof(ctpConfig));
         
     }
     void reset(){
-        memset(this,0,sizeof(AccountParam));
+        memset(this,0,sizeof(ctpConfig));
     }
 };
 
-//保存读取的信息的结构体
-struct mongoSetting
+struct mongoConfig
 {
-    char address[50];// Host地址
+    char address[50];// Host address
     char database[50];
-    int mongoPort;// 端口
+    int mongoPort;// 
     bool mongoLogging;// 
-    //string m_read_contract;//合约代码
-    mongoSetting(){
-        memset(this,0,sizeof(mongoSetting));
+
+    mongoConfig(){
+        memset(this,0,sizeof(mongoConfig));
     }
     void reset(){
-        memset(this,0,sizeof(mongoSetting));
+        memset(this,0,sizeof(mongoConfig));
     }
 };
 
-struct autoSetting
+struct strategyConfig
 {
-    char tradeDayDir[125];// 交易日路径
-    char dataBaseDir[125];// 数据路径
+    char tradeDayDir[125];
+    char dataBaseDir[125];
     
     
     char startDate[25];
     char endDate[25];
 
-// dataSource
+    // dataSource
     char startDateTime[150];
     char endDateTime[150];
     char collectionName[20];
@@ -130,17 +130,13 @@ struct autoSetting
     char timeMode[300]; // strategy Time filter mode
     char collectionList[500]; // strategy collection name
 
-    autoSetting(){
-        memset(this, 0, sizeof(autoSetting));
+    strategyConfig(){
+        memset(this, 0, sizeof(strategyConfig));
     }
     void reset(){
-        memset(this, 0, sizeof(autoSetting));
+        memset(this, 0, sizeof(strategyConfig));
     }
 };
-
-int ParseSettingJson(AccountParam&,mongoSetting&,autoSetting&);
-
-
 
 
 

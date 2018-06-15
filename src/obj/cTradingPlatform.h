@@ -14,17 +14,19 @@ class cTraderSpi;
 #include "cStrategyKingKeltner.h"
 #include "autotrade_config.h"
 #include "common.h"
+//#include "mongo\mongostore.h"
+
 class cTradingPlatform
 {
 public:
     cTradingPlatform();
-    virtual ~cTradingPlatform();
+    ~cTradingPlatform() = default;
 
     void RegisterTraderSpi( cTraderSpi* pTraderSpi );
     void RegisterMdSpi( cMdSpi* p );
     void RegisterMarketDataEngine( cMarketDataCollectionPtr pMarketDataEngine );
     void RegisterStrategy( cStrategyPtr pStrategy );
-    void RegisterParameters(autoSetting *pAutoSetting, mongoSetting *pMongoSetting);
+    void RegisterParameters(ctpConfig *pAutoSetting, mongoConfig *pMongoSetting);
 
 
     //
@@ -77,15 +79,24 @@ public:
 
     void readDay(string fileName, map<string,int> &workDay);
     //init
-    void initStrategy(autoSetting &);
+    void initStrategy(strategyConfig &);
     std::vector<std::string> cTradingPlatform::splitToStr(std::string str, std::string pattern);
     std::vector<int32> cTradingPlatform::splitToInt(std::string str, std::string pattern);
 
-    int32 reConnect();
 
+    int32 loadConfig(const string& config_file);
+    int32 createPath();
+    int32 init();
+    int32 start();
+    int32 stop();
+    int32 reConnect();
+    bool isRunning() const;
 
 
 private:
+    void process();
+
+    
     cTraderSpi*    m_pTraderSpi;
     cMdSpi* m_pMdSpi;
     cMarketDataCollectionPtr m_pMarketDataEngine;
@@ -108,12 +119,32 @@ private:
     //cStrategyTemplate m_strategy;
     std::list<std::shared_ptr<cStrategyKingKeltner>> m_StrategyKKList;
     cStrategyKingKeltner m_strategyKingKeltner; // cancle comment cause Bug
-    //cStrategyBayes m_strategyBayes;
+    //cStrategyBayes m_strategyBayes;k
     // calendar day
     map<string,int> m_tradeDayList;
 
-    autoSetting* m_pAutoSetting;
-    mongoSetting* m_pMongoSetting;
+
+    
+    
+    ctpConfig                               ctpConfig_;
+    strategyConfig                          strategyConfig_;
+    mongoConfig                             mongoConfig_;
+
+
+    cTraderSpi                              ctp_td_spi_;
+    cMdSpi                                  ctp_md_spi_;
+    std::list<std::shared_ptr<cStrategy>>   strategy_list_;
+    cMarketDataCollection                   marketdate_collection_;
+    cPositionCollection                     position_collection_;
+    cTradeCollection                        trade_collection_;
+    cOrderCollection                        order_collection_;
+    //MongoStore                              mongo_store_;
+
+    std::thread inter_thread_;  // for process()
+
+
+    DISALLOW_COPY_AND_ASSIGN(cTradingPlatform);
+
 };
 
 typedef shared_ptr< cTradingPlatform > cTradingPlatformPtr;

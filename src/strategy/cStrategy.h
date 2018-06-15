@@ -60,7 +60,13 @@ public:
     virtual void setCollectionName(string collectionName) { this->m_collectionName = collectionName; }
     virtual void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; }
 
-    virtual void sendStopOrder(string inst, DIRECTION inDirection,OFFSETFLAG inOffset, double price, UINT volume, string strategy,int slipNum = 1);
+    virtual void sendStopOrder(string             inst,
+                               traderTag::DIRECTION inDirection,
+                               traderTag::OFFSETFLAG  inOffset,
+                               double             price,
+                               UINT               volume,
+                               string             strategy,
+                               int                slipNum = 1);
 
     virtual void processStopOrder(string inst, double lastData);
 
@@ -73,7 +79,7 @@ public:
     void RegisterOrderCollectionPtr(cOrderCollectionPtr p){m_pOrderC = p;}
     void RegisterTradeCollectionPtr(cTradeCollectionPtr p){m_pTradeC = p;}
     void RegisterTxtDir(string tradeDayDir, string oneMinuteDataDir){ m_tradeDayDir = tradeDayDir; m_oneMinuteDataDir = oneMinuteDataDir; }
-    void RegisterAutoSetting(autoSetting *p) { this->m_pAutoSetting = p; }
+    void RegisterAutoSetting(strategyConfig  *p) { this->m_pAutoSetting = p; }
 //    void RegisterTradePlatForm(cTradingPlatform *p){m_pTradePlatform = p;}
 protected:
 
@@ -116,7 +122,7 @@ protected:
     string m_startDate;
     string m_endDate;
 
-    autoSetting *m_pAutoSetting;
+    strategyConfig *m_pAutoSetting;
 
 
 
