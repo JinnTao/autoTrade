@@ -151,8 +151,10 @@ public:
     int32 init(const ctpConfig& ctp_config);
     int32 stop();
     int32 reConnect(const ctpConfig& ctp_config);
+    int32 start();
 
-
+    void clearCallBack();
+    void clear();
 
 private:
     CThostFtdcTraderApi* m_pUserTraderApi;
@@ -204,13 +206,13 @@ private:
     cString m_logFile;
 
     //=======================20170828==================
-    bool m_first_inquiry_order;//是否首次查询报单
-    bool m_first_inquiry_trade;//是否首次查询成交
-    bool m_firs_inquiry_Detail;//是否首次查询持仓明细
-    bool m_firs_inquiry_TradingAccount;//是否首次查询资金账号
-    bool m_firs_inquiry_Position;//是否首次查询投资者持仓
-    bool m_first_inquiry_Instrument;//是否首次查询合约
-    bool m_first_inquiry_commissionRate;//是否首次查询手续费
+    bool m_first_inquiry_order = true;//是否首次查询报单
+    bool m_first_inquiry_trade = true;//是否首次查询成交
+    bool m_firs_inquiry_Detail = true;//是否首次查询持仓明细
+    bool m_firs_inquiry_TradingAccount = true;//是否首次查询资金账号
+    bool m_firs_inquiry_Position = true;//是否首次查询投资者持仓
+    bool m_first_inquiry_Instrument = true;//是否首次查询合约
+    bool m_first_inquiry_commissionRate = true;//是否首次查询手续费
     
     vector<CThostFtdcOrderField*> m_orderList;//委托记录，全部合约
     vector<CThostFtdcOrderField*> m_pendOrderList;//挂单记录，全部合约
@@ -239,6 +241,17 @@ private:
     map<string,CThostFtdcInstrumentField*>::iterator m_itMap;// 用于查询合约
     /// marketData
     cMarketDataCollectionPtr m_pMarketDataEngine;
+
+    using CtpTdApiPtr = std::unique_ptr<CThostFtdcTraderApi, std::function<void(CThostFtdcTraderApi*)>>;
+    CtpTdApiPtr ctpTdApi_;
+    int32       request_id_;
+    std::function<void()> on_connected_fun_;
+    std::function<void(CThostFtdcRspUserLoginField*,CThostFtdcRspInfoField*)> on_login_fun_;
+    std::function<void(int32)>                                                on_disconnected_fun_;
+    std::function<void()>                                                     on_started_fun_;
+    std::mutex                                                                mut_;
+    ctpConfig                                                                 ctp_config_;
+
 };
 
 typedef int (*ccbf_secureApi_LoginTrader)(CThostFtdcTraderApi* ctp_futures_pTraderApi, TThostFtdcBrokerIDType brokeId, TThostFtdcUserIDType userId, char* pChar_passwd, int& ctp_futures_requestId);

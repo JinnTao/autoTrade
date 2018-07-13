@@ -5,6 +5,7 @@
 #include "easylogging++.h"
 #include <future>
 #include <chrono>
+#include "global.h"
 
 using namespace std;
 
@@ -41,21 +42,26 @@ void cMdSpi::OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool b
 }
 
 void cMdSpi::OnFrontDisconnected(int nReason) {
-    char message[256];
-    sprintf(message,
-            "%s:called cMdSpi::OnFrontDisconnected. Reason = %d",
-            cSystem::GetCurrentTimeBuffer().c_str(),
-            nReason);
-    cout << message << endl;
+    // char message[256];
+    // sprintf(message,
+    //        "%s:called cMdSpi::OnFrontDisconnected. Reason = %d",
+    //        cSystem::GetCurrentTimeBuffer().c_str(),
+    //        nReason);
+    // cout << message << endl;
 
-    // log info
-    if (m_genLog) {
-        if (m_outputDirectory.IsBlankString())
-            cSystem::WriteLogFile(m_logFile.c_str(), message, false);
-        else {
-            cString folderDir = m_outputDirectory + m_logFileFolder + "//";
-            cSystem::WriteLogFile(folderDir.c_str(), m_logFile.c_str(), message, false);
-        }
+    //// log info
+    // if (m_genLog) {
+    //    if (m_outputDirectory.IsBlankString())
+    //        cSystem::WriteLogFile(m_logFile.c_str(), message, false);
+    //    else {
+    //        cString folderDir = m_outputDirectory + m_logFileFolder + "//";
+    //        cSystem::WriteLogFile(folderDir.c_str(), m_logFile.c_str(), message, false);
+    //    }
+    //}
+    LOG(INFO) << "Md front disconnect!Reason:" << nReason;
+    std::lock_guard<std::mutex> guard(mut_);
+    if (on_disconnected_fun_) {
+        std::invoke(on_disconnected_fun_, nReason);
     }
 }
 
@@ -69,12 +75,17 @@ void cMdSpi::OnHeartBeatWarning(int nTimeLapse) {
 }
 
 void cMdSpi::OnFrontConnected() {
-    char message[256];
-    sprintf(message, "%s:called cMdSpi::OnFrontConnected.", cSystem::GetCurrentTimeBuffer().c_str());
-    cout << message << endl;
+    // char message[256];
+    // sprintf(message, "%s:called cMdSpi::OnFrontConnected.", cSystem::GetCurrentTimeBuffer().c_str());
+    // cout << message << endl;
 
-    // request user login
-    ReqUserLogin();
+    //// request user login
+    // ReqUserLogin();
+    std::lock_guard<std::mutex> guard(mut_);
+    LOG(INFO) << "Md connected to front";
+    if (on_connected_fun_) {
+        std::invoke(on_connected_fun_);
+    }
 }
 
 void cMdSpi::ReqUserLogin() {
@@ -122,17 +133,15 @@ void cMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin,
                             bool                         bIsLast) {
     std::lock_guard<std::mutex> guard(mut_);
     if (pRspUserLogin && !IsErrorRspInfo(pRspInfo)) {
-        char message[256];
-        sprintf(message, "%s:called cMdSpi::OnRspUserLogin.", cSystem::GetCurrentTimeBuffer().c_str());
-        cout << message << endl;
+
+        LOG(INFO) << "OnRspUserLogin Success! TradeDate: " << pRspUserLogin->TradingDay
+                  << " SessionId: " << pRspUserLogin->SessionID << " FrontID: " << pRspUserLogin->FrontID;
     }
     if (bIsLast) {
-        SetEvent(g_hEvent);
-        cerr << cSystem::GetCurrentTimeBuffer() << " Market init Finish" << endl;
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(500ms);
-        if (on_finished_fun_) {
-            std::invoke(on_finished_fun_);
+        // using namespace std::chrono_literals;
+        // std::this_thread::sleep_for(500ms);
+        if (on_login_fun_) {
+            std::invoke(on_login_fun_, pRspUserLogin, pRspInfo);
         }
     };
 }
@@ -168,11 +177,6 @@ void cMdSpi::SubscribeMarketData(string inst) {
     memset(p, 0, 50);
     strcpy_s(p, sizeof(inst), inst.c_str());
     SubscribeMarketData(p);
-}
-
-void cMdSpi::setOnFrontConnected(std::function<void()>&& fun) {
-    std::lock_guard<std::mutex> guard(mut_);
-    on_finished_fun_ = fun;
 }
 
 void cMdSpi::SubscribeMarketData(shared_ptr<vector<string>> instList) {
@@ -274,52 +278,107 @@ int32 cMdSpi::init(const ctpConfig& ctp_config) {
     using namespace std::chrono_literals;
     // 1.create md api instance
     {
+
         auto mdapi = CThostFtdcMdApi::CreateFtdcMdApi(ctp_config.md_flow_path_);
         if (mdapi == nullptr) {
-            LOG(ERROR) << "md create instance failed!";
+            LOG(ERROR) << "Md create instance failed!";
             return -1;
         }
+        // unique_ptr->ctp's document release call Release api,maybe release then join 2018/07/11 JinnTao
         ctpmdapi_ = {mdapi, [](CThostFtdcMdApi* mdapi) {
                          if (mdapi != nullptr) {
+                             mdapi->RegisterSpi(NULL);
                              mdapi->Release();
                          }
+                         LOG(INFO) << "release mdapi";
                      }};
         ctpmdapi_->RegisterSpi(this);
-        LOG(INFO) << "md create instance success!";
+        LOG(INFO) << "Md create instance success!";
     }
 
     // 2.connect to md Front
     {
+        this->clearCallBack();
         ctpmdapi_->RegisterFront(const_cast<char*>(ctp_config.mdAddress));
         std::promise<bool> connect_result;
         std::future<bool>  is_connected = connect_result.get_future();
-        on_connected_fun_               = [&connect_result] {
-            connect_result.set_value(true); };
+        on_connected_fun_               = [&connect_result] { connect_result.set_value(true); };
         ctpmdapi_->Init();
         auto wait_result = is_connected.wait_for(10s);
         if (wait_result != std::future_status::ready || is_connected.get() != true) {
             return -2;
         }
+        LOG(INFO) << "Md connect front success!";
     }
 
     // 3.login to md.
-    { 
-        promise_result_.set_value(false);
-        is_promised_result_ = promise_result_.get_future();
-
+    {
+        this->clearCallBack();
         std::promise<bool> login_result;
         std::future<bool>  is_logined = login_result.get_future();
-        
+        on_login_fun_ = [&login_result](CThostFtdcRspUserLoginField* login, CThostFtdcRspInfoField* info) {
+            if (info->ErrorID == 0) {
+                login_result.set_value(true);
+            } else {
+                login_result.set_value(false);
+            }
+        };
+        CThostFtdcReqUserLoginField req;
 
-    
-    
+        memset(&req, 0, sizeof(req));
+        strcpy_s(req.BrokerID, sizeof(TThostFtdcBrokerIDType), ctp_config.brokerId);
+        strcpy_s(req.UserID, sizeof(TThostFtdcInvestorIDType), ctp_config.userId);
+        strcpy_s(req.Password, sizeof TThostFtdcPasswordType, ctp_config.passwd);
+        ctp_config_ = ctp_config;
+
+        // Try login
+        auto req_login_result = ctpmdapi_->ReqUserLogin(&req, ++request_id_);
+        if (req_login_result != 0) {
+            LOG(ERROR) << "Md request login failed!";
+            return -3;
+        }
+        auto wait_result = is_logined.wait_for(5s);
+        if (wait_result != std::future_status::ready || is_logined.get() != true) {
+            return -3;
+        }
+        LOG(INFO) << "Md login success!";
+    }
+
+    // 4.set callback
+    {
+        this->clearCallBack();
+        global::need_reconnect.store(false,
+                                     std::memory_order_release);  // current write/read cannot set this store back;
+        on_disconnected_fun_ = [](int32 reason) {
+            LOG(INFO) << "Md disconnect,try reconnect! reason:" << reason;
+            global::need_reconnect.store(true, std::memory_order_release);
+        };
     }
     return 0;
 }
 int32 cMdSpi::stop() {
+    if (ctpmdapi_) {
+        ctpmdapi_.reset(nullptr);
+    }
+
     return 0;
 }
 
 int32 cMdSpi::reConnect(const ctpConfig& ctp_config) {
     return 0;
+}
+int32 cMdSpi::start(){
+    return 0;
+}
+
+void cMdSpi::clearCallBack() {
+    std::lock_guard<std::mutex> guard(mut_);
+    on_connected_fun_    = {};
+    on_disconnected_fun_ = {};
+    on_login_fun_        = {};
+}
+void cMdSpi::clear() {
+    if (ctpmdapi_) {
+        ctpmdapi_.reset(nullptr);
+    }
 }

@@ -20,7 +20,7 @@ class cTradingPlatform
 {
 public:
     cTradingPlatform();
-    ~cTradingPlatform() = default;
+    ~cTradingPlatform();
 
     void RegisterTraderSpi( cTraderSpi* pTraderSpi );
     void RegisterMdSpi( cMdSpi* p );
@@ -143,7 +143,7 @@ private:
     std::thread inter_thread_;  // for process()
 
 
-    DISALLOW_COPY_AND_ASSIGN(cTradingPlatform);
+    //DISALLOW_COPY_AND_ASSIGN(cTradingPlatform);
 
 };
 

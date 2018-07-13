@@ -88,8 +88,11 @@ public:
     int32 init(const ctpConfig& ctp_config);
     int32 stop();
     int32 reConnect(const ctpConfig& ctp_config);
+    int32 start();
 
-private:
+    void clearCallBack();
+    void clear();
+
     using CtpMdApiPtr = std::unique_ptr<CThostFtdcMdApi, std::function<void(CThostFtdcMdApi*)>>;
     void ReqUserLogin();
 
@@ -114,10 +117,13 @@ private:
     bool m_status;
 
     std::function<void()>       on_connected_fun_;
+    std::function<void(CThostFtdcRspUserLoginField*, CThostFtdcRspInfoField*)> on_login_fun_;
     std::mutex                  mut_;
     CtpMdApiPtr                 ctpmdapi_;
-    std::promise<bool>          promise_result_;
-    std::future<bool>           is_promised_result_;
+    int32                                                                      request_id_ = 0;
+    std::function<void(int32)>                                                 on_disconnected_fun_;
+    ctpConfig ctp_config_;
+
 };
 typedef int (*ccbf_secureApi_LoginMd)(CThostFtdcMdApi*       ctp_futures_pMdApi,
                                       TThostFtdcBrokerIDType brokeId,
