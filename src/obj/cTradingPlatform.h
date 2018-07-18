@@ -110,7 +110,7 @@ private:
     // instrument Commission Rate
     map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>>* m_pInstCommissionRate;
 
-    shared_ptr<vector<string>> m_pSubscribeInst;
+
 
     int m_nRequestID;
     bool m_runAutoTrade;
@@ -124,20 +124,29 @@ private:
     map<string,int> m_tradeDayList;
 
 
-    
+    using cStrategyListPtr       = std::list<std::shared_ptr<cStrategyKingKeltner>>;
+    using cInstrumentFieldMapPtr = shared_ptr<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentField>>>;
+    using cInstrumentCommissionRateFieldMapPtr =
+        shared_ptr<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>>;
+    using cTraderSpiPtr = std::shared_ptr<cTraderSpi>;
+    using cMdSpiPtr    = std::shared_ptr<cMdSpi>;
     
     ctpConfig                               ctpConfig_;
     strategyConfig                          strategyConfig_;
     mongoConfig                             mongoConfig_;
 
+    cTraderSpi ctp_td_spi_;
+    cMdSpi     ctp_md_spi_;
 
-    cTraderSpi                              ctp_td_spi_;
-    cMdSpi                                  ctp_md_spi_;
-    std::list<std::shared_ptr<cStrategy>>   strategy_list_;
-    cMarketDataCollection                   marketdate_collection_;
-    cPositionCollection                     position_collection_;
-    cTradeCollection                        trade_collection_;
-    cOrderCollection                        order_collection_;
+    cMarketDataCollectionPtr                   marketdate_collection_;
+    cPositionCollectionPtr                     position_collection_;
+    cTradeCollectionPtr                        trade_collection_;
+    cOrderCollectionPtr                        order_collection_;
+    cStrategyListPtr                           strategy_list_;
+    cInstrumentFieldMapPtr                     inst_field_map_;
+    cInstrumentCommissionRateFieldMapPtr       inst_commission_rate_field_map_;
+    map<string, int>                           trade_day_list_;
+    shared_ptr<vector<string>>                 subscribe_inst_v_;
     //MongoStore                              mongo_store_;
 
     std::thread inter_thread_;  // for process()

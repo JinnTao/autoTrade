@@ -21,7 +21,7 @@ class cStrategy;
 class cTraderSpi : public CThostFtdcTraderSpi
 {
 public:
-    cTraderSpi() = default;
+    cTraderSpi();
     cTraderSpi( CThostFtdcTraderApi* pUserTraderApi, cMdSpi* pUserMdSpi,CThostFtdcMdApi* pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog = false );
     
     ~cTraderSpi();
@@ -53,6 +53,12 @@ public:
     // order insertion response
     virtual void OnRspOrderInsert( CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
 
+	///报单录入错误回报
+    virtual void OnErrRtnOrderInsert(CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo);
+
+    ///报单操作错误回报
+    virtual void OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo);
+
     // order action response
     virtual void OnRspOrderAction( CThostFtdcInputOrderActionField* pInputOrderAction, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast ); 
 
@@ -80,11 +86,17 @@ public:
 
 
     void RegisterPositionCollection( cPositionCollectionPtr p );
+
     void RegisterOrderCollection( cOrderCollectionPtr p );
+
     void RegisterTradeCollection( cTradeCollectionPtr p );
+
     void RegisterSubscribeInstList(shared_ptr<vector<string>> p);
-    void RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>* p );
-    void RegisterInstCommissionMap(map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>> *p);
+
+    void RegisterInstMessageMap( map<string, std::shared_ptr<CThostFtdcInstrumentField>>* p );
+
+    void RegisterInstCommissionMap(map<string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>> *p);
+
     void ReqQryInstrument();
 
     void ReqQryInstrument_all();
@@ -144,7 +156,9 @@ public:
 
     void cancleMyPendingOrder();
 
-    void RegisterMarketDataEngine(cMarketDataCollectionPtr p){ this->m_pMarketDataEngine = p;}
+    void RegisterMarketDataCollection(cMarketDataCollectionPtr p) { this->m_pMarketDataEngine = p; }
+
+    void RegisterCtpMdSpi(cMdSpi*p) { ctp_md_spi_ = p; }
 
     void RegisterStrategy(cStrategy *p) { m_strategyList.push_back(p); };
     
@@ -185,13 +199,13 @@ private:
     shared_ptr<vector<string>> m_pSubscribeInst;
 
     // Instrument detail Message Map    
-    map<string, CThostFtdcInstrumentField*>* m_InstMeassageMap;
+    map<string, std::shared_ptr<CThostFtdcInstrumentField>>* m_InstMeassageMap;
 
     // strategy List
     std::list<cStrategy*> m_strategyList;
 
     //
-    map<string,shared_ptr<CThostFtdcInstrumentCommissionRateField>>*m_pInstCommissionMap;
+    map<string,std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>*m_pInstCommissionMap;
 
     void ReqUserLogin();
     void ReqSettlementInfoConfirm();
@@ -238,7 +252,7 @@ private:
     string m_actionDay;
     bool m_qryStatus;
     ///
-    map<string,CThostFtdcInstrumentField*>::iterator m_itMap;// 用于查询合约
+    map<string,std::shared_ptr<CThostFtdcInstrumentField>>::iterator m_itMap;// 用于查询合约
     /// marketData
     cMarketDataCollectionPtr m_pMarketDataEngine;
 
@@ -251,6 +265,7 @@ private:
     std::function<void()>                                                     on_started_fun_;
     std::mutex                                                                mut_;
     ctpConfig                                                                 ctp_config_;
+    cMdSpi*                                                  ctp_md_spi_;
 
 };
 

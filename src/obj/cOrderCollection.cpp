@@ -1,5 +1,5 @@
 #include <cOrderCollection.h>
-
+#include "easylogging++.h"
 cOrderCollection::cOrderCollection()
 {
     _it = _map_order.end();
@@ -21,7 +21,6 @@ void cOrderCollection::Add( CThostFtdcOrderField* pOrder )
 {
     if( !pOrder )
         return;
-    
     if( pOrder->VolumeTotalOriginal > 0 )
     {
         shared_ptr< cOrder > ptr = make_shared< cOrder >( pOrder );
@@ -182,7 +181,7 @@ void cOrderCollection::PrintAllOrders() const
     {
         count++;
         if( count == 0 )
-            printf( "\nAll Orders:\n" );
+            printf( "All Orders:\n" );
         (*it).second->Print();
         
     }

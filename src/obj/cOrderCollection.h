@@ -51,7 +51,6 @@ private:
     void AddToMapInternal( shared_ptr< cOrder >& element );
 
 };
-
 typedef shared_ptr< cOrderCollection > cOrderCollectionPtr;
 
 #endif

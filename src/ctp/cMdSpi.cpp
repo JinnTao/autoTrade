@@ -158,18 +158,14 @@ void cMdSpi::SubscribeMarketData(char* instIdList) {
         token = strtok(NULL, ",");
     }
 
-    unsigned int len = list.size();
+    size_t len = list.size();
 
     char** pInstId = new char*[len];
 
     for (unsigned int i = 0; i < len; i++)
         pInstId[i] = list[i];  // vector list ×ªµ½ char **
-
-    int ret = m_pUserMdApi->SubscribeMarketData(pInstId, len);
-
-    cerr << "=> Request SubscribeMarketData " << *pInstId << ((ret == 0) ? " success" : " fail") << endl;
-
-    SetEvent(g_hEvent);
+    int ret = ctpmdapi_->SubscribeMarketData(pInstId, len);
+    LOG(INFO) << "SubscribeMarketData,Inst: " << pInstId << " result: " << ret;
 }
 void cMdSpi::SubscribeMarketData(string inst) {
     char p[50];
@@ -368,6 +364,7 @@ int32 cMdSpi::reConnect(const ctpConfig& ctp_config) {
     return 0;
 }
 int32 cMdSpi::start(){
+    LOG(INFO) << "Md start success!";
     return 0;
 }
 

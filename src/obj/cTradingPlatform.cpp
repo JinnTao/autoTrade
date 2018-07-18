@@ -72,12 +72,12 @@ void cTradingPlatform::RegisterTraderSpi(cTraderSpi* pTraderSpi) {
 
     m_pTraderSpi = pTraderSpi;
 
-    m_pTraderSpi->RegisterPositionCollection(m_pPositions);
-    m_pTraderSpi->RegisterOrderCollection(m_pOrders);
-    m_pTraderSpi->RegisterTradeCollection(m_pTrades);
-    m_pTraderSpi->RegisterInstMessageMap(m_pInstMessageMap);
-    m_pTraderSpi->RegisterInstCommissionMap(m_pInstCommissionRate);
-    m_pTraderSpi->RegisterSubscribeInstList(m_pSubscribeInst);
+    // m_pTraderSpi->RegisterPositionCollection(m_pPositions);
+    // m_pTraderSpi->RegisterOrderCollection(m_pOrders);
+    // m_pTraderSpi->RegisterTradeCollection(m_pTrades);
+    // m_pTraderSpi->RegisterInstMessageMap(m_pInstMessageMap);
+    // m_pTraderSpi->RegisterInstCommissionMap(m_pInstCommissionRate);
+    // m_pTraderSpi->RegisterSubscribeInstList(m_pSubscribeInst);
     // cArray< cString > instrumentIDs;
     // pTraderSpi->GetInstrumentIDs( instrumentIDs );
 
@@ -120,7 +120,7 @@ void cTradingPlatform::RegisterMarketDataEngine(cMarketDataCollectionPtr pMarket
 
         if( !m_instrumentIDs.getSize() )
         {
-            
+            
             for( int i = 0; i < instrumentIDs.getSize(); ++i )
                 m_instrumentIDs.push_back( instrumentIDs[i] );
         }
@@ -199,7 +199,7 @@ std::vector<std::string> cTradingPlatform::splitToStr(std::string str, std::stri
     std::string::size_type   pos;
     std::vector<std::string> result;
     str += pattern;  //扩展字符串以方便操作
-    int size = str.size();
+    size_t size = str.size();
 
     for (int i = 0; i < size; i++) {
         pos = str.find(pattern, i);
@@ -216,7 +216,7 @@ std::vector<int32> cTradingPlatform::splitToInt(std::string str, std::string pat
     std::string::size_type pos;
     std::vector<int32>     result;
     str += pattern;  //扩展字符串以方便操作
-    int size = str.size();
+    uint32 size = str.size();
 
     for (int i = 0; i < size; i++) {
         pos = str.find(pattern, i);
@@ -244,8 +244,8 @@ void cTradingPlatform::initStrategy(strategyConfig& para) {
         std::shared_ptr<cStrategyKingKeltner> pStrategy = std::make_shared<cStrategyKingKeltner>();
 
         pStrategy->RegisterMarketDataCollection(this->m_pMarketDataEngine);
-        pStrategy->RegisterTradeSpi(this->m_pTraderSpi);
-        pStrategy->RegisterMdSpi(this->m_pMdSpi);
+        // pStrategy->RegisterTradeSpi(ctp_td_spi_);
+        // pStrategy->RegisterMdSpi(ctp_md_spi_);
         pStrategy->RegisterPositionCollectionPtr(this->m_pPositions);
         pStrategy->RegisterOrderCollectionPtr(this->m_pOrders);
         pStrategy->RegisterTradeCollectionPtr(this->m_pTrades);
@@ -287,19 +287,17 @@ void cTradingPlatform::readDay(string fileName, map<string, int>& workDay) {
 }
 
 DWORD cTradingPlatform::AutoTrading() {
-
+    std::this_thread::sleep_for(std::chrono::microseconds(1000));
     string str;
     char   dire[50], offset[50], inst[50], price[50], order[50];
     int    vol, mark = 0, orderNo;
     char   tag[10];
-    cerr << "--------------------Human-computer interaction function Start--------------------------------" << endl;
-    cerr << endl
-         << "OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancle "
-            "seqNo：";
+    LOG(INFO) << "--------------------Human-computer interaction function Start--------------------------------";
+    LOG(INFO) << "OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| "
+                 "cancel seqNo.";
     // initial subcribe instrument
-    this->m_pMdSpi->SubscribeMarketData(this->m_pSubscribeInst);
-    this->initStrategy(this->strategyConfig_);
-    this->m_pTraderSpi->RegisterMarketDataEngine(this->m_pMarketDataEngine);
+    // this->ctp_md_spi_.SubscribeMarketData(this->m_pSubscribeInst);
+
     while (true) {
         // std::cin>>str;
         memset(price, 0, 50);
@@ -309,7 +307,7 @@ DWORD cTradingPlatform::AutoTrading() {
         orderNo = 0;
         getline(std::cin, str);
         if (str == "show") {
-            m_pTraderSpi->showPositionDetail();
+            ctp_td_spi_.showPositionDetail();
         }
 
         else if (str == "close") {
@@ -317,24 +315,24 @@ DWORD cTradingPlatform::AutoTrading() {
             // g_pUserSpi_tradeAll->ForceClose();
         } else if (str == "run") {
             //            m_strategy.start();
-            for (auto iter : m_StrategyKKList) {
+            for (auto iter : *strategy_list_) {
                 iter->start();
             }
         } else if (str == "stop") {
             //    m_strategy.stop();
-            for (auto iter : m_StrategyKKList) {
+            for (auto iter : *strategy_list_) {
                 iter->stop();
             }
 
         } else if (str == "order") {
-            this->m_pOrders->PrintPendingOrders();
+            this->order_collection_->PrintPendingOrders();
         } else if (str == "trade") {
             // 首先查询手续费 再查询成交
-            this->m_pTraderSpi->ReqQryInstrumentCommissionRate(true);
+            this->ctp_td_spi_.ReqQryInstrumentCommissionRate(true);
         } else if (str == "help") {
             cerr << "OrderList: show | order| trade | stop | run |close |buy/sell open/close inst vol price -> ";
         } else if (str == "account") {
-            this->m_pTraderSpi->ReqQryTradingAccount();
+            this->ctp_td_spi_.ReqQryTradingAccount();
         } else if (str == "SP") {
             cerr << "Sp Order command: " << endl;
             getline(std::cin, str);
@@ -467,13 +465,13 @@ void cTradingPlatform::cancleOrder(string order, int seqNo) {
 
         shared_ptr<cOrder> pOrder = NULL;
         if (seqNo != -1) {
-            if (!this->m_pOrders->getOrderByNo(seqNo, pOrder)) {
+            if (!this->order_collection_->getOrderByNo(seqNo, pOrder)) {
                 cerr << "  Order Seq No Exist." << endl;
                 return;
             }
-            this->m_pTraderSpi->ReqOrderAction(pOrder);
+            this->ctp_td_spi_.ReqOrderAction(pOrder);
         } else {
-            this->m_pTraderSpi->cancleAllPendingOrder();
+            this->ctp_td_spi_.cancleAllPendingOrder();
         }
     }
 }
@@ -511,7 +509,7 @@ void cTradingPlatform::insertOrder(string inst, string dire, string flag, int vo
     }
 
     // go into order
-    this->m_pTraderSpi->insertOrder(inst, eDire, eFlag, vol, orderPrice, tag);
+    this->ctp_td_spi_.insertOrder(inst, eDire, eFlag, vol, orderPrice, tag);
     _sleep(500);  // wait 500ms for pTrader response.
 }
 
@@ -645,16 +643,125 @@ int32 cTradingPlatform::init() {
         //    LOG(ERROR) << "MongoDb init failed! Result:" << init_result;
         //}
 
+        // md init
+        // if (ctp_md_spi_) {
+        //    ctp_md_spi_.reset();
+        //}
+        // ctp_md_spi_ = std::make_shared<cMdSpi>();
         init_result = ctp_md_spi_.init(ctpConfig_);
         if (init_result != 0) {
             LOG(ERROR) << "Md init failed! Result:" << init_result;
             return -1;
         }
 
+        // td init
+        // if (ctp_td_spi_) {
+        //    ctp_td_spi_.reset();
+        //}
+        // ctp_td_spi_ = std::make_shared<cTraderSpi>();
         init_result = ctp_td_spi_.init(ctpConfig_);
         if (init_result != 0) {
             LOG(ERROR) << "Td init failed! Result:" << init_result;
             return -2;
+        }
+
+        // init Position、Orders、Trades、MarketDataEngine
+        {
+            if (marketdate_collection_) {
+                marketdate_collection_.reset();
+            }
+            marketdate_collection_ = std::make_shared<cMarketDataCollection>();
+            LOG(INFO) << "Market data collection create success!";
+
+            if (position_collection_) {
+                position_collection_.reset();
+            }
+            position_collection_ = std::make_shared<cPositionCollection>();
+            LOG(INFO) << "Position collection create success!";
+            if (order_collection_) {
+                order_collection_.reset();
+            }
+            order_collection_ = std::make_shared<cOrderCollection>();
+            LOG(INFO) << "order collection create success!";
+            if (trade_collection_) {
+                trade_collection_.reset();
+            }
+            trade_collection_ = std::make_shared<cTradeCollection>();
+            LOG(INFO) << "Trade collection create success!";
+            if (inst_field_map_) {
+                inst_field_map_.reset();
+            }
+            inst_field_map_ = std::make_shared<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentField>>>();
+            LOG(INFO) << "Inst field list create success!";
+            if (inst_commission_rate_field_map_) {
+                inst_commission_rate_field_map_.reset();
+            }
+            inst_commission_rate_field_map_ =
+                std::make_shared<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>>();
+            LOG(INFO) << "Inst commission rate field map create success!";
+
+            if (subscribe_inst_v_) {
+                subscribe_inst_v_.reset();
+            }
+            subscribe_inst_v_ = std::make_shared<std::vector<std::string>>();
+            LOG(INFO) << "Subscribe inst vector success!";
+
+            if (strategy_list_) {
+                strategy_list_.reset();
+            }
+            strategy_list_ = std::make_shared<std::list<std::shared_ptr<cStrategyKingKeltner>>>();
+            LOG(INFO) << "Strategy list create success!";
+        }
+        // init connection
+        {
+            ctp_md_spi_.RegisterMarketDataCollection(marketdate_collection_.get());
+            ctp_td_spi_.RegisterMarketDataCollection(marketdate_collection_);
+
+            ctp_td_spi_.RegisterPositionCollection(position_collection_);
+            ctp_td_spi_.RegisterOrderCollection(order_collection_);
+            ctp_td_spi_.RegisterTradeCollection(trade_collection_);
+            ctp_td_spi_.RegisterInstMessageMap(inst_field_map_.get());
+            ctp_td_spi_.RegisterInstCommissionMap(inst_commission_rate_field_map_.get());
+            ctp_td_spi_.RegisterSubscribeInstList(subscribe_inst_v_);
+            ctp_td_spi_.RegisterCtpMdSpi(&ctp_md_spi_);
+
+            std::vector<std::string> instList     = this->splitToStr(std::string(strategyConfig_.inst), ",");
+            std::vector<int32>       lotsList     = this->splitToInt(std::string(strategyConfig_.lots), ",");
+            std::vector<int32>       timeModeList = this->splitToInt(std::string(strategyConfig_.timeMode), ",");
+            std::vector<std::string> collectionList =
+                this->splitToStr(std::string(strategyConfig_.collectionList), ",");
+
+            if (instList.size() != lotsList.size() || timeModeList.size() != lotsList.size() ||
+                collectionList.size() != lotsList.size()) {
+                LOG(INFO) << " InitStrategy  inst lot timeMode Error:size not match, init Strategy Failed";
+                return -3;
+            }
+            for (int i = 0; i < instList.size(); i++) {
+                std::shared_ptr<cStrategyKingKeltner> pStrategy = std::make_shared<cStrategyKingKeltner>();
+
+                pStrategy->RegisterMarketDataCollection(marketdate_collection_);
+                // pStrategy->RegisterTradeSpi(ctp_td_spi_);
+                // pStrategy->RegisterMdSpi(ctp_md_spi_);
+                pStrategy->RegisterPositionCollectionPtr(position_collection_);
+                pStrategy->RegisterOrderCollectionPtr(order_collection_);
+                pStrategy->RegisterTradeCollectionPtr(trade_collection_);
+                pStrategy->RegisterTxtDir(string(strategyConfig_.tradeDayDir), string(strategyConfig_.dataBaseDir));
+                pStrategy->RegisterAutoSetting(&strategyConfig_);
+
+                this->readDay(string(strategyConfig_.tradeDayDir), trade_day_list_);
+                marketdate_collection_->setTradeDayList(&trade_day_list_);
+
+                pStrategy->setInst(instList[i]);
+                pStrategy->setlots(lotsList[i]);
+                pStrategy->setTimeMode(timeModeList[i]);
+                pStrategy->setInitDate(strategyConfig_.startDate, strategyConfig_.endDate);
+                pStrategy->setCollectionName(collectionList[i]);
+
+                // ctp_td_spi_->RegisterStrategy(pStrategy.get());
+                strategy_list_->push_back(pStrategy);
+                LOG(INFO) << "Init strategy inst:" << instList[i] << " lots:" << lotsList[i]
+                          << " timeMode: " << timeModeList[i] << " collectionList: " << collectionList[i];
+            }
         }
 
     } catch (std::exception& e) {
@@ -678,6 +785,17 @@ int32 cTradingPlatform::start() {
         if (start_result != 0) {
             LOG(ERROR) << "Td start failed! Result: " << start_result;
             return -2;
+        }
+
+        // TradingPlatform start
+        {
+            // inter thread start
+            inter_thread_ = std::thread(&cTradingPlatform::AutoTrading, this);
+            
+            // strategy list check status
+            for (auto iter = strategy_list_.begin(); iter != strategy_list_.end(); iter++) {
+                iter
+            }
         }
 
     } catch (std::exception& e) {
