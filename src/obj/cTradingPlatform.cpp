@@ -120,7 +120,7 @@ void cTradingPlatform::RegisterMarketDataEngine(cMarketDataCollectionPtr pMarket
 
         if( !m_instrumentIDs.getSize() )
         {
-            
+            
             for( int i = 0; i < instrumentIDs.getSize(); ++i )
                 m_instrumentIDs.push_back( instrumentIDs[i] );
         }
@@ -315,12 +315,12 @@ DWORD cTradingPlatform::AutoTrading() {
             // g_pUserSpi_tradeAll->ForceClose();
         } else if (str == "run") {
             //            m_strategy.start();
-            for (auto iter : *strategy_list_) {
+            for (auto iter : strategy_list_) {
                 iter->start();
             }
         } else if (str == "stop") {
             //    m_strategy.stop();
-            for (auto iter : *strategy_list_) {
+            for (auto iter : strategy_list_) {
                 iter->stop();
             }
 
@@ -706,11 +706,11 @@ int32 cTradingPlatform::init() {
             subscribe_inst_v_ = std::make_shared<std::vector<std::string>>();
             LOG(INFO) << "Subscribe inst vector success!";
 
-            if (strategy_list_) {
-                strategy_list_.reset();
-            }
-            strategy_list_ = std::make_shared<std::list<std::shared_ptr<cStrategyKingKeltner>>>();
-            LOG(INFO) << "Strategy list create success!";
+            // if (strategy_list_) {
+            //    strategy_list_.reset();
+            //}
+            // strategy_list_ = std::make_shared<std::list<std::shared_ptr<cStrategyKingKeltner>>>();
+            // LOG(INFO) << "Strategy list create success!";
         }
         // init connection
         {
@@ -740,8 +740,8 @@ int32 cTradingPlatform::init() {
                 std::shared_ptr<cStrategyKingKeltner> pStrategy = std::make_shared<cStrategyKingKeltner>();
 
                 pStrategy->RegisterMarketDataCollection(marketdate_collection_);
-                // pStrategy->RegisterTradeSpi(ctp_td_spi_);
-                // pStrategy->RegisterMdSpi(ctp_md_spi_);
+                //pStrategy->RegisterTradeSpi(ctp_td_spi_);
+                //pStrategy->RegisterMdSpi(ctp_md_spi_);
                 pStrategy->RegisterPositionCollectionPtr(position_collection_);
                 pStrategy->RegisterOrderCollectionPtr(order_collection_);
                 pStrategy->RegisterTradeCollectionPtr(trade_collection_);
@@ -758,7 +758,7 @@ int32 cTradingPlatform::init() {
                 pStrategy->setCollectionName(collectionList[i]);
 
                 // ctp_td_spi_->RegisterStrategy(pStrategy.get());
-                strategy_list_->push_back(pStrategy);
+                strategy_list_.push_back(pStrategy);
                 LOG(INFO) << "Init strategy inst:" << instList[i] << " lots:" << lotsList[i]
                           << " timeMode: " << timeModeList[i] << " collectionList: " << collectionList[i];
             }
@@ -791,10 +791,12 @@ int32 cTradingPlatform::start() {
         {
             // inter thread start
             inter_thread_ = std::thread(&cTradingPlatform::AutoTrading, this);
-            
+
             // strategy list check status
             for (auto iter = strategy_list_.begin(); iter != strategy_list_.end(); iter++) {
-                iter
+                if (iter->get()->GetStrategyStatus()) {
+                    iter->get()->start();
+                }
             }
         }
 

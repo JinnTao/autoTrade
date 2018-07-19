@@ -162,10 +162,12 @@ void cMdSpi::SubscribeMarketData(char* instIdList) {
 
     char** pInstId = new char*[len];
 
-    for (unsigned int i = 0; i < len; i++)
+    for (unsigned int i = 0; i < len; i++) {
         pInstId[i] = list[i];  // vector list ×ªµ½ char **
+    }
+        
     int ret = ctpmdapi_->SubscribeMarketData(pInstId, len);
-    LOG(INFO) << "SubscribeMarketData,Inst: " << pInstId << " result: " << ret;
+    LOG(INFO) << "SubscribeMarketData,Inst: " << pInstId[0] << " result: " << ret;
 }
 void cMdSpi::SubscribeMarketData(string inst) {
     char p[50];

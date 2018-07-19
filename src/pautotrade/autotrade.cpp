@@ -7,7 +7,7 @@
 #include <thread>
 
 INITIALIZE_EASYLOGGINGPP
-
+#define ELPP_THREAD_SAFE
 #define TRADE_CONFIG_FILE "setting.ini"
 #define LOG_CONFIG_FILE "easyLog.conf"
 
@@ -58,7 +58,7 @@ int main(int32 argc, char** argv) {
                 LOG(ERROR) << "Trader start failed! Result: " << result;
                 return -4;
             }
-            LOG(INFO) << "Trader start success!";
+            //LOG(INFO) << "Trader start success!";
 
             while (global::is_running) {
                 if (global::need_reconnect.load(std::memory_order_relaxed)) {

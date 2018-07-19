@@ -1,6 +1,7 @@
 #include <cPositionCollection.h>
 #include <cVector.h>
 #include <cTrade.h>
+#include <easylogging++.h>
 
 #ifndef _DEBUG
 #define _DEBUG 0
@@ -20,37 +21,29 @@ void cPositionCollection::PrintDetail()
     double closeProfit = 0,openProfit = 0,margin = 0;
         for(map<string, cPositionDetailPtr>::iterator iter = m_positionMap.begin(); iter != m_positionMap.end(); iter++)
         {
-            if(iter->second->getHoldLong() != 0 || iter->second->getHoldShort() != 0){
-                iter->second->Print();
+            //if(iter->second->getHoldLong() != 0 || iter->second->getHoldShort() != 0){
+                iter->second->Print();         
 
-                //cerr<<"map元素个数:"<<m_trade_message_map.size()<<","<<"多单平仓盈亏:"<<iter->second->closeProfit_long<<","<<"空单平仓盈亏:"<<iter->second->closeProfit_short<<",账户平仓盈亏"<<m_closeProfit<<endl;
-                    
-                //        
                 //账户平仓盈亏
                 closeProfit = closeProfit + iter->second->closeProfit_long + iter->second->closeProfit_short;
-                //        
+       
                 //账户浮动盈亏
                 openProfit = openProfit + iter->second->OpenProfit_long + iter->second->OpenProfit_short;
 
                 margin += iter->second->margin;
-                }
-
+             //}
         }
-                
-        cerr<<endl<<"Position Profit:"<<closeProfit + openProfit
-            <<"\t Open Profit:"<<openProfit
-            <<"\t Close Profit:"<<closeProfit
-            <<"\t margin:"<<margin
-            <<endl<<endl;
+        LOG(INFO) << "Total profit: " << closeProfit + openProfit << " OpenProfit: " << openProfit << " CloseProfit: " << closeProfit
+        << " Margin: " << margin;
 }
 void cPositionCollection::update(CThostFtdcInvestorPositionField* pInvestorPosition){
         bool find_trade_message_map = false;
         // filtration positon is zero 
-        if(pInvestorPosition->Position != 0){
-            
+        //if(pInvestorPosition->Position != 0){
+        //    
             for(map<string, cPositionDetailPtr>::iterator iter = m_positionMap.begin(); iter!= m_positionMap.end();iter++)
             {
-                if(strcmp( (iter->first).c_str(), pInvestorPosition->InstrumentID)==0)//合约已存在
+                if(strcmp( (iter->first).c_str(), pInvestorPosition->InstrumentID)==0 && pInvestorPosition->PosiDirection == iter->second->)//合约已存在
                 {
                     find_trade_message_map = true;
                     break;
@@ -66,15 +59,14 @@ void cPositionCollection::update(CThostFtdcInvestorPositionField* pInvestorPosit
             }
             //update position
             m_positionMap[pInvestorPosition->InstrumentID]->update(pInvestorPosition);
-        }
+        //}
 }
 void cPositionCollection::update(CThostFtdcTradeField* pTrade){
         bool find_trade_message_map = false;
         // new open 
         if(pTrade->OffsetFlag == THOST_FTDC_OF_Open){
             
-            for(map<string, cPositionDetailPtr>::iterator iter = m_positionMap.begin(); iter!= m_positionMap.end();iter++)
-            {
+            for(map<string, cPositionDetailPtr>::iterator iter = m_positionMap.begin(); iter!= m_positionMap.end();iter++){
                 if(strcmp( (iter->first).c_str(), pTrade->InstrumentID)==0)//合约已存在
                 {
                     find_trade_message_map = true;
@@ -82,8 +74,7 @@ void cPositionCollection::update(CThostFtdcTradeField* pTrade){
                 }
             }
             // create new postion Detail
-            if(!find_trade_message_map )
-            {
+            if(!find_trade_message_map ){
 
                 cPositionDetailPtr trade_message_p  = make_shared<cPositionDetail>(pTrade->InstrumentID);
 

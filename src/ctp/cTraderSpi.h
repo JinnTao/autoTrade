@@ -12,9 +12,6 @@
 #include "cStrategy.h"
 
 using namespace std;
-extern int iRequestID;
-class cString;
-template< class T > class cArray;
 
 class cStrategy;
 
@@ -22,8 +19,7 @@ class cTraderSpi : public CThostFtdcTraderSpi
 {
 public:
     cTraderSpi();
-    cTraderSpi( CThostFtdcTraderApi* pUserTraderApi, cMdSpi* pUserMdSpi,CThostFtdcMdApi* pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog = false );
-    
+
     ~cTraderSpi();
 
     // After making a succeed connection with the CTP server, the client should send the login request to the CTP server.
@@ -45,7 +41,7 @@ public:
     virtual void OnRspQryTradingAccount( CThostFtdcTradingAccountField* pTradingAccount, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
 
     // After receiving the investor position request, the CTP server will send the following response to notify the client whether the request success or not
-    //virtual void OnRspQryInvestorPosition( CThostFtdcInvestorPositionField* pInvestorPosition, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
+    virtual void OnRspQryInvestorPosition( CThostFtdcInvestorPositionField* pInvestorPosition, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
     
     // After receiving the investor position detail request, the CTP server will send the following response to notify the client whether the request success or not
     virtual void OnRspQryInvestorPositionDetail( CThostFtdcInvestorPositionDetailField* pInvestorPositionDetail, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
@@ -70,9 +66,6 @@ public:
 
     virtual void OnHeartBeatWarning( int nTimeLapse );
 
-    virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
-
-
     ///请求查询成交响应
     virtual void OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
@@ -83,7 +76,12 @@ public:
 
     //请求查询合约手续费率响应
     virtual void OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) ;
+   
+    void ReqSettlementInfoConfirm();
 
+    bool IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo);
+
+    bool IsMyOrder(CThostFtdcOrderField* pOrder);
 
     void RegisterPositionCollection( cPositionCollectionPtr p );
 
@@ -151,7 +149,6 @@ public:
 
     bool isValidInsturment(string inst,string& instName);
 
-
     void cancleAllPendingOrder();
 
     void cancleMyPendingOrder();
@@ -163,11 +160,15 @@ public:
     void RegisterStrategy(cStrategy *p) { m_strategyList.push_back(p); };
     
     int32 init(const ctpConfig& ctp_config);
+
     int32 stop();
+
     int32 reConnect(const ctpConfig& ctp_config);
+
     int32 start();
 
     void clearCallBack();
+
     void clear();
 
 private:
@@ -182,24 +183,21 @@ private:
     map< cString, sInstrumentInfo* > m_instrumentInfo;        // useful trading information for traded instruments
     //
     /* postions */
-    /*cPositionCollection* m_positionCollection;*/
     cPositionCollectionPtr m_positionCollection;
     // 
     /* orders */
-    /*cOrderCollection* m_orderCollection;*/
     cOrderCollectionPtr m_orderCollection;
 
     vector<int> m_allOrderRef;                                            // list of all orderRef
     //
     /* trades */
-    /*cTradeCollection* m_tradeCollection;*/
     cTradeCollectionPtr m_tradeCollection;
 
     //subscribe inst
     shared_ptr<vector<string>> m_pSubscribeInst;
 
     // Instrument detail Message Map    
-    map<string, std::shared_ptr<CThostFtdcInstrumentField>>* m_InstMeassageMap;
+    map<string, std::shared_ptr<CThostFtdcInstrumentField>>* m_InstMeassageMap = nullptr;
 
     // strategy List
     std::list<cStrategy*> m_strategyList;
@@ -207,10 +205,6 @@ private:
     //
     map<string,std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>*m_pInstCommissionMap;
 
-    void ReqUserLogin();
-    void ReqSettlementInfoConfirm();
-    bool IsErrorRspInfo( CThostFtdcRspInfoField* pRspInfo );
-    bool IsMyOrder( CThostFtdcOrderField* pOrder );
 
     TThostFtdcBrokerIDType    m_brokerID;
     TThostFtdcInvestorIDType m_investorID;
@@ -231,21 +225,18 @@ private:
     vector<CThostFtdcOrderField*> m_orderList;//委托记录，全部合约
     vector<CThostFtdcOrderField*> m_pendOrderList;//挂单记录，全部合约
     vector<CThostFtdcTradeField*> m_tradeList;//成交记录，全部合约
-
     vector<CThostFtdcTradeField*> m_tradeListNotClosedAccount;//未平仓记录
 
     map<string,cPositionDetailPtr> m_position_message_map;//持仓记录 
 
-    double m_closeProfit;//平仓盈亏，所有合约一起算后的值，另外在m_trade_message_map有单独计算每个合约的平仓盈亏值
+    double m_closeProfit = 0;//平仓盈亏，所有合约一起算后的值，另外在m_trade_message_map有单独计算每个合约的平仓盈亏值
     
-    double m_OpenProfit;//浮动盈亏，所有合约一起算后的值，另外在m_trade_message_map有单独计算每个合约的浮动盈亏值
+    double m_OpenProfit = 0;//浮动盈亏，所有合约一起算后的值，另外在m_trade_message_map有单独计算每个合约的浮动盈亏值
 
-    //map<string, CThostFtdcInstrumentField*> m_instMessage_map;//保存合约信息的map
-    
     cMdSpi* m_pMdSpi;//行情API指针，构造函数里赋值
 
     CThostFtdcMdApi* m_pMDUserApi_td;
-    double m_accountMargin;
+    double m_accountMargin = 0;
 
     fstream m_output;
     string m_tradeDay;
@@ -268,8 +259,6 @@ private:
     cMdSpi*                                                  ctp_md_spi_;
 
 };
-
-typedef int (*ccbf_secureApi_LoginTrader)(CThostFtdcTraderApi* ctp_futures_pTraderApi, TThostFtdcBrokerIDType brokeId, TThostFtdcUserIDType userId, char* pChar_passwd, int& ctp_futures_requestId);
 
 #endif
 

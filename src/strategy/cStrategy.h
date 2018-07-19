@@ -125,6 +125,8 @@ protected:
 
     strategyConfig* m_pAutoSetting;
 
+    string strategy_id_name_;
+
 private:
     DWORD               AutoTrading();
     std::thread         m_thread;

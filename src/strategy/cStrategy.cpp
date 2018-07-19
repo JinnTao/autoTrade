@@ -25,6 +25,7 @@ void cStrategy::start(){
     //this->m_status = true;
     this->m_isRuning.store(true, std::memory_order_release);
     m_thread = std::thread(&cStrategy::AutoTrading, this);
+    LOG(INFO) << "Strategy Inst: " << m_inst << " timeMode: " << m_timeMode << " lots: " << m_lots << " start success!";
 
     //m_thread.join();
     //m_pTradingThread->Init();
@@ -35,6 +36,7 @@ void cStrategy::stop(){
     if (m_thread.joinable()) {
         m_thread.join();
     }
+    LOG(INFO) << "Strategy Inst: " << m_inst << " timeMode: " << m_timeMode << " lots: " << m_lots << " stop success!";
     //this->m_status = false;
 }
 
