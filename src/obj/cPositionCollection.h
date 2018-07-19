@@ -23,7 +23,7 @@ public:
     void update( CThostFtdcInvestorPositionField* pInvestorPositionDetail);
 
     void update( CThostFtdcTradeField* pTrade);
-
+    
     int getPosition(string instID,int dire);
     
     int getYdPosition(string instID, int dire);

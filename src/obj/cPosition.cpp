@@ -12,11 +12,11 @@ void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition)
     if (strcmp(pInvestorPosition->InstrumentID, this->m_instrumentID.c_str()) == 0) {
         // long postion
         if (pInvestorPosition->PosiDirection == '2') {
-            posi_direction_ = 1;
+            posi_direction_ = DIRE::LONG;
         }
         // short postion
         else if (pInvestorPosition->PosiDirection == '3') {
-            posi_direction_ = -1;
+            posi_direction_ = DIRE::SHORT;
         } else {
             LOG(INFO) << "cPostionDetail PosiDirection error";
             return;
@@ -36,9 +36,16 @@ void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition)
 void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
 
     if (strcmp(pTrade->InstrumentID, this->m_instrumentID.c_str()) == 0) {
+        if (pTrade->Direction == THOST_FTDC_D_Buy) {
+            posi_direction_ = DIRE::LONG;
+        }
+        if (pTrade->Direction == THOST_FTDC_D_Sell) {
+            posi_direction_ = DIRE::SHORT;
+        }
+
+
         if (pTrade->OffsetFlag == THOST_FTDC_OF_Open) {
             position_ += pTrade->Volume;
-
             today_pos_ += pTrade->Volume;
         }
         if (pTrade->OffsetFlag == THOST_FTDC_D_Sell) {

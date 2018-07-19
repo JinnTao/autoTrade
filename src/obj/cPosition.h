@@ -5,6 +5,8 @@
 #include <ThostFtdcUserApiStruct.h>
 
 using namespace std;
+
+enum DIRE {LONG,SHORT,UNDEFINE};
 class cPositionDetail {
 public:
     cPositionDetail(string inst);
@@ -33,7 +35,7 @@ private:
     int    position_            = 0;  //总持仓量
     int    today_pos_           = 0;  //今日持仓量
     int    yd_pos_              = 0;  //多单上日持仓
-    int    posi_direction_      = 0;  // 1 : 多单 -1 : 空单 0 : 未定义
+    DIRE    posi_direction_     = UNDEFINE;  //
     string trade_date_;
 };
 
