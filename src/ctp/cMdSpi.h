@@ -9,10 +9,11 @@
 #include "common.h"
 #include <functional>
 #include <mutex>
-using std::shared_ptr;
+#include "cPositionCollection.h"
+#include "cMarketDataCollection.h"
+//
+//class cMarketDataCollection;
 
-class cMarketDataCollection;
-extern int iRequestID;
 
 class cMdSpi : public CThostFtdcMdSpi {
 public:
@@ -75,13 +76,13 @@ public:
     virtual void OnRtnForQuoteRsp(CThostFtdcForQuoteRspField* pForQuoteRsp);
 
     void RegisterMarketDataCollection(cMarketDataCollection* pMktDataCollection);
+    void RegisterPositionCollection(cPositionCollectionPtr pMktDataCollection);
 
     bool getSatus() { return this->m_status; }
 
     void SubscribeMarketData(char* instIdList);
     void SubscribeMarketData(shared_ptr<vector<string>> instList);
     void SubscribeMarketData(string inst);
-
 
     void setOnFrontConnected(std::function<void()>&& fun);
 
@@ -116,18 +117,15 @@ public:
 
     bool m_status;
 
-    std::function<void()>       on_connected_fun_;
+    std::function<void()>                                                      on_connected_fun_;
     std::function<void(CThostFtdcRspUserLoginField*, CThostFtdcRspInfoField*)> on_login_fun_;
-    std::mutex                  mut_;
-    CtpMdApiPtr                 ctpmdapi_;
+    std::mutex                                                                 mut_;
+    CtpMdApiPtr                                                                ctpmdapi_;
     int32                                                                      request_id_ = 0;
     std::function<void(int32)>                                                 on_disconnected_fun_;
-    ctpConfig ctp_config_;
-
+    ctpConfig                                                                  ctp_config_;
+    cPositionCollectionPtr                                                     position_collection_;
+    
 };
-typedef int (*ccbf_secureApi_LoginMd)(CThostFtdcMdApi*       ctp_futures_pMdApi,
-                                      TThostFtdcBrokerIDType brokeId,
-                                      TThostFtdcUserIDType   userId,
-                                      char*                  pChar_passwd,
-                                      int&                   ctp_futures_requestId);
+
 #endif

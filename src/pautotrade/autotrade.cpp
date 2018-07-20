@@ -7,12 +7,10 @@
 #include <thread>
 
 INITIALIZE_EASYLOGGINGPP
+
 #define ELPP_THREAD_SAFE
 #define TRADE_CONFIG_FILE "setting.ini"
 #define LOG_CONFIG_FILE "easyLog.conf"
-
-HANDLE g_hEvent;
-int    iRequestID;
 
 extern "C" void signal_handler(int signal) {
     LOG(INFO) << "Detect signal: " << signal << endl;

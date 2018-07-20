@@ -714,9 +714,12 @@ int32 cTradingPlatform::init() {
         }
         // init connection
         {
-            ctp_md_spi_.RegisterMarketDataCollection(marketdate_collection_.get());
-            ctp_td_spi_.RegisterMarketDataCollection(marketdate_collection_);
+            position_collection_->registerInstFiledMap(inst_field_map_);
 
+            ctp_md_spi_.RegisterMarketDataCollection(marketdate_collection_.get());
+            ctp_md_spi_.RegisterPositionCollection(position_collection_);
+
+            ctp_td_spi_.RegisterMarketDataCollection(marketdate_collection_);
             ctp_td_spi_.RegisterPositionCollection(position_collection_);
             ctp_td_spi_.RegisterOrderCollection(order_collection_);
             ctp_td_spi_.RegisterTradeCollection(trade_collection_);

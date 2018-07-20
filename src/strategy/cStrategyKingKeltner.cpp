@@ -121,8 +121,8 @@ void cStrategyKingKeltner::on5MBar(){
     this->m_workingStopOrderList.clear();
     // ===========================================================ÏÂµ¥Âß¼­============================================================
 
-    int longPos = this->m_pPositionC.get()->getHolding_long(m_inst);
-    int shortPos = this->m_pPositionC.get()->getHolding_short(m_inst);
+    int longPos = this->m_pPositionC.get()->getPosition(m_inst,DIRE::AUTO_LONG);
+    int shortPos = this->m_pPositionC.get()->getPosition(m_inst,DIRE::AUTO_SHORT);
 
     this->m_netPos = longPos - shortPos;
 

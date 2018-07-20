@@ -86,17 +86,61 @@ void cTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField
         LOG(INFO) << "OnRspSettlementInfoConfirm: Success!";
     }
     if (bIsLast) {
-        ReqQryOrder();
+        ReqQryInstrument_all();
     }
 }
 
+void cTraderSpi::ReqQryInstrument_all() {
+    std::lock_guard<std::mutex>  guard(mut_);
+    CThostFtdcQryInstrumentField req;
+    memset(&req, 0, sizeof(req));
+    while (true) {
+        int iResult = ctpTdApi_->ReqQryInstrument(&req, ++request_id_);
+        LOG(INFO) << "ReqQryInstrument, result: " << iResult;
+        if (IsFlowControl(iResult)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        } else {
+            break;
+        }
+    }
+}
+
+void cTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField* pInstrument,
+                                    CThostFtdcRspInfoField*    pRspInfo,
+                                    int                        nRequestID,
+                                    bool                       bIsLast) {
+
+    if (!IsErrorRspInfo(pRspInfo) && pInstrument) {
+        if (m_first_inquiry_Instrument == true) {
+            // save all instrument to Inst message map
+            auto instField = make_shared<CThostFtdcInstrumentField>(*pInstrument);
+            // maybe save all Insturment msg is better?but save to csv or save to database?
+            m_InstMeassageMap->insert(
+                pair<string, std::shared_ptr<CThostFtdcInstrumentField>>(instField->InstrumentID, instField));
+        }
+    }
+    if (bIsLast) {
+        m_first_inquiry_Instrument = false;
+        LOG(INFO) << "OnRspQryInstrument success, bIsLast: " << bIsLast;
+        ReqQryOrder();
+
+    }
+}
 void cTraderSpi::ReqQryOrder() {
     std::lock_guard<std::mutex> guard(mut_);
     CThostFtdcQryOrderField     req;
     memset(&req, 0, sizeof(req));
     strcpy_s(req.InvestorID, sizeof(TThostFtdcInvestorIDType), ctp_config_.userId);
-    int iResult = ctpTdApi_->ReqQryOrder(&req, ++request_id_);
-    LOG(INFO) << "ReqQryOrder result: " << iResult;
+
+    while (true) {
+        int iResult = ctpTdApi_->ReqQryOrder(&req, ++request_id_);
+        LOG(INFO) << "ReqQryOrder result: " << iResult;
+        if (IsFlowControl(iResult)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        } else {
+            break;
+        }
+    }
 }
 
 void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField*   pOrder,
@@ -202,7 +246,7 @@ void cTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField* pTradingA
         m_accountInfo->FrozenMargin   = pTradingAccount->FrozenMargin;
     }
     if (bIsLast){
-        LOG(INFO) << "OnRspQryTradingAccount success.isLast:" << bIsLast;
+
         printf("Account Summary:\n");
         printf("   AccountID:%s\n", m_accountInfo->AccountID);
         printf("   PreBalance:%.2f\n", m_accountInfo->PreBalance);
@@ -216,6 +260,7 @@ void cTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField* pTradingA
         printf("   CurrMargin:%.2f\n", m_accountInfo->CurrMargin);
 
         if (m_firs_inquiry_TradingAccount){
+            LOG(INFO) << "OnRspQryTradingAccount success.isLast:" << bIsLast;
             ReqQryInvestorPosition_all();
         }
         m_firs_inquiry_TradingAccount = false;
@@ -253,61 +298,24 @@ void cTraderSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* pInve
     if (bIsLast) {
         m_firs_inquiry_Position = false;
         this->m_positionCollection->PrintDetail();
-        LOG(INFO) << "OnRspQryInvestorPosition noexists position.isLast: " << bIsLast;
-        ReqQryInstrument_all();
-    }
-}
-
-void cTraderSpi::ReqQryInstrument_all() {
-    std::lock_guard<std::mutex>  guard(mut_);
-    CThostFtdcQryInstrumentField req;
-    memset(&req, 0, sizeof(req));
-    while (true) {
-        int iResult = ctpTdApi_->ReqQryInstrument(&req, ++request_id_);
-        LOG(INFO) << "ReqQryInstrument, result: " << iResult;
-        if (IsFlowControl(iResult)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        } else {
-            break;
-        }
-    }
-}
-
-void cTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField* pInstrument,
-                                    CThostFtdcRspInfoField*    pRspInfo,
-                                    int                        nRequestID,
-                                    bool                       bIsLast) {
-
-    if (!IsErrorRspInfo(pRspInfo) && pInstrument) {
-        if (m_first_inquiry_Instrument == true) {
-            // save all instrument to Inst message map
-            auto instField = make_shared<CThostFtdcInstrumentField>(*pInstrument);
-            // maybe save all trade is better?but save to csv or save to database?
-            m_InstMeassageMap->insert(
-                pair<string, std::shared_ptr<CThostFtdcInstrumentField>>(instField->InstrumentID, instField));
-        }
-    }
-    if (bIsLast) {
-        m_first_inquiry_Instrument = false;
-//融航需要指定合约
+        LOG(INFO) << "OnRspQryInvestorPosition success.isLast: " << bIsLast;
+        //融航需要指定合约
 #ifdef ROHON
         m_itMap = m_InstMeassageMap->begin();
 
         // First Start up
         m_output.open("output/" + string(ctp_config_.userId) + "_" + m_tradeDay + "_commission.txt",
-                        ios::_Nocreate | ios::in);
+                      ios::_Nocreate | ios::in);
         if (m_output) {
             while (!m_output.eof()) {
                 // get Instrument List
                 shared_ptr<CThostFtdcInstrumentCommissionRateField> instField =
                     make_shared<CThostFtdcInstrumentCommissionRateField>();
-                m_output >> instField->InstrumentID >> instField->CloseRatioByMoney >>
-                    instField->CloseRatioByVolume >> instField->CloseTodayRatioByMoney >>
-                    instField->CloseTodayRatioByVolume >> instField->OpenRatioByMoney >>
-                    instField->OpenRatioByVolume;
-                m_pInstCommissionMap->insert(
-                    pair<string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>(
-                        instField->InstrumentID, instField));
+                m_output >> instField->InstrumentID >> instField->CloseRatioByMoney >> instField->CloseRatioByVolume >>
+                    instField->CloseTodayRatioByMoney >> instField->CloseTodayRatioByVolume >>
+                    instField->OpenRatioByMoney >> instField->OpenRatioByVolume;
+                m_pInstCommissionMap->insert(pair<string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>(
+                    instField->InstrumentID, instField));
             }
 
             if (m_pInstCommissionMap->size() > 10) {
@@ -317,13 +325,13 @@ void cTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField* pInstrument,
             }
         }
         m_output.open("output/" + string(ctp_config_.userId) + "_" + m_tradeDay + "_commission.txt",
-                        ios::app | ios::out);
+                      ios::app | ios::out);
 
         ReqQryInstrumentCommissionRate();
 #else
         ReqQryInstrumentCommissionRate();
 #endif  //  ROHON
-     }
+    }
 }
 // 这种循环查询 手续费的方式：因为接口一次只能查询一个，为了方便，查询出来的结果
 // 保存到txt中，第二次启动时直接从文件读取，速度就快很多，但是第一次查询需要花费10Min
@@ -585,7 +593,7 @@ void cTraderSpi::ReqOrderInsert(cOrder* pOrder) {
     req.IsAutoSuspend       = 0;
     req.UserForceClose      = 0;
 
-    int iResult = m_pUserTraderApi->ReqOrderInsert(&req, ++iRequestID);
+    int iResult = m_pUserTraderApi->ReqOrderInsert(&req, ++request_id_);
     // cout << "--->>> ReqOrderInsert: " << iResult << ( ( iResult == 0 ) ? ", succeed" : ", fail") << endl;
     if (iResult == 0) {
         int orderRef = atoi(m_ORDER_REF);
@@ -685,7 +693,7 @@ void cTraderSpi::ReqOrderAction(shared_ptr<cOrder> pOrder) {
     req.SessionID  = m_SESSION_ID;
     req.ActionFlag = THOST_FTDC_AF_Delete;
 
-    int iResult = ctpTdApi_->ReqOrderAction(&req, ++iRequestID);
+    int iResult = ctpTdApi_->ReqOrderAction(&req, ++request_id_);
     LOG(INFO) << "ReqOrderAction,result: " << iResult;
 
 }
@@ -858,12 +866,12 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
     if (dir == '1') {
         // SPD 指令平仓需要注意
 
-        if (this->m_positionCollection->getHolding_long(instId) < vol) {
+        if (this->m_positionCollection->getPosition(instId, DIRE::AUTO_LONG) < vol) {
             LOG(INFO) << "Long:close vol more than hold vol";
             return;
         }
 
-        if (this->m_positionCollection->getHolding_long(instId) > 0) {
+        if (this->m_positionCollection->getPosition(instId, DIRE::AUTO_LONG) > 0) {
             if (strcmp(m_InstMeassageMap->at(instId)->ExchangeID, "SHFE") == 0) {
                 if (strcmp(tag.c_str(), "") != 0) {
                     if (strcmp(tag.c_str(), "Y") == 0) {
@@ -879,8 +887,8 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
 
                 } else {
                     // close y than close t
-                    int Yd_long = this->m_positionCollection->getYdLong(instId);
-                    int Td_long = this->m_positionCollection->getTdLong(instId);
+                    int Yd_long = this->m_positionCollection->getYdPosition(instId, DIRE::AUTO_LONG);
+                    int Td_long = this->m_positionCollection->getTdPosition(instId, DIRE::AUTO_LONG);
                     if (Yd_long > vol) {
                         strcpy(kpp, "1");  // close yP
                         ReqOrderInsert(instId, dir, kpp, price, vol);
@@ -903,12 +911,13 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
     }
     // close short
     else {
-        if (this->m_positionCollection->getHolding_short(instId) < vol) {
-            LOG(INFO) << "short:close vol more than hold vol";
+        if (this->m_positionCollection->getPosition(instId, DIRE::AUTO_SHORT) < vol) {
+            LOG(INFO) << "short:close vol more than hold vol,position: "
+                      << this->m_positionCollection->getPosition(instId, DIRE::AUTO_SHORT) << " vol" << vol;
             return;
         }
 
-        if (this->m_positionCollection->getHolding_short(instId) > 0) {
+        if (this->m_positionCollection->getPosition(instId, DIRE::AUTO_SHORT) > 0) {
             if (strcmp(m_InstMeassageMap->at(instId)->ExchangeID, "SHFE") == 0) {
                 if (strcmp(tag.c_str(), "") != 0) {
                     if (strcmp(tag.c_str(), "Y") == 0) {
@@ -923,8 +932,8 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
                     ReqOrderInsert(instId, dir, kpp, price, vol);
                 } else {
                     // close yP than tP
-                    int Yd_short = this->m_positionCollection->getYdShort(instId);
-                    int Td_short = this->m_positionCollection->getTdShort(instId);
+                    int Yd_short = this->m_positionCollection->getYdPosition(instId, DIRE::AUTO_SHORT);
+                    int Td_short = this->m_positionCollection->getTdPosition(instId, DIRE::AUTO_SHORT);
 
                     if (Yd_short >= vol) {
                         strcpy(kpp, "1");  // yP

@@ -95,8 +95,8 @@ void cStrategyTemplate::on1MBar(){
         double rsiValue = outReal[0];
         cout << cSystem::GetCurrentTimeBuffer() << " RSI: " << rsiValue << " "<< m_lastOpen << " " << m_lastHigh << " " << m_lastLow << " " << m_lastClose << endl;
         // ===========================================================ÏÂµ¥Âß¼­============================================================
-        int longPos = this->m_pPositionC.get()->getHolding_long(m_inst);
-        int shortPos = this->m_pPositionC.get()->getHolding_short(m_inst);
+        int longPos = this->m_pPositionC.get()->getPosition(m_inst,DIRE::AUTO_LONG);
+        int shortPos = this->m_pPositionC.get()->getPosition(m_inst,DIRE::AUTO_SHORT);
 
         int netPos = longPos - shortPos;
         
