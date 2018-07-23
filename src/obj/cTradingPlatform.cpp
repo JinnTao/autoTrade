@@ -295,11 +295,8 @@ DWORD cTradingPlatform::AutoTrading() {
     LOG(INFO) << "--------------------Human-computer interaction function Start--------------------------------";
     LOG(INFO) << "OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| "
                  "cancel seqNo.";
-    // initial subcribe instrument
-    // this->ctp_md_spi_.SubscribeMarketData(this->m_pSubscribeInst);
 
     while (true) {
-        // std::cin>>str;
         memset(price, 0, 50);
         memset(order, 0, 50);
         memset(tag, 0, 10);
@@ -307,32 +304,30 @@ DWORD cTradingPlatform::AutoTrading() {
         orderNo = 0;
         getline(std::cin, str);
         if (str == "show") {
-            ctp_td_spi_.showPositionDetail();
+            ctp_td_spi_->showPositionDetail();
         }
 
         else if (str == "close") {
             cerr << "close Position:" << endl;
             // g_pUserSpi_tradeAll->ForceClose();
         } else if (str == "run") {
-            //            m_strategy.start();
+
             for (auto iter : strategy_list_) {
                 iter->start();
             }
         } else if (str == "stop") {
-            //    m_strategy.stop();
             for (auto iter : strategy_list_) {
                 iter->stop();
             }
-
         } else if (str == "order") {
             this->order_collection_->PrintPendingOrders();
         } else if (str == "trade") {
             // 首先查询手续费 再查询成交
-            this->ctp_td_spi_.ReqQryInstrumentCommissionRate(true);
+            this->ctp_td_spi_->ReqQryInstrumentCommissionRate(true);
         } else if (str == "help") {
             cerr << "OrderList: show | order| trade | stop | run |close |buy/sell open/close inst vol price -> ";
         } else if (str == "account") {
-            this->ctp_td_spi_.ReqQryTradingAccount();
+            this->ctp_td_spi_->ReqQryTradingAccount();
         } else if (str == "SP") {
             cerr << "Sp Order command: " << endl;
             getline(std::cin, str);
@@ -469,9 +464,9 @@ void cTradingPlatform::cancleOrder(string order, int seqNo) {
                 cerr << "  Order Seq No Exist." << endl;
                 return;
             }
-            this->ctp_td_spi_.ReqOrderAction(pOrder);
+            this->ctp_td_spi_->ReqOrderAction(pOrder);
         } else {
-            this->ctp_td_spi_.cancleAllPendingOrder();
+            this->ctp_td_spi_->cancleAllPendingOrder();
         }
     }
 }
@@ -509,7 +504,7 @@ void cTradingPlatform::insertOrder(string inst, string dire, string flag, int vo
     }
 
     // go into order
-    this->ctp_td_spi_.insertOrder(inst, eDire, eFlag, vol, orderPrice, tag);
+    this->ctp_td_spi_->insertOrder(inst, eDire, eFlag, vol, orderPrice, tag);
     _sleep(500);  // wait 500ms for pTrader response.
 }
 
@@ -643,23 +638,23 @@ int32 cTradingPlatform::init() {
         //    LOG(ERROR) << "MongoDb init failed! Result:" << init_result;
         //}
 
-        // md init
-        // if (ctp_md_spi_) {
-        //    ctp_md_spi_.reset();
-        //}
-        // ctp_md_spi_ = std::make_shared<cMdSpi>();
-        init_result = ctp_md_spi_.init(ctpConfig_);
+         //md init
+         if (ctp_md_spi_) {
+            ctp_md_spi_.reset();
+        }
+         ctp_md_spi_ = std::make_shared<cMdSpi>();
+        init_result = ctp_md_spi_->init(ctpConfig_);
         if (init_result != 0) {
             LOG(ERROR) << "Md init failed! Result:" << init_result;
             return -1;
         }
 
         // td init
-        // if (ctp_td_spi_) {
-        //    ctp_td_spi_.reset();
-        //}
-        // ctp_td_spi_ = std::make_shared<cTraderSpi>();
-        init_result = ctp_td_spi_.init(ctpConfig_);
+        if (ctp_td_spi_) {
+            ctp_td_spi_.reset();
+        }
+         ctp_td_spi_ = std::make_shared<cTraderSpi>();
+        init_result = ctp_td_spi_->init(ctpConfig_);
         if (init_result != 0) {
             LOG(ERROR) << "Td init failed! Result:" << init_result;
             return -2;
@@ -716,17 +711,17 @@ int32 cTradingPlatform::init() {
         {
             position_collection_->registerInstFiledMap(inst_field_map_);
 
-            ctp_md_spi_.RegisterMarketDataCollection(marketdate_collection_.get());
-            ctp_md_spi_.RegisterPositionCollection(position_collection_);
+            ctp_md_spi_->RegisterMarketDataCollection(marketdate_collection_.get());
+            ctp_md_spi_->RegisterPositionCollection(position_collection_);
 
-            ctp_td_spi_.RegisterMarketDataCollection(marketdate_collection_);
-            ctp_td_spi_.RegisterPositionCollection(position_collection_);
-            ctp_td_spi_.RegisterOrderCollection(order_collection_);
-            ctp_td_spi_.RegisterTradeCollection(trade_collection_);
-            ctp_td_spi_.RegisterInstMessageMap(inst_field_map_.get());
-            ctp_td_spi_.RegisterInstCommissionMap(inst_commission_rate_field_map_.get());
-            ctp_td_spi_.RegisterSubscribeInstList(subscribe_inst_v_);
-            ctp_td_spi_.RegisterCtpMdSpi(&ctp_md_spi_);
+            ctp_td_spi_->RegisterMarketDataCollection(marketdate_collection_);
+            ctp_td_spi_->RegisterPositionCollection(position_collection_);
+            ctp_td_spi_->RegisterOrderCollection(order_collection_);
+            ctp_td_spi_->RegisterTradeCollection(trade_collection_);
+            ctp_td_spi_->RegisterInstMessageMap(inst_field_map_.get());
+            ctp_td_spi_->RegisterInstCommissionMap(inst_commission_rate_field_map_.get());
+            ctp_td_spi_->RegisterSubscribeInstList(subscribe_inst_v_);
+            ctp_td_spi_->RegisterCtpMdSpi(ctp_md_spi_.get());
 
             std::vector<std::string> instList     = this->splitToStr(std::string(strategyConfig_.inst), ",");
             std::vector<int32>       lotsList     = this->splitToInt(std::string(strategyConfig_.lots), ",");
@@ -743,8 +738,8 @@ int32 cTradingPlatform::init() {
                 std::shared_ptr<cStrategyKingKeltner> pStrategy = std::make_shared<cStrategyKingKeltner>();
 
                 pStrategy->RegisterMarketDataCollection(marketdate_collection_);
-                //pStrategy->RegisterTradeSpi(ctp_td_spi_);
-                //pStrategy->RegisterMdSpi(ctp_md_spi_);
+                pStrategy->RegisterTradeSpi(ctp_td_spi_);
+                pStrategy->RegisterMdSpi(ctp_md_spi_);
                 pStrategy->RegisterPositionCollectionPtr(position_collection_);
                 pStrategy->RegisterOrderCollectionPtr(order_collection_);
                 pStrategy->RegisterTradeCollectionPtr(trade_collection_);
@@ -760,7 +755,9 @@ int32 cTradingPlatform::init() {
                 pStrategy->setInitDate(strategyConfig_.startDate, strategyConfig_.endDate);
                 pStrategy->setCollectionName(collectionList[i]);
 
-                // ctp_td_spi_->RegisterStrategy(pStrategy.get());
+                ctp_td_spi_->RegisterStrategy(pStrategy.get());// onTrade onOrder
+
+                subscribe_inst_v_->push_back(instList[i]);
                 strategy_list_.push_back(pStrategy);
                 LOG(INFO) << "Init strategy inst:" << instList[i] << " lots:" << lotsList[i]
                           << " timeMode: " << timeModeList[i] << " collectionList: " << collectionList[i];
@@ -778,20 +775,25 @@ int32 cTradingPlatform::start() {
     int start_result = 0;
     try {
 
-        start_result = ctp_md_spi_.start();
-        if (start_result != 0) {
-            LOG(ERROR) << "Md start failed! Result: " << start_result;
-            return -1;
-        }
 
-        start_result = ctp_td_spi_.start();
+
+        start_result = ctp_td_spi_->start();
         if (start_result != 0) {
             LOG(ERROR) << "Td start failed! Result: " << start_result;
             return -2;
         }
 
+        start_result = ctp_md_spi_->start();
+        ctp_md_spi_->SubscribeMarketData(this->subscribe_inst_v_);
+        if (start_result != 0) {
+            LOG(ERROR) << "Md start failed! Result: " << start_result;
+            return -2;
+        }
+
         // TradingPlatform start
         {
+            
+
             // inter thread start
             inter_thread_ = std::thread(&cTradingPlatform::AutoTrading, this);
 
@@ -824,7 +826,7 @@ int32 cTradingPlatform::reConnect() {
 }
 
 int32 cTradingPlatform::stop() {
-    this->ctp_td_spi_.clear();
-    this->ctp_md_spi_.clear();
+    this->ctp_td_spi_->clear();
+    this->ctp_md_spi_->clear();
     return 0;
 }

@@ -10,8 +10,6 @@ cPositionCollection::cPositionCollection() {
     if (position_map_.size() != 0) {
         position_map_.clear();
     }
-
-
 }
 
 cPositionCollection::~cPositionCollection() {}
@@ -58,7 +56,15 @@ void cPositionCollection::update(CThostFtdcTradeField* pTrade) {
     string                                              inst(pTrade->InstrumentID);
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
-        if (this->posDireEqual(pos->second->getPosiDire(), pTrade->Direction)) {
+        // open should find  pos dire equal trade dire 
+        if (this->posDireEqual(pos->second->getPosiDire(), pTrade->Direction) &&
+            pTrade->OffsetFlag == THOST_FTDC_OF_Open) {
+            is_find_position = true;
+            break;
+        } 
+        // close should find pos dire not equal trade dire
+        else if (pTrade->OffsetFlag != THOST_FTDC_OF_Open &&
+                   !this->posDireEqual(pos->second->getPosiDire(), pTrade->Direction)) {
             is_find_position = true;
             break;
         }
@@ -71,7 +77,7 @@ void cPositionCollection::update(CThostFtdcTradeField* pTrade) {
     // update position
     pos->second->update(pTrade);
 }
-void cPositionCollection::update(CThostFtdcDepthMarketDataField* pDepthMarket){
+void cPositionCollection::update(CThostFtdcDepthMarketDataField* pDepthMarket) {
     bool is_find_position = false;
 
     string                                              inst(pDepthMarket->InstrumentID);
@@ -81,18 +87,17 @@ void cPositionCollection::update(CThostFtdcDepthMarketDataField* pDepthMarket){
     }
 }
 
-
 int cPositionCollection::getPosition(string inst, DIRE dire) {
     bool                                                is_find_position = false;
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
-        //LOG(INFO) << inst << " " << pos->second->getPosition();
-        if (pos->second->getPosiDire() ==  dire) {
+        // LOG(INFO) << inst << " " << pos->second->getPosition();
+        if (pos->second->getPosiDire() == dire) {
             is_find_position = true;
             break;
         }
     }
-    //LOG(INFO) << is_find_position;
+    // LOG(INFO) << is_find_position;
     if (is_find_position) {
         return pos->second->getPosition();
     } else {
@@ -103,7 +108,7 @@ int cPositionCollection::getYdPosition(string inst, DIRE dire) {
     bool                                                is_find_position = false;
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
-        if (pos->second->getPosiDire() ==  dire) {
+        if (pos->second->getPosiDire() == dire) {
             is_find_position = true;
             break;
         }
@@ -133,7 +138,7 @@ int cPositionCollection::getTdPosition(string inst, DIRE dire) {
 bool cPositionCollection::posDireEqual(DIRE dire, TThostFtdcPosiDirectionType ftdc_dire) {
 
     bool is_equal = false;
-   // LOG(INFO) << dire << " " << ftdc_dire;
+    // LOG(INFO) << dire << " " << ftdc_dire;
     if (dire == DIRE::AUTO_LONG && (ftdc_dire == THOST_FTDC_PD_Long || ftdc_dire == THOST_FTDC_D_Buy)) {
         is_equal = true;
     }

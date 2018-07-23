@@ -627,14 +627,16 @@ void cTraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, C
 }
 // order insertion return
 void cTraderSpi::OnRtnOrder(CThostFtdcOrderField* pOrder) {
-    if (pOrder && !strcmp(pOrder->InvestorID, this->m_investorID)) {
-        // m_orderCollection->Add( pOrder );
+
+    if (pOrder && !strcmp(pOrder->InvestorID, this->ctp_config_.userId)) {
+        m_orderCollection->Add( pOrder );
         if (!IsMyOrder(pOrder)) {
-            cerr << " Other:";
+            LOG(INFO) << "Other No" << pOrder->OrderSysID << "  Status:" << pOrder->OrderStatus << " "
+                      << pOrder->StatusMsg;
         } else {
-            cerr << " My";
+            LOG(INFO) << "My No" << pOrder->OrderSysID << "  Status:" << pOrder->OrderStatus << " "
+                      << pOrder->StatusMsg;
         }
-        cerr << " No" << pOrder->OrderSysID << "  Status:" << pOrder->OrderStatus << pOrder->StatusMsg << endl;
     }
 
 }
@@ -1077,7 +1079,7 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
         std::future<bool>  is_connected = connect_result.get_future();
         on_connected_fun_               = [&connect_result] { connect_result.set_value(true); };
         ctpTdApi_->Init();
-        auto wait_result = is_connected.wait_for(10s);
+        auto wait_result = is_connected.wait_for(15s);
         if (wait_result != std::future_status::ready || is_connected.get() != true) {
             return -2;
         }

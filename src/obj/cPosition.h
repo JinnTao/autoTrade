@@ -25,14 +25,13 @@ public:
     DIRE   getPosiDire() { return posi_direction_; }
     void   registerInstField(std::shared_ptr<CThostFtdcInstrumentField> p) { inst_field_ = p; }
     void   Print();
-    double CloseProfit;     //多单平仓盈亏
-    double PositionProfit;  //多单浮动盈亏
-    double Margin;          //持仓占用保证金
+    double CloseProfit = 0;     //平仓盈亏
+    double PositionProfit = 0;  //持仓盈亏
+    double FloatProfit = 0;     // 浮动盈亏 （累计盈亏）
+    double Margin = 0;          //持仓占用保证金
 private:
     int    m_tradeID = 0;
     string m_instrumentID;            //合约代码
-    double m_lastPrice          = 0;  //最新价，时刻保存合约的最新价，平仓用
-    double m_PreSettlementPrice = 0;  //上次结算价，对隔夜仓有时候要用，快期有用
     double position_price_      = 0;  //持仓成本
     double open_price_          = 0;  //开仓成本
     int    position_            = 0;  //总持仓量

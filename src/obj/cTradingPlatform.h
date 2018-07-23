@@ -135,8 +135,8 @@ private:
     strategyConfig                          strategyConfig_;
     mongoConfig                             mongoConfig_;
 
-    cTraderSpi ctp_td_spi_;
-    cMdSpi     ctp_md_spi_;
+    cTraderSpiPtr ctp_td_spi_;
+    cMdSpiPtr     ctp_md_spi_;
 
     cMarketDataCollectionPtr                   marketdate_collection_;
     cPositionCollectionPtr                     position_collection_;

@@ -17,8 +17,6 @@
 
 class cMdSpi : public CThostFtdcMdSpi {
 public:
-    // cMdSpi( CThostFtdcMdApi* pUserMdApi,  TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID,
-    // TThostFtdcPasswordType password, bool genLog = false );
     cMdSpi(){};
     ///´íÎóÓ¦´ð
     virtual void OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast);
