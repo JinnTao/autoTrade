@@ -23,6 +23,7 @@ void cPositionCollection::PrintDetail() {
                  if (elem.second->getPosition() != 0) {
                      elem.second->Print();
                  }
+                 //elem.second->Print();
                  closeProfit += elem.second->CloseProfit;
                  positionProfit += elem.second->PositionProfit;
              });
@@ -56,6 +57,8 @@ void cPositionCollection::update(CThostFtdcTradeField* pTrade) {
     string                                              inst(pTrade->InstrumentID);
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
+        //LOG(INFO) << "offset" << pTrade->OffsetFlag << " posDire:" << pos->second->getPosiDire()
+        //          << "  tradeDire:" << pTrade->Direction;
         // open should find  pos dire equal trade dire 
         if (this->posDireEqual(pos->second->getPosiDire(), pTrade->Direction) &&
             pTrade->OffsetFlag == THOST_FTDC_OF_Open) {
@@ -68,7 +71,9 @@ void cPositionCollection::update(CThostFtdcTradeField* pTrade) {
             is_find_position = true;
             break;
         }
+
     }
+    //LOG(INFO) << "is_find:" << is_find_position;
     if (!is_find_position) {
         cPositionDetailPtr position_detail = make_shared<cPositionDetail>(inst);
         pos = position_map_.insert(pair<string, cPositionDetailPtr>(inst, position_detail));

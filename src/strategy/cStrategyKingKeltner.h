@@ -11,7 +11,7 @@ public:
     virtual void unInit();
 
     virtual void run();
-    void on5MBar();
+    void on1MBar();
 
     virtual void onOrder(cOrderPtr) {};
 

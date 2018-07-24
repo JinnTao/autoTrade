@@ -76,13 +76,10 @@ public:
     void RegisterMarketDataCollection(cMarketDataCollection* pMktDataCollection);
     void RegisterPositionCollection(cPositionCollectionPtr pMktDataCollection);
 
-    bool getSatus() { return this->m_status; }
-
     void SubscribeMarketData(char* instIdList);
     void SubscribeMarketData(shared_ptr<vector<string>> instList);
     void SubscribeMarketData(string inst);
 
-    void setOnFrontConnected(std::function<void()>&& fun);
 
     int32 init(const ctpConfig& ctp_config);
     int32 stop();
@@ -93,25 +90,11 @@ public:
     void clear();
 
     using CtpMdApiPtr = std::unique_ptr<CThostFtdcMdApi, std::function<void(CThostFtdcMdApi*)>>;
-    void ReqUserLogin();
 
     void SubscribeForQuoteRsp();
     bool IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo);
 
-    TThostFtdcBrokerIDType   m_brokerID;
-    TThostFtdcInvestorIDType m_investorID;
-    char                     m_password[252];
-
-    CThostFtdcMdApi* m_pUserMdApi;
-
     cMarketDataCollection* m_pMktDataCollection;
-
-    bool m_genLog;
-
-    int     m_requestID;
-    cString m_outputDirectory;
-    cString m_logFileFolder;
-    cString m_logFile;
 
     bool m_status;
 

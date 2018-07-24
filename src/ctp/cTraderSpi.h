@@ -95,8 +95,6 @@ public:
 
     void RegisterInstCommissionMap(map<string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>> *p);
 
-    void ReqQryInstrument();
-
     void ReqQryInstrument_all();
 
     void ReqQryTradingAccount();
@@ -116,17 +114,9 @@ public:
 
     void ReqQryInstrumentCommissionRate(bool qryTrade = false);
 
-    void Close();
-
-    void Init();
-
-    void GetInstrumentIDs( cArray< cString >& ) const;
-
-    const sInstrumentInfo* GetInstrumentInfo( const cString& ) const;
 
     const sTradingAccountInfo* GetTradingAccountInfo() const { return m_accountInfo; }
 
-    void saveInstrumentField(CThostFtdcInstrumentField* instField);
 
     void showPositionDetail();
 
@@ -172,16 +162,14 @@ public:
     void clear();
 
 private:
-    CThostFtdcTraderApi* m_pUserTraderApi;
-    cArray< cString > m_instrumentIDs;
+ 
 
     TThostFtdcOrderRefType    m_ORDER_REF;
     TThostFtdcFrontIDType    m_FRONT_ID;
     TThostFtdcSessionIDType    m_SESSION_ID;
     
     sTradingAccountInfo* m_accountInfo;
-    map< cString, sInstrumentInfo* > m_instrumentInfo;        // useful trading information for traded instruments
-    //
+   //
     /* postions */
     cPositionCollectionPtr m_positionCollection;
     // 
@@ -195,23 +183,17 @@ private:
 
     //subscribe inst
     shared_ptr<vector<string>> m_pSubscribeInst;
-
+    // marketData
+    cMarketDataCollectionPtr m_pMarketDataEngine;
     // Instrument detail Message Map    
     map<string, std::shared_ptr<CThostFtdcInstrumentField>>* m_InstMeassageMap = nullptr;
 
     // strategy List
     std::list<cStrategy*> m_strategyList;
 
+    fstream m_output;
     //
     map<string,std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>*m_pInstCommissionMap;
-
-
-    TThostFtdcBrokerIDType    m_brokerID;
-    TThostFtdcInvestorIDType m_investorID;
-    char m_password[252];
-
-    bool m_genLog;
-    cString m_logFile;
 
     //=======================20170828==================
     bool m_first_inquiry_order = true;//是否首次查询报单
@@ -222,30 +204,11 @@ private:
     bool m_first_inquiry_Instrument = true;//是否首次查询合约
     bool m_first_inquiry_commissionRate = true;//是否首次查询手续费
     
-    vector<CThostFtdcOrderField*> m_orderList;//委托记录，全部合约
-    vector<CThostFtdcOrderField*> m_pendOrderList;//挂单记录，全部合约
-    vector<CThostFtdcTradeField*> m_tradeList;//成交记录，全部合约
-    vector<CThostFtdcTradeField*> m_tradeListNotClosedAccount;//未平仓记录
 
-    map<string,cPositionDetailPtr> m_position_message_map;//持仓记录 
-
-    double m_closeProfit = 0;//平仓盈亏，所有合约一起算后的值，另外在m_trade_message_map有单独计算每个合约的平仓盈亏值
-    
-    double m_OpenProfit = 0;//浮动盈亏，所有合约一起算后的值，另外在m_trade_message_map有单独计算每个合约的浮动盈亏值
-
-    cMdSpi* m_pMdSpi;//行情API指针，构造函数里赋值
-
-    CThostFtdcMdApi* m_pMDUserApi_td;
-    double m_accountMargin = 0;
-
-    fstream m_output;
     string m_tradeDay;
     string m_actionDay;
-    bool m_qryStatus;
     ///
     map<string,std::shared_ptr<CThostFtdcInstrumentField>>::iterator m_itMap;// 用于查询合约
-    /// marketData
-    cMarketDataCollectionPtr m_pMarketDataEngine;
 
     using CtpTdApiPtr = std::unique_ptr<CThostFtdcTraderApi, std::function<void(CThostFtdcTraderApi*)>>;
     CtpTdApiPtr ctpTdApi_;
@@ -256,7 +219,7 @@ private:
     std::function<void()>                                                     on_started_fun_;
     std::mutex                                                                mut_;
     ctpConfig                                                                 ctp_config_;
-    cMdSpi*                                                  ctp_md_spi_;
+    cMdSpi*                                                                   ctp_md_spi_;
 
 };
 

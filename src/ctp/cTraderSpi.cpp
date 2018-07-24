@@ -490,36 +490,6 @@ void cTraderSpi::showPositionDetail() {
     this->m_positionCollection->PrintDetail();
 }
 
-void cTraderSpi::ReqQryInstrument() {
-
-    CThostFtdcQryInstrumentField req;
-    memset(&req, 0, sizeof(req));
-    // Mark:good design -- JinnTao
-    while (true) {
-        int  iResult = ctpTdApi_->ReqQryInstrument(&req, ++request_id_);
-        char message[256];
-        if (!IsFlowControl(iResult)) {
-            if (m_genLog) {
-                sprintf(message,
-                        "%s:called cTraderSpi::ReqQryInstrument: %s.",
-                        cSystem::GetCurrentTimeBuffer().c_str(),
-                        ((iResult == 0) ? "Success" : "Fail"));
-                cout << message << endl;
-                cSystem::WriteLogFile(m_logFile.c_str(), message, false);
-            }
-            break;
-        } else {
-            if (m_genLog) {
-                sprintf(message,
-                        "%s:called cTraderSpi::ReqQryInstrument: Flow Control.",
-                        cSystem::GetCurrentTimeBuffer().c_str());
-                cout << message << endl;
-                cSystem::WriteLogFile(m_logFile.c_str(), message, false);
-            }
-            cSystem::Sleep(1000);
-        }
-    }
-}
 
 void cTraderSpi::ReqOrderInsert(TThostFtdcInstrumentIDType   instId,
                                 TThostFtdcDirectionType      dir,
@@ -569,9 +539,9 @@ void cTraderSpi::ReqOrderInsert(cOrder* pOrder) {
 
     memset(&req, 0, sizeof(req));
 
-    strcpy(req.BrokerID, m_brokerID);
-    strcpy(req.InvestorID, m_investorID);
-    strcpy(req.UserID, m_investorID);
+    strcpy(req.BrokerID, ctp_config_.brokerId);
+    strcpy(req.InvestorID, ctp_config_.userId);
+    strcpy(req.UserID, ctp_config_.userId);
     strcpy(req.InstrumentID, pOrder->GetInstrumentID().c_str());
     strcpy(req.OrderRef, m_ORDER_REF);
 
@@ -593,7 +563,7 @@ void cTraderSpi::ReqOrderInsert(cOrder* pOrder) {
     req.IsAutoSuspend       = 0;
     req.UserForceClose      = 0;
 
-    int iResult = m_pUserTraderApi->ReqOrderInsert(&req, ++request_id_);
+    int iResult = ctpTdApi_->ReqOrderInsert(&req, ++request_id_);
     // cout << "--->>> ReqOrderInsert: " << iResult << ( ( iResult == 0 ) ? ", succeed" : ", fail") << endl;
     if (iResult == 0) {
         int orderRef = atoi(m_ORDER_REF);
@@ -686,8 +656,8 @@ void cTraderSpi::ReqOrderAction(shared_ptr<cOrder> pOrder) {
     CThostFtdcInputOrderActionField req;
     memset(&req, 0, sizeof(req));
 
-    strcpy(req.BrokerID, m_brokerID);
-    strcpy(req.InvestorID, m_investorID);
+    strcpy(req.BrokerID, ctp_config_.brokerId);
+    strcpy(req.InvestorID, ctp_config_.userId);
     // sprintf( req.OrderRef, "%d",pOrder->GetOrderRef() );
     strcpy(req.OrderSysID, pOrder->m_orderSysID);
     strcpy(req.ExchangeID, pOrder->ExchangeID);
@@ -723,18 +693,7 @@ bool cTraderSpi::IsMyOrder(CThostFtdcOrderField* pOrder) {
     return (flag && (pOrder->FrontID == m_FRONT_ID) && (pOrder->SessionID == m_SESSION_ID));
 }
 
-void cTraderSpi::GetInstrumentIDs(cArray<cString>& instrumentIDs) const {
-    for (int i = 0; i < m_instrumentIDs.getSize(); ++i)
-        instrumentIDs.push_back(m_instrumentIDs[i]);
-}
 
-const sInstrumentInfo* cTraderSpi::GetInstrumentInfo(const cString& instrumentID) const {
-    map<cString, sInstrumentInfo*>::const_iterator it = m_instrumentInfo.find(instrumentID);
-    if (it != m_instrumentInfo.end())
-        return (*it).second;
-    else
-        yr_error("instrument %s not found!", instrumentID.c_str());
-}
 
 void cTraderSpi::RegisterPositionCollection(cPositionCollectionPtr p) {
     if (m_positionCollection.get())
@@ -1134,6 +1093,9 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
     return 0;
 }
 int32 cTraderSpi::stop() {
+    if (ctpTdApi_) {
+        ctpTdApi_.reset(nullptr);
+    }
     return 0;
 }
 int32 cTraderSpi::reConnect(const ctpConfig& ctp_config) {
@@ -1144,7 +1106,7 @@ int32 cTraderSpi::start() {
     std::future<bool>  is_started = start_result.get_future();
     on_started_fun_               = [&start_result]() { start_result.set_value(true); };
     this->ReqSettlementInfoConfirm();
-    auto wait_result = is_started.wait_for(20min);
+    auto wait_result = is_started.wait_for(2min);
     if (wait_result == std::future_status::timeout) {
         LOG(INFO) << "Td start timeout";
         return -1;
@@ -1163,7 +1125,5 @@ void cTraderSpi::clearCallBack() {
 }
 
 void cTraderSpi::clear() {
-    if (ctpTdApi_) {
-        ctpTdApi_.reset(nullptr);
-    }
+
 }

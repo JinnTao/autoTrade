@@ -14,18 +14,8 @@ using namespace std;
 void cMdSpi::OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) {
     char message[256];
     sprintf(message, "%s:called cMdSpi::OnRspError", cSystem::GetCurrentTimeBuffer().c_str());
-    cout << message << endl;
+    LOG(INFO) << message ;
     IsErrorRspInfo(pRspInfo);
-
-    // log info
-    if (m_genLog) {
-        if (m_outputDirectory.IsBlankString())
-            cSystem::WriteLogFile(m_logFile.c_str(), message, false);
-        else {
-            cString folderDir = m_outputDirectory + m_logFileFolder + "//";
-            cSystem::WriteLogFile(folderDir.c_str(), m_logFile.c_str(), message, false);
-        }
-    }
 }
 
 void cMdSpi::OnFrontDisconnected(int nReason) {
@@ -47,12 +37,7 @@ void cMdSpi::OnHeartBeatWarning(int nTimeLapse) {
 }
 
 void cMdSpi::OnFrontConnected() {
-    // char message[256];
-    // sprintf(message, "%s:called cMdSpi::OnFrontConnected.", cSystem::GetCurrentTimeBuffer().c_str());
-    // cout << message << endl;
 
-    //// request user login
-    // ReqUserLogin();
     std::lock_guard<std::mutex> guard(mut_);
     LOG(INFO) << "Md connected to front";
     if (on_connected_fun_) {
@@ -193,14 +178,7 @@ bool cMdSpi::IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo) {
                 pRspInfo->ErrorID,
                 pRspInfo->ErrorMsg);
         cout << message << endl;
-        if (m_genLog) {
-            if (m_outputDirectory.IsBlankString())
-                cSystem::WriteLogFile(m_logFile.c_str(), message, false);
-            else {
-                cString folderDir = m_outputDirectory + m_logFileFolder + "//";
-                cSystem::WriteLogFile(folderDir.c_str(), m_logFile.c_str(), message, false);
-            }
-        }
+        LOG(INFO) << "Md : " << message;
     }
     return bResult;
 }
@@ -233,7 +211,7 @@ int32 cMdSpi::init(const ctpConfig& ctp_config) {
                              mdapi->RegisterSpi(NULL);
                              mdapi->Release();
                          }
-                         LOG(INFO) << "release mdapi";
+                         LOG(INFO) << "Release mdapi";
                      }};
         ctpmdapi_->RegisterSpi(this);
         LOG(INFO) << "Md create instance success!";
@@ -247,7 +225,7 @@ int32 cMdSpi::init(const ctpConfig& ctp_config) {
         std::future<bool>  is_connected = connect_result.get_future();
         on_connected_fun_               = [&connect_result] { connect_result.set_value(true); };
         ctpmdapi_->Init();
-        auto wait_result = is_connected.wait_for(10s);
+        auto wait_result = is_connected.wait_for(3s);
         if (wait_result != std::future_status::ready || is_connected.get() != true) {
             return -2;
         }

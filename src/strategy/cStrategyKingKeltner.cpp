@@ -64,7 +64,7 @@ void cStrategyKingKeltner::run(){
             m_lastLow = *(m_low.end()-1);
             m_lastClose = *(m_close.end()-1);
             m_lastVolume = *(m_volume.end()-1);
-            on5MBar();
+            on1MBar();
             // latest bar data
             m_lastOpen = lastData.LastPrice;
             m_lastHigh = lastData.LastPrice;
@@ -87,8 +87,11 @@ void cStrategyKingKeltner::run(){
         }
         // 处理停止单
         this->processStopOrder(m_inst, m_lastClose);
+    }else{
+        //LOG(INFO) << m_inst << " cStrategyKingKeltner "
+        //          << " wait: " << m_lots;
+
     }
-    LOG(INFO) << m_inst;
 }
 
 void cStrategyKingKeltner::sendOcoOrder(double upPrice, double downPrice, int fixedSize) {
@@ -108,7 +111,7 @@ void cStrategyKingKeltner::sendOcoOrder(double upPrice, double downPrice, int fi
 
 }
 
-void cStrategyKingKeltner::on5MBar(){
+void cStrategyKingKeltner::on1MBar(){
     // =================================================================  指标计算 =================================================
     double up, down;
     if (!keltner(int(this->m_pAutoSetting->kkLength), this->m_pAutoSetting->kkDev, up, down)) {
@@ -195,7 +198,7 @@ bool cStrategyKingKeltner::keltner( int kkLength, double kkDev, double& kkUp,dou
 void cStrategyKingKeltner::onTrade(CThostFtdcTradeField pTrade) {
     
     if (strcmp(pTrade.InstrumentID, m_inst.c_str()) != 0) {
-        LOG(INFO) << " not" << m_inst << " on trade";
+        //LOG(INFO) << "Not " << m_inst << " on trade";
     }
     else{
         LOG(INFO) << this->m_strategyName << " onTrade " << endl;
