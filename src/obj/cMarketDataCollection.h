@@ -44,7 +44,7 @@ public:
 
     void setTradeDayList(map<string,int> *p){m_pTradeDayList = p;}
     void registerMongoSetting(mongoConfig *p) {
-     //   m_mongoStore.init(*p); 
+        //m_mongoStore.init(*p); 
     }
 protected:
 
@@ -56,7 +56,7 @@ protected:
     // trade date List
     map<string,int> *m_pTradeDayList;
 private:
-   //MongoStore m_mongoStore;
+   // MongoStore m_mongoStore;
     
 };
 

@@ -88,8 +88,9 @@ void cStrategyKingKeltner::run(){
         // ´¦ÀíÍ£Ö¹µ¥
         this->processStopOrder(m_inst, m_lastClose);
     }else{
-        //LOG(INFO) << m_inst << " cStrategyKingKeltner "
-        //          << " wait: " << m_lots;
+        auto tick = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
+        LOG(INFO) << m_inst << " cStrategyKingKeltner "
+                  << " wait: " << m_lots << " last Price" << tick.LastPrice << " updateTime: " << tick.LastPrice;
 
     }
 }

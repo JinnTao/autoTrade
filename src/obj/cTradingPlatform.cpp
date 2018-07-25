@@ -9,6 +9,7 @@
 #include "easylogging\easylogging++.h"
 #include <io.h>
 #include "IniFile.h"
+#include "global.h"
 using std::string;
 
 #ifndef _DEBUG
@@ -62,7 +63,22 @@ bool CompareStringArray(const cArray<cString>& strArray1, const cArray<cString>&
 cTradingPlatform::cTradingPlatform() {}
 cTradingPlatform::~cTradingPlatform() {
     LOG(INFO) << "Clear trading platform.";
-    // this->ctp_td_spi_.clear();
+    trade_day_list_.clear();
+    strategy_list_.clear();
+    subscribe_inst_v_.reset();
+
+    // inter thread start
+    // inter_thread_ = std::thread(&cTradingPlatform::AutoTrading, this);
+    for (auto s : strategy_list_) {
+        if (s->GetStrategyStatus()) {
+            s->stop();
+        }
+    }
+    if (inter_thread_.joinable()){
+        inter_thread_.join();
+    }
+    
+    
     // this->ctp_md_spi_.clear();
 }
 
@@ -132,13 +148,14 @@ DWORD cTradingPlatform::AutoTrading() {
     LOG(INFO) << "OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| "
                  "cancel seqNo.";
 
-    while (true) {
+    while (global::is_running) {
         memset(price, 0, 50);
         memset(order, 0, 50);
         memset(tag, 0, 10);
         vol     = 0;
         orderNo = 0;
         getline(std::cin, str);
+
         if (str == "show") {
             ctp_td_spi_->showPositionDetail();
         }
@@ -420,6 +437,8 @@ int32 cTradingPlatform::init() {
             ctp_td_spi_->RegisterInstCommissionMap(inst_commission_rate_field_map_.get());
             ctp_td_spi_->RegisterSubscribeInstList(subscribe_inst_v_);
             ctp_td_spi_->RegisterCtpMdSpi(ctp_md_spi_.get());
+
+            marketdate_collection_->registerMongoSetting(&mongoConfig_);
             // fresh strategy
             for (auto pStrategy : strategy_list_) {
                 pStrategy->RegisterMarketDataCollection(marketdate_collection_);
@@ -499,7 +518,6 @@ int32 cTradingPlatform::start() {
                 LOG(INFO) << "Init strategy inst:" << instList[i] << " lots:" << lotsList[i]
                           << " timeMode: " << timeModeList[i] << " collectionList: " << collectionList[i];
             }
-        
         }
 
         // TradingPlatform start
@@ -543,8 +561,17 @@ int32 cTradingPlatform::reConnect() {
 
 int32 cTradingPlatform::stop() {
     // strategy_list_.clear();
-    this->ctp_td_spi_->stop();
-    this->ctp_md_spi_->stop();
+    // stop
 
+
+    // clean
+    if (ctp_td_spi_) {
+        this->ctp_td_spi_->stop();
+        ctp_td_spi_.reset();
+    }
+    if (ctp_md_spi_) {
+        this->ctp_md_spi_->stop();
+        ctp_md_spi_.reset();
+    }
     return 0;
 }

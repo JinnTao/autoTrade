@@ -24,21 +24,10 @@ void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition)
     double lamda = 1;
     if (strcmp(pInvestorPosition->InstrumentID, this->m_instrumentID.c_str()) == 0) {
 
-        Margin         += pInvestorPosition->UseMargin;
-        CloseProfit    += pInvestorPosition->CloseProfit;
+        Margin += pInvestorPosition->UseMargin;
+        CloseProfit += pInvestorPosition->CloseProfit;
         PositionProfit += pInvestorPosition->PositionProfit;
-        commission_    += pInvestorPosition->Commission;
-
-        //LOG(INFO)<< "Inst" << pInvestorPosition->InstrumentID << "position" << pInvestorPosition->Position 
-        //          <<"ydPos" << pInvestorPosition->YdPosition 
-        //          << " tdPos " << pInvestorPosition->TodayPosition
-        //         << " Margin " << pInvestorPosition->UseMargin
-        //         << " CloseProfit " << pInvestorPosition->CloseProfit << " PositionProfit " << pInvestorPosition->PositionProfit
-        //          << " position_date_ " << pInvestorPosition->PositionDate << " commission_ "
-        //          << pInvestorPosition->Commission << " settle_price_ " << pInvestorPosition->SettlementPrice
-        //          << " margin_rate_ " << pInvestorPosition->ExchangeMargin    
-        //    << "openVolume"<< pInvestorPosition->OpenVolume 
-        //    << " closeV " << pInvestorPosition->CloseVolume;
+        commission_ += pInvestorPosition->Commission;
 
         // long postion
         if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long) {
@@ -56,15 +45,30 @@ void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition)
             position_ += pInvestorPosition->Position;
             today_pos_ += pInvestorPosition->TodayPosition;
             yd_pos_ += pInvestorPosition->YdPosition;
-            settle_price_   = pInvestorPosition->SettlementPrice;
-            margin_rate_    = pInvestorPosition->ExchangeMargin;
-            position_date_  = pInvestorPosition->PositionDate;
-            trade_date_     = pInvestorPosition->TradingDay;
+            settle_price_  = pInvestorPosition->SettlementPrice;
+            margin_rate_   = pInvestorPosition->ExchangeMargin;
+            position_date_ = pInvestorPosition->PositionDate;
+            trade_date_    = pInvestorPosition->TradingDay;
 
             open_price_     = pInvestorPosition->OpenCost / double(inst_field_->VolumeMultiple) / double(position_);
             position_price_ = pInvestorPosition->PositionCost / double(inst_field_->VolumeMultiple) / double(position_);
-            last_price_ = position_price_ + lamda * PositionProfit / double(position_ * double(inst_field_->VolumeMultiple));
+            last_price_ =
+                position_price_ + lamda * PositionProfit / double(position_ * double(inst_field_->VolumeMultiple));
             FloatProfit = lamda * (last_price_ - open_price_) * position_ * double(inst_field_->VolumeMultiple);
+
+            if (position_ != (today_pos_ + yd_pos_)){
+                 LOG(INFO)<< "Inst" << pInvestorPosition->InstrumentID << "position" << pInvestorPosition->Position
+                          <<"ydPos" << pInvestorPosition->YdPosition
+                          << " tdPos " << pInvestorPosition->TodayPosition
+                         << " Margin " << pInvestorPosition->UseMargin
+                         << " CloseProfit " << pInvestorPosition->CloseProfit << " PositionProfit " <<
+                         pInvestorPosition->PositionProfit
+                          << " position_date_ " << pInvestorPosition->PositionDate << " commission_ "
+                          << pInvestorPosition->Commission << " settle_price_ " << pInvestorPosition->SettlementPrice
+                          << " margin_rate_ " << pInvestorPosition->ExchangeMargin
+                    << "openVolume"<< pInvestorPosition->OpenVolume
+                    << " closeV " << pInvestorPosition->CloseVolume;
+            }
         }
     } else {
         LOG(INFO) << "cPostionDetail update error";
@@ -101,8 +105,8 @@ void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
         if (pTrade->OffsetFlag == THOST_FTDC_OF_Open) {
             position_ += pTrade->Volume;
             today_pos_ += pTrade->Volume;
-            //LOG(INFO) << pTrade->Price << "  " << pTrade->Volume << "  " << open_price_ << "  " << old_pos << "  "
-             //         << position_;
+            // LOG(INFO) << pTrade->Price << "  " << pTrade->Volume << "  " << open_price_ << "  " << old_pos << "  "
+            //         << position_;
             open_price_     = (pTrade->Price * pTrade->Volume + open_price_ * old_pos) / double(position_);
             position_price_ = (pTrade->Price * pTrade->Volume + position_price_ * old_pos) / double(position_);
             // long
@@ -132,16 +136,16 @@ void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
             }
             // buy close => sell open
             if (pTrade->Direction == THOST_FTDC_D_Buy) {
-                CloseProfit += (open_price_ - pTrade->Price) * pTrade->Volume * double(inst_field_->VolumeMultiple);
+                CloseProfit += (position_price_ - pTrade->Price) * pTrade->Volume * double(inst_field_->VolumeMultiple);
             }
             // sell close => buy open
             if (pTrade->Direction == THOST_FTDC_D_Sell) {
-                CloseProfit += (pTrade->Price - open_price_) * pTrade->Volume * double(inst_field_->VolumeMultiple);
+                CloseProfit += (pTrade->Price - position_price_) * pTrade->Volume * double(inst_field_->VolumeMultiple);
             }
             if (position_ > 0) {
-                //open_price_     = (open_price_ * old_pos - pTrade->Price * pTrade->Volume) / double(position_);
-                //position_price_ = (position_price_ * old_pos - pTrade->Price * pTrade->Volume) / double(position_);
-                
+                // open_price_     = (open_price_ * old_pos - pTrade->Price * pTrade->Volume) / double(position_);
+                // position_price_ = (position_price_ * old_pos - pTrade->Price * pTrade->Volume) / double(position_);
+
             } else {
                 open_price_     = 0;
                 position_price_ = 0;
@@ -149,12 +153,16 @@ void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
                 FloatProfit     = 0;
             }
 
+            if (position_ != (yd_pos_ + today_pos_)) {
+                LOG(INFO) << "Position error: pos " << position_ << " yd_pos: " << yd_pos_ << " td_pos_: " << today_pos_
+                          << " offset: " << pTrade->OffsetFlag << " Vol" << pTrade->Volume;
+            }
         }
 
         position_date_ = pTrade->TradingDay;
         trade_date_    = pTrade->TradingDay;
         exchange_id_   = pTrade->ExchangeID;
-        //LOG(INFO) << "price :" << pTrade->Price << " pos: " << position_ << "tradding day" << trade_date_;
+        // LOG(INFO) << "price :" << pTrade->Price << " pos: " << position_ << "tradding day" << trade_date_;
 
     } else {
         LOG(INFO) << "cPostionDetail update error";
@@ -162,7 +170,7 @@ void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
 }
 
 void cPositionDetail::Print() {
-    string posi_dire[] = {"Long", "Short","error"};
+    string posi_dire[] = {"Long", "Short", "error"};
     cerr << this->m_instrumentID << "\t Pos:" << position_ << "\t Dire: " << posi_dire[posi_direction_]
          << "\t Td:" << today_pos_ << "\t Yd:" << yd_pos_ << "\t PositionP&L:" << PositionProfit
          << "\t Float P&L:" << FloatProfit  //<< "\t CloseP&L:" << CloseProfit
