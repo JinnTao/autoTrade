@@ -2,7 +2,6 @@
 #define __CTRADERSPI_H__
 
 #include <map>
-#include <yr_structs.h>
 #include <cPositionCollection.h>
 #include <cTradeCollection.h>
 #include <cOrderCollection.h>

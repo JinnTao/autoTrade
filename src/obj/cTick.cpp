@@ -1,12 +1,11 @@
 #include <cTick.h>
 
-cTick::cTick()
-: m_instrumentID( theString )
-, m_tickTime( theTickTime )
-{
+cTick::cTick() {
+    m_instrumentID = "";
+    m_tickTime     = std::chrono::system_clock::now();
 }
 
-cTick::cTick( const cString& instrumentID, const cTickTime& tickTime )
+cTick::cTick( const std::string& instrumentID, const std::chrono::system_clock::time_point& tickTime )
 : m_instrumentID( instrumentID )
 , m_tickTime( tickTime )
 {
@@ -18,7 +17,7 @@ cTick::~cTick()
 
 cTick::cTick( const cTick& in )
 {
-    yr_assert( this != & in );
+
     m_instrumentID = in.m_instrumentID;
     m_tickTime = in.m_tickTime;
     m_last = in.m_last;

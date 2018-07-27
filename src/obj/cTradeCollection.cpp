@@ -22,7 +22,7 @@ void cTradeCollection::Add(CThostFtdcTradeField* pTrade, CThostFtdcInstrumentCom
 {
     if (pTrade->Volume > 0)
     {
-        shared_ptr< cTrade > ptr = make_shared< cTrade >(pTrade);
+        shared_ptr< cTrade > ptr = std::make_shared< cTrade >(pTrade);
         AddToMapInternal(ptr, pCom, pInstFiled);
     }
 }
@@ -40,20 +40,18 @@ int cTradeCollection::Count() const
     return count;
 }
 
-void cTradeCollection::GetInstrumentIDs(cArray< cString >& instrumentIDs) const
+void cTradeCollection::GetInstrumentIDs(std::vector< std::string >& instrumentIDs) const
 {
     for (tradeStoreByInstrument::const_iterator it = _m_trade_instrument.begin(); it != _m_trade_instrument.end(); ++it)
         instrumentIDs.push_back((*it).first);
 }
 
-void cTradeCollection::GetOrderIDs(cIvector& orderIDs) const
-{
+void cTradeCollection::GetOrderIDs(std::vector<int>& orderIDs) const {
     for (tradeStoreByOrder::const_iterator it = _m_trade_order.begin(); it != _m_trade_order.end(); ++it)
         orderIDs.push_back((*it).first);
 }
 
-void cTradeCollection::GetTradeIDs(cIvector& tradeIDs) const
-{
+void cTradeCollection::GetTradeIDs(std::vector<int>& tradeIDs) const {
     for (mapType::const_iterator it = _map_trade.begin(); it != _map_trade.end(); ++it)
         tradeIDs.push_back((*it).first);
 }
@@ -76,22 +74,21 @@ cTradePtr cTradeCollection::GetTradeHandleSharedPtr(int tradeID)
         return cTradePtr();
 }
 
-cArray< const cTrade* > cTradeCollection::GetTradeByInstrument(const cString& instrumentID) const
-{
+std::vector<const cTrade*> cTradeCollection::GetTradeByInstrument(const std::string& instrumentID) const{
     tradeStoreByInstrument::const_iterator it = _m_trade_instrument.find(instrumentID);
     if (it != _m_trade_instrument.end())
         return (*it).second;
     else
-        return cArray< const cTrade* >();
+        return std::vector< const cTrade* >();
 }
 
-cArray< const cTrade* > cTradeCollection::GetTradeByOrder(int orderID) const
+std::vector< const cTrade* > cTradeCollection::GetTradeByOrder(int orderID) const
 {
     tradeStoreByOrder::const_iterator it = _m_trade_order.find(orderID);
     if (it != _m_trade_order.end())
         return (*it).second;
     else
-        return cArray< const cTrade* >();
+        return std::vector< const cTrade* >();
 }
 
 void cTradeCollection::AddToMapInternal(shared_ptr< cTrade >& element, CThostFtdcInstrumentCommissionRateField* pCom, CThostFtdcInstrumentField *pInstField)
@@ -109,6 +106,7 @@ void cTradeCollection::AddToMapInternal(shared_ptr< cTrade >& element, CThostFtd
 
 void cTradeCollection::PrintAll() const
 {
+    using namespace std;
     tradeHandle::const_iterator it;
     if (_m_trade_handle.size() == 0) {
         cerr << "  No trade List" << endl;

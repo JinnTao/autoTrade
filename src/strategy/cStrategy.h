@@ -12,15 +12,16 @@
 #include <cPositionCollection.h>
 #include <cOrderCollection.h>
 #include "autotrade_config.h"
-#include "cthread.h"
+
 #include "ta_libc.h"
 #include "cTraderSpi.h"
 #include "cMdSpi.h"
-#include "cDateTime.h"
-#include "cSystem.h"
+
 #include <thread>
 #include <atomic>
+
 class cTraderSpi;
+typedef unsigned int DateTimeFormat;
 
 class cStrategy {
 private:
@@ -131,7 +132,6 @@ private:
     DWORD               AutoTrading();
     std::thread         m_thread;
     std::atomic<bool>   m_isRuning{ATOMIC_FLAG_INIT};
-    cThread<cStrategy>* m_pTradingThread;
 };
 
 typedef shared_ptr<cStrategy> cStrategyPtr;

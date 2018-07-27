@@ -3,7 +3,7 @@
 
 #include <ThostFtdcMdApi.h>
 #include <ThostFtdcTraderApi.h>
-#include <cString.h>
+
 #include <memory>
 #include "autotrade_config.h"
 #include "common.h"

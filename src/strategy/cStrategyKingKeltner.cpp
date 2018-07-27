@@ -76,7 +76,10 @@ void cStrategyKingKeltner::run(){
         }
         else {
             // update bar data
-            m_lastHigh = max(m_lastHigh, lastData.LastPrice);
+            m_lastHigh = 
+                
+                
+                (m_lastHigh, lastData.LastPrice);
 
             m_lastLow = min(m_lastLow, lastData.LastPrice);
 

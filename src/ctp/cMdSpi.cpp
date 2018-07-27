@@ -1,6 +1,5 @@
 #include <cMdSpi.h>
 #include <iostream>
-#include <cSystem.h>
 #include <cMarketDataCollection.h>
 #include "easylogging++.h"
 #include <future>
@@ -12,9 +11,8 @@ using namespace std;
 
 
 void cMdSpi::OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) {
-    char message[256];
-    sprintf(message, "%s:called cMdSpi::OnRspError", cSystem::GetCurrentTimeBuffer().c_str());
-    LOG(INFO) << message ;
+
+    LOG(INFO) << "cMdSpi::OnRspError" ;
     IsErrorRspInfo(pRspInfo);
 }
 
@@ -28,12 +26,8 @@ void cMdSpi::OnFrontDisconnected(int nReason) {
 }
 
 void cMdSpi::OnHeartBeatWarning(int nTimeLapse) {
-    char message[256];
-    sprintf(message,
-            "%s:called cMdSpi::OnHeartBeatWarning. nTimerLapse = %d",
-            cSystem::GetCurrentTimeBuffer().c_str(),
-            nTimeLapse);
-    cout << message << endl;
+
+    cout << "cMdSpi::OnHeartBeatWarning" << nTimeLapse << endl;
 }
 
 void cMdSpi::OnFrontConnected() {
@@ -171,14 +165,8 @@ bool cMdSpi::IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo) {
     // 如果ErrorID != 0, 说明收到了错误的响应
     bool bResult = ((pRspInfo) && (pRspInfo->ErrorID != 0));
     if (bResult) {
-        char message[256];
-        sprintf(message,
-                "%s:ERROR with ErrorID = %d and ErrorMsg = %s.",
-                cSystem::GetCurrentTimeBuffer().c_str(),
-                pRspInfo->ErrorID,
-                pRspInfo->ErrorMsg);
-        cout << message << endl;
-        LOG(INFO) << "Md : " << message;
+        
+        LOG(INFO) << "cMdSpi:IsErrorRspInfo, ErrorId: " << pRspInfo->ErrorID << " ErrorMsg:" << pRspInfo->ErrorMsg;
     }
     return bResult;
 }

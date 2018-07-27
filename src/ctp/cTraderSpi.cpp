@@ -1,4 +1,3 @@
-#include <cSystem.h>
 #include <cTraderSpi.h>
 #include <cTrade.h>
 #include "easylogging\easylogging++.h"

@@ -3,8 +3,8 @@
 
 cOrder::cOrder()
     : m_orderID(-1)
-    , m_instrumentID(theString)
-    , m_accountID(theString)
+    , m_instrumentID("")
+    , m_accountID("")
     , m_orderRef(0)
     , m_direction('0')
     , m_offsetFlag('0')
@@ -12,8 +12,8 @@ cOrder::cOrder()
     , m_price(0.0)
     , m_volumeOriginal(0)
     , m_volumeTraded(0)
-    , m_orderServerTime(theTickTime)
-    , m_orderLocalTime(theTickTime)
+    , m_orderServerTime(std::chrono::system_clock::now())
+    , m_orderLocalTime(std::chrono::system_clock::now())
     , m_frontID(-1)
     , m_sessionID(-1) {
     m_BrokerOrderSeq = 0;
@@ -21,10 +21,10 @@ cOrder::cOrder()
 }
 
 cOrder::cOrder(CThostFtdcOrderField* pOrder) {
-
+    int sYear, sMon, sDay, H, M, S;
     m_orderID         = atoi(pOrder->OrderSysID);
-    m_instrumentID    = cString(pOrder->InstrumentID);
-    m_accountID       = cString(pOrder->InvestorID);
+    m_instrumentID    = std::string(pOrder->InstrumentID);
+    m_accountID       = std::string(pOrder->InvestorID);
     m_orderRef        = atoi(pOrder->OrderRef);
     m_direction       = pOrder->Direction;
     m_offsetFlag      = pOrder->CombOffsetFlag[0];
@@ -32,8 +32,14 @@ cOrder::cOrder(CThostFtdcOrderField* pOrder) {
     m_price           = pOrder->LimitPrice;
     m_volumeOriginal  = pOrder->VolumeTotalOriginal;
     m_volumeTraded    = pOrder->VolumeTraded;
-    m_orderServerTime = cTickTime(pOrder->InsertDate, pOrder->InsertTime);
-    m_orderLocalTime  = theTickTime;
+
+    sscanf_s(pOrder->InsertDate, "%4d%2d%2d", &sYear, &sMon, &sDay);
+    sscanf_s(pOrder->InsertTime, "%2d:%2d:%2d", &H, &M, &S);
+    std::tm sTimeTm{S, M, H, sDay, sMon - 1, sYear - 1900};
+
+    m_orderServerTime = cTickTime(std::chrono::system_clock::from_time_t(mktime(&sTimeTm)));
+
+    m_orderLocalTime  = std::chrono::system_clock::now();
     strcpy(m_orderSysID, pOrder->OrderSysID);
     strcpy(ExchangeID, pOrder->ExchangeID);  // exchange Id
     m_frontID        = pOrder->FrontID;
@@ -44,7 +50,6 @@ cOrder::cOrder(CThostFtdcOrderField* pOrder) {
 }
 
 cOrder::cOrder(const cOrder& in) {
-    yr_assert(this != &in);
     m_orderID         = in.m_orderID;
     m_instrumentID    = in.m_instrumentID;
     m_accountID       = in.m_accountID;

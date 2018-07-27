@@ -1,1 +1,1 @@
-cmake -G "Visual Studio 15 2017 Win64"  -DCMAKE_PREFIX_PATH="mongodriver" -DCMAKE_TOOLCHAIN_FILE="boost/vcpkg-export-20171010-163718/scripts/buildsystems/vcpkg.cmake" -DBoost_NO_BOOST_CMAKE="ON" ..
+cmake -G "Visual Studio 15 2017 Win64"  -DCMAKE_PREFIX_PATH=mongo-cxx-driver -DBOOST_ROOT=C:\boost_1_65_0 ..

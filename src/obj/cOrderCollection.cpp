@@ -23,7 +23,7 @@ void cOrderCollection::Add( CThostFtdcOrderField* pOrder )
         return;
     if( pOrder->VolumeTotalOriginal > 0 )
     {
-        shared_ptr< cOrder > ptr = make_shared< cOrder >( pOrder );
+        std::shared_ptr< cOrder > ptr = std::make_shared< cOrder >( pOrder );
         AddToMapInternal( ptr );
     }
 }
@@ -41,14 +41,14 @@ int cOrderCollection::Count() const
     return count;
 }
 
-void cOrderCollection::GetInstrumentIDs( cArray< cString >& instrumentIDs ) const
+void cOrderCollection::GetInstrumentIDs( std::vector< std::string >& instrumentIDs ) const
 {
     orderStore::const_iterator it;
     for( it = _m_order_instrument.begin(); it != _m_order_instrument.end(); ++it )
         instrumentIDs.push_back( (*it).first );
 }
 
-void cOrderCollection::GetOrderIDs( cIvector& orderIDs ) const
+void cOrderCollection::GetOrderIDs( std::vector<int>& orderIDs ) const
 {
     orderHandle::const_iterator it;
     for( it = _m_order_handle.begin(); it != _m_order_handle.end(); ++it )
@@ -73,7 +73,7 @@ cOrderPtr cOrderCollection::GetOrderHandleSharedPtr( int tradeID )
         return cOrderPtr();
 }
 
-cArray< const cOrder* > cOrderCollection::GetOrderByInstrument( const cString& instrumentID ) const
+std::vector< const cOrder* > cOrderCollection::GetOrderByInstrument( const std::string& instrumentID ) const
 {
     orderStore::const_iterator it = _m_order_instrument.find( instrumentID );
     if( it != _m_order_instrument.end() )
@@ -81,11 +81,11 @@ cArray< const cOrder* > cOrderCollection::GetOrderByInstrument( const cString& i
         return (*it).second;
     }
     else
-        return cArray< const cOrder* >();
+        return std::vector< const cOrder* >();
 }
-vector<cOrderPtr> cOrderCollection::GetAllOrder( ) const{
+std::vector<cOrderPtr> cOrderCollection::GetAllOrder( ) const{
     orderHandle::const_iterator it;
-    vector<cOrderPtr> vOrder;
+    std::vector<cOrderPtr> vOrder;
     for( it = _m_order_handle.begin(); it != _m_order_handle.end(); ++it )
     {
         vOrder.push_back(it->second);
@@ -93,7 +93,7 @@ vector<cOrderPtr> cOrderCollection::GetAllOrder( ) const{
     return vOrder;
 }
 
-void cOrderCollection::AddToMapInternal( shared_ptr< cOrder >& element )
+void cOrderCollection::AddToMapInternal( std::shared_ptr< cOrder >& element )
 {
     int orderID = element->GetOrderID();
     mapType::iterator it = _map_order.find( orderID );
@@ -102,18 +102,18 @@ void cOrderCollection::AddToMapInternal( shared_ptr< cOrder >& element )
     else
         _map_order.insert( mapType::value_type( orderID, element ) );
 
-    cString instrumentID = element->GetInstrumentID();
+    std::string instrumentID = element->GetInstrumentID();
     orderStore::iterator itS = _m_order_instrument.find( instrumentID );
     if( itS == _m_order_instrument.end() )
     {
-        cArray< const cOrder* > v;
+        std::vector< const cOrder* > v;
         v.push_back( element.get() );
         _m_order_instrument.insert( orderStore::value_type( instrumentID, v ) );
     }
     else
     {
         bool foundFlag = false;
-        for( int i = 0; i < (*itS).second.getSize(); ++i )
+        for( int i = 0; i < (*itS).second.size(); ++i )
         {
             if( element->GetOrderID() == (*itS).second[i]->GetOrderID() )
             {
@@ -190,7 +190,7 @@ void cOrderCollection::PrintAllOrders() const
 void cOrderCollection::Remove( int orderID )
 {
     orderHandle::iterator it = _m_order_handle.find( orderID );
-    cString instrumentID;
+    std::string instrumentID("null");
     if( it != _m_order_handle.end() )
     {
         instrumentID = (*it).second->GetInstrumentID();
@@ -201,22 +201,23 @@ void cOrderCollection::Remove( int orderID )
     if( it2 != _map_order.end() )
         _map_order.erase( it2 );
     
-    orderStore::iterator it3 = _m_order_instrument.find( orderID );
+    orderStore::iterator it3 = _m_order_instrument.find(instrumentID);
     if( it3 != _m_order_instrument.end() )
     {
-        cArray< const cOrder* > v = (*it3).second;
+        // fix delete order instrument by jinntao need test -- 2018/07/27
+        std::vector<const cOrder* > v = (*it3).second;
         int index = -1;
-        for( index = 0; index < v.getSize(); ++v )
+        for( index = 0; index < v.size(); ++index )
         {
             if( v[index]->GetOrderID() == orderID )
                 break;
         }
-        if( index < v.getSize() )
-            (*it3).second.drop( index );
+        if (index < v.size())
+            (*it3).second.erase((*it3).second.begin() + index);
     }
 }
 
-bool cOrderCollection::getOrderByNo(TThostFtdcSequenceNoType orderSequenceNo,shared_ptr<cOrder> &pOrder){
+bool cOrderCollection::getOrderByNo(TThostFtdcSequenceNoType orderSequenceNo,std::shared_ptr<cOrder> &pOrder){
     orderHandle::const_iterator it;
     bool exist = false;
     for( it = _m_order_handle.begin(); it != _m_order_handle.end(); ++it )

@@ -1,5 +1,4 @@
 #include <cPositionCollection.h>
-#include <cVector.h>
 #include <cTrade.h>
 #include <easylogging++.h>
 

@@ -1,5 +1,4 @@
 //
-#include <cSystem.h>
 #include <cTradingPlatform.h>
 #include <cTraderSpi.h>
 #include <cTick.h>
@@ -15,25 +14,7 @@ using std::string;
 #ifndef _DEBUG
 #define _DEBUG 0
 #endif
-bool CompareStringArray(const cArray<cString>& strArray1, const cArray<cString>& strArray2) {
-    if (&strArray1 == &strArray2)
-        return true;
-    if (strArray1.getSize() != strArray2.getSize())
-        return false;
 
-    for (int i = 0; i < strArray1.getSize(); ++i) {
-        cString str1 = strArray1[i];
-        int     j;
-        for (j = 0; j < strArray2.getSize(); ++j) {
-
-            if (Compare(str1, strArray2[j]))
-                break;
-        }
-        if (j >= strArray2.getSize())
-            return false;
-    }
-    return true;
-}
 
 // cTradingPlatform::cTradingPlatform()
 //: m_pTraderSpi( NULL )
@@ -74,11 +55,10 @@ cTradingPlatform::~cTradingPlatform() {
             s->stop();
         }
     }
-    if (inter_thread_.joinable()){
+    if (inter_thread_.joinable()) {
         inter_thread_.join();
     }
-    
-    
+
     // this->ctp_md_spi_.clear();
 }
 
@@ -562,16 +542,22 @@ int32 cTradingPlatform::reConnect() {
 int32 cTradingPlatform::stop() {
     // strategy_list_.clear();
     // stop
+    try {
+        // should stop md than stop td?
+        if (ctp_md_spi_) {
+            this->ctp_md_spi_->stop();
+            ctp_md_spi_.reset();
+        }
+        // clean
+        if (ctp_td_spi_) {
+            this->ctp_td_spi_->stop();
+            ctp_td_spi_.reset();
+        }
 
-
-    // clean
-    if (ctp_td_spi_) {
-        this->ctp_td_spi_->stop();
-        ctp_td_spi_.reset();
-    }
-    if (ctp_md_spi_) {
-        this->ctp_md_spi_->stop();
-        ctp_md_spi_.reset();
+    } catch (std::exception& e) {
+        LOG(INFO) << "stop failed:" << e.what();
+    } catch (...) {
+        LOG(INFO) << "stop failed:noknow error";
     }
     return 0;
 }

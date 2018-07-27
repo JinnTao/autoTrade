@@ -1,8 +1,5 @@
 #include <cMarketDataCollection.h>
-#include <cTickTime.h>
-#include <cSystem.h>
-#include <cDateTime.h>
-
+#include <time.h>
 
 cMarketDataCollection::cMarketDataCollection()
 {
@@ -101,10 +98,7 @@ void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,strin
     }
 
 }
-vector<cCandle> cMarketDataCollection::loadCandleHistory(string inst,string startDate,string endDate,DataFrequency dataFrequency,DataType dataType){
-    vector<cCandle> t;
-    return t;
-}
+
 void cMarketDataCollection::loadHistoryFromMongo(string collection, string sDateTime, string eDateTime, vector<double>& open, vector<double>& high, vector<double> &low, vector<double>& close, vector<double> &volume) {
     vector<string> dateTime;
     int sYear, sMon, sDay, eYear, eMon, eDay;
@@ -113,8 +107,8 @@ void cMarketDataCollection::loadHistoryFromMongo(string collection, string sDate
     sscanf_s(eDateTime.c_str(), "%4d%2d%2d-%2d:%2d:%2d", &eYear, &eMon, &eDay, &eH, &eM, &eS);
     std::tm sTimeTm{sS,sM,sH,sDay,sMon-1,sYear-1900};
     std::tm eTimeTm{eS,eM,eH,eDay,eMon-1,eYear-1900};
-    this->m_sDateTimePoint = std::chrono::system_clock::from_time_t(std::mktime(&sTimeTm));
-    this->m_eDateTimePoint = std::chrono::system_clock::from_time_t(std::mktime(&eTimeTm));
+    this->m_sDateTimePoint = std::chrono::system_clock::from_time_t(mktime(&sTimeTm));
+    this->m_eDateTimePoint = std::chrono::system_clock::from_time_t(mktime(&eTimeTm));
     //m_mongoStore.getData(collection, m_sDateTimePoint, m_eDateTimePoint, close, open, high, low, volume, dateTime);
 
 }

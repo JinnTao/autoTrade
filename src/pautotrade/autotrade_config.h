@@ -1,68 +1,66 @@
 #ifndef __AUTOTRADE_CONFIG_H__
 #define __AUTOTRADE_CONFIG_H__
 
-#include <cString.h>
-#include <cArray.h>
+
 #include <map>
-#include <cSystem.h>
 #include <ThostFtdcMdApi.h>
 #include <memory>
+////
+//struct sATGeneralConfig
+//{
+//    bool genLog;
+//    cString dataoutputDirectory;
+//    cString tickDataFolderName;
+//    cString candleDataFolderName;
+//    cString logFileFolderName;
+//    cArray< cString > underlyings;
+//    map< cString, bool > displayTick;
+//    map< cString, bool > displayCandle;
+//    map< cString, bool > displaySignal;
+//    map< cString, bool > displayOrder;
+//    map< cString, bool > displayTrade;
+//};
 //
-struct sATGeneralConfig
-{
-    bool genLog;
-    cString dataoutputDirectory;
-    cString tickDataFolderName;
-    cString candleDataFolderName;
-    cString logFileFolderName;
-    cArray< cString > underlyings;
-    map< cString, bool > displayTick;
-    map< cString, bool > displayCandle;
-    map< cString, bool > displaySignal;
-    map< cString, bool > displayOrder;
-    map< cString, bool > displayTrade;
-};
-
-void autotrade_loadconfig_general( sATGeneralConfig& configs, cString& fileName );
-
+//void autotrade_loadconfig_general( sATGeneralConfig& configs, cString& fileName );
 //
-struct sATDownloadMarketDataConfig
-{
-    sATGeneralConfig generalConfig;
-    cString logFileName;
-};
-
-void autotrade_loadconfig_downloadmarketdata( sATDownloadMarketDataConfig& configs );
-
-
-struct sATBacktestConfig
-{
-    sATGeneralConfig generalConfig;
-    
-    cString strategyName;
-    cArray< cString > strategyConfigFileNames;
-    
-    cString dateStart;
-    cString dateEnd;
-    bool oldFormat;
-    cString dataLoadDirectory;
-};
-
-void autotrade_loadconfig_backtest( sATBacktestConfig& configs );
-
-struct sATTradeConfig
-{
-    sATGeneralConfig generalConfig;
-
-    cString logFileName;
-    
-    cArray< cString > strategyConfigFileNames;
-    
-};
-
-
-void autotrade_loadconfig_trade( sATTradeConfig& configs );
-
+////
+//struct sATDownloadMarketDataConfig
+//{
+//    sATGeneralConfig generalConfig;
+//    cString logFileName;
+//};
+//
+//void autotrade_loadconfig_downloadmarketdata( sATDownloadMarketDataConfig& configs );
+//
+//
+//struct sATBacktestConfig
+//{
+//    sATGeneralConfig generalConfig;
+//    
+//    cString strategyName;
+//    cArray< cString > strategyConfigFileNames;
+//    
+//    cString dateStart;
+//    cString dateEnd;
+//    bool oldFormat;
+//    cString dataLoadDirectory;
+//};
+//
+//void autotrade_loadconfig_backtest( sATBacktestConfig& configs );
+//
+//struct sATTradeConfig
+//{
+//    sATGeneralConfig generalConfig;
+//
+//    cString logFileName;
+//    
+//    cArray< cString > strategyConfigFileNames;
+//    
+//};
+//
+//
+//void autotrade_loadconfig_trade( sATTradeConfig& configs );
+//
 
 struct ctpConfig
 {
@@ -138,6 +136,40 @@ struct strategyConfig
     }
 };
 
+struct sInstrumentInfo {
+    char   InstrumentID[32];
+    char   ExchangeID[32];
+    char   ProductID[32];
+    int    MaxMarketOrderVolume;
+    int    MinMarketOrderVolume;
+    int    MaxLimitOrderVolume;
+    int    MinLimitOrderVolume;
+    int    VolumeMultiple;
+    double PriceTick;
+    int    IsTrading;
+    double LongMarginRatio;
+    double ShortMarginRatio;
+};
+
+struct sTradingAccountInfo {
+    char   BrokerID[32];
+    char   AccountID[32];
+    double PreBalance;
+    double Balance;
+    double Available;
+    double WithdrawQuota;
+    double CurrMargin;
+    double CloseProfit;
+    double PositionProfit;
+    double Commission;
+    double FrozenMargin;
+};
+
+// Direction Offset
+namespace traderTag {
+enum DIRECTION { buy, sell };
+enum OFFSETFLAG { open, close };
+}  // namespace traderTag
 
 
 #endif

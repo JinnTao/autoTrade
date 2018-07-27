@@ -4,22 +4,17 @@
 #include <cMarketData.h>
 #include <map>
 #include <vector>
-
+#include <fstream>
 #include "cCandle.h"
 #include "cTick.h"
 #include "cHistoryMarketData.h"
 #include "autotrade_config.h"
-//#include "mongo\mongostore.h"
-
-
+#include "mongo\mongostore.h"
 
 using std::map;
 using std::vector;
 
-// futures ID versus cMarketDataPtr, i.e. IF1601
 typedef map< string, cMarketDataPtr > marketdataHandle;
-
-
 class cMarketDataCollection
 {
 public:
@@ -36,7 +31,6 @@ public:
     // history series from old to newest
     // data get from api http://www.tq18.cn/ or https://www.juhe.cn/docs/api/id/21
     void loadSeriesHistory(string inst,string startDate,string endDate,vector<double>& open, vector<double>& high,vector<double> &low,vector<double>& close,vector<double> &volume);
-    vector<cCandle> loadCandleHistory(string inst,string startDate,string endDate,DataFrequency dataFrequency,DataType dataType);
 
     // history series from old to newest; data from mongoDb
     void loadHistoryFromMongo(string collection, string sDateTime,string eDateTime,vector<double>& open, vector<double>& high, vector<double> &low, vector<double>& close, vector<double> &volume);

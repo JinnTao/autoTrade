@@ -1,5 +1,4 @@
 #include <autotrade_config.h>
-#include <cSystem.h>
 //#include "IniFile.h"
 //
 //int ParseSettingJson( AccountParam &account,mongoSetting &mongoDbSetting,autoSetting &autoTradeSetting){  
@@ -73,415 +72,415 @@
 //
 //}  
 
-
-void autotrade_loadconfig_general( sATGeneralConfig& configs, cString& fileName )
-{
-    printf( "\nplease save your configuration file in the folder %s", ( cSystem::GetEnv( "MYDATADIR" ) + "configs\\" ).c_str() );
-
-    char configFileName[256];
-
-    printf( "\nplease input the configuration file name:" );
-    cin >> configFileName;
-
-    fileName = cString( configFileName );
-    
-    cString configDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + configFileName + ".txt";
-    
-    ifstream ifs;
-    ifs.open( configDir.c_str(), ios::in );
-    if( !ifs )
-        yr_error( "file %s cannot be open!", configDir.c_str() );
-
-    string line;
-    bool foundGenLog = false;
-    bool foundDataoutputDirectory = false;
-    bool foundTickDataFolderName = false;
-    bool foundCandleDataFolderName = false;
-    bool foundLogFileFolderName = false;
-    bool foundUnderlyings = false;
-    bool foundDisplayTick = false;
-    bool foundDisplayCandle = false;
-    bool foundDisplaySignal = false;
-    bool foundDisplayOrder = false;
-    bool foundDisplayTrade = false;
-
-    cArray< bool > displayTickArray;
-    cArray< bool > displayCandleArray;
-    cArray< bool > displaySignalArray;
-    cArray< bool > displayOrderArray;
-    cArray< bool > displayTradeArray;
-
-
-    while( getline( ifs, line ) )
-    {
-        string buff;
-        stringstream ss( line );
-        cArray< string > sbu;
-        while( ss >> buff )
-            sbu.push_back( buff );
-
-        if( sbu.getSize() < 1 )
-            continue;
-
-        if( Compare( "GenLog", sbu[0].c_str() ) )
-        {
-            configs.genLog = Compare( sbu[1].c_str(), "YES" ) ? true : false;
-            foundGenLog = true;
-        }
-
-        if( Compare( "DataOutputDirectory", sbu[0].c_str() ) )
-        {
-            configs.dataoutputDirectory = cString( sbu[1].c_str() );
-            foundDataoutputDirectory = true;
-        }
-
-        if( Compare( "TickDataFolderName", sbu[0].c_str() ) )
-        {
-            configs.tickDataFolderName = cString( sbu[1].c_str() );
-            foundTickDataFolderName = true;
-        }
-
-        if( Compare( "CandleDataFolderName", sbu[0].c_str() ) )
-        {
-            configs.candleDataFolderName = cString( sbu[1].c_str() );
-            foundCandleDataFolderName = true;
-        }
-
-        if( Compare( "LogFileFolderName", sbu[0].c_str() ) )
-        {
-            configs.logFileFolderName = cString( sbu[1].c_str() );
-            foundLogFileFolderName = true;
-        }
-
-        if( Compare( "Underlyings", sbu[0].c_str() ) )
-        {
-            for( int i = 1; i < sbu.getSize(); ++i )
-                configs.underlyings.push_back( cString( sbu[i].c_str() ) );
-            foundUnderlyings = true;
-        }
-
-
-        if( Compare( "DisplayTick", sbu[0].c_str() ) )
-        {
-            for( int i = 1; i < sbu.getSize(); ++i )
-                displayTickArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
-            foundDisplayTick = true;
-        }
-
-        if( Compare( "DisplayCandle", sbu[0].c_str() ) )
-        {
-            for( int i = 1; i < sbu.getSize(); ++i )
-                displayCandleArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
-            foundDisplayCandle = true;
-        }
-
-        if( Compare( "DisplaySignal", sbu[0].c_str() ) )
-        {
-            for( int i = 1; i < sbu.getSize(); ++i )
-                displaySignalArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
-            foundDisplaySignal = true;
-        }
-
-        if( Compare( "DisplayOrder", sbu[0].c_str() ) )
-        {
-            for( int i = 1; i < sbu.getSize(); ++i )
-                displayOrderArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
-            foundDisplayOrder = true;
-        }
-
-        if( Compare( "DisplayTrade", sbu[0].c_str() ) )
-        {
-            for( int i = 1; i < sbu.getSize(); ++i )
-                displayTradeArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
-            foundDisplayTrade = true;
-        }
-    }
-
-    ifs.close();
-
-    //
-    /* Set default values */
-    if( !foundDataoutputDirectory )
-        configs.dataoutputDirectory = "C:\\Temp\\";
-
-    if( !foundUnderlyings )
-        yr_error( "invalid underlying input..." );
-
-    if( !foundGenLog )
-        configs.genLog = false;
-
-    if( !foundDataoutputDirectory )
-        configs.dataoutputDirectory = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() );
-    
-
-    if( !foundTickDataFolderName )
-        configs.tickDataFolderName = "tick";
-
-    if( !foundCandleDataFolderName )
-        configs.candleDataFolderName = "candle";
-
-    if( !foundLogFileFolderName )
-        configs.logFileFolderName = "log";
-
-    if( !foundDisplayTick )
-    {
-        for( int i = 0; i < configs.underlyings.getSize(); ++i )
-            displayTickArray.push_back( false );
-    }
-
-    if( !foundDisplayCandle )
-    {
-        for( int i = 0; i < configs.underlyings.getSize(); ++i )
-            displayCandleArray.push_back( false );
-    }
-
-    if( !foundDisplaySignal )
-    {
-        for( int i = 0; i < configs.underlyings.getSize(); ++i )
-            displaySignalArray.push_back( false );
-    }
-
-    if( !foundDisplayOrder )
-    {
-        for( int i = 0; i < configs.underlyings.getSize(); ++i )
-            displayOrderArray.push_back( false );
-    }
-
-    if( !foundDisplayTrade )
-    {
-        for( int i = 0; i < configs.underlyings.getSize(); ++i )
-            displayTradeArray.push_back( false );
-    }
-
-    for( int i = 0; i < configs.underlyings.getSize(); ++i )
-    {
-        map< cString, bool >::iterator it = configs.displayTick.find( configs.underlyings[i] );
-        if( it == configs.displayTick.end() )
-            configs.displayTick.insert( map< cString, bool >::value_type( configs.underlyings[i], displayTickArray[i] ) );
-        else
-            (*it).second = displayTickArray[i];
-
-        map< cString, bool >::iterator it2 = configs.displayCandle.find( configs.underlyings[i] );
-        if( it2 == configs.displayCandle.end() )
-            configs.displayCandle.insert( map< cString, bool >::value_type( configs.underlyings[i], displayCandleArray[i] ) );
-        else
-            (*it2).second = displayCandleArray[i];
-
-        map< cString, bool >::iterator it3 = configs.displaySignal.find( configs.underlyings[i] );
-        if( it3 == configs.displaySignal.end() )
-            configs.displaySignal.insert( map< cString, bool >::value_type( configs.underlyings[i], displaySignalArray[i] ) );
-        else
-            (*it3).second = displaySignalArray[i];
-
-        map< cString, bool >::iterator it4 = configs.displayOrder.find( configs.underlyings[i] );
-        if( it4 == configs.displayOrder.end() )
-            configs.displayOrder.insert( map< cString, bool >::value_type( configs.underlyings[i], displayOrderArray[i] ) );
-        else
-            (*it4).second = displayOrderArray[i];
-
-        map< cString, bool >::iterator it5 = configs.displayTrade.find( configs.underlyings[i] );
-        if( it5 == configs.displayTrade.end() )
-            configs.displayTrade.insert( map< cString, bool >::value_type( configs.underlyings[i], displayTradeArray[i] ) );
-        else
-            (*it5).second = displayTradeArray[i];
-    }
-    
-    cSystem::FirstTimeInit( configs.dataoutputDirectory.c_str(), configs.tickDataFolderName.c_str(), configs.candleDataFolderName.c_str(), configs.logFileFolderName.c_str() );
-
-}
-
-void autotrade_loadconfig_downloadmarketdata( sATDownloadMarketDataConfig& configs )
-{
-
-    cString fileName;
-    
-    autotrade_loadconfig_general( configs.generalConfig, fileName );
-    
-    cString configDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + fileName + ".txt";
-    ifstream ifs;
-    ifs.open( configDir.c_str(), ios::in );
-    string line;
-    
-    bool foundLogFileName = false;
-
-    while( getline( ifs, line ) )
-    {
-        string buff;
-        stringstream ss( line );
-        cArray< string > sbu;
-        while( ss >> buff )
-            sbu.push_back( buff );
-
-        if( sbu.getSize() < 1 )
-            continue;
-
-        if( Compare( "LogFileName", sbu[0].c_str() ) )
-        {
-            configs.logFileName = cString( sbu[1].c_str() );
-            foundLogFileName = true;
-        }    
-    }
-
-    ifs.close();
-
-    if( !foundLogFileName )
-        configs.logFileName = theString;
-    
-}
-
-void autotrade_loadconfig_backtest( sATBacktestConfig& configs )
-{
-    cString fileName;
-
-    autotrade_loadconfig_general( configs.generalConfig, fileName );
-    
-    cString configDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + fileName + ".txt";
-    ifstream ifs;
-    ifs.open( configDir.c_str(), ios::in );
-    if( !ifs )
-        yr_error( "file %s cannot be open!", configDir.c_str() );
-    
-    string line;
-    bool foundStart = false;
-    bool foundEnd = false;
-    
-    bool foundStrategyName = false;
-    bool foundStrategyConfigFile = false;
-    bool foundDataFormat = false;
-    bool foundDisplaySignal = false;
-    bool foundDataloadDirectory = false;
-    
-    while( getline( ifs, line ) )
-    {
-        string buff;
-        stringstream ss( line );
-        cArray< string > sbu;
-        while( ss >> buff )
-            sbu.push_back( buff );
-        
-        if( sbu.getSize() < 1 )
-            continue;
-
-        if( Compare( "Start", sbu[0].c_str() ) )
-        {
-            configs.dateStart = cString( sbu[1].c_str() );
-            foundStart = true;
-        }
-
-        if( Compare( "End", sbu[0].c_str() ) )
-        {
-            configs.dateEnd = cString( sbu[1].c_str() );
-            foundEnd = true;
-        }
-
-        if( Compare( "StrategyName", sbu[0].c_str() ) )
-        {
-            configs.strategyName = cString( sbu[1].c_str() );
-            foundStrategyName = true;
-        }
-        
-        if( Compare( "StrategyConfigFile", sbu[0].c_str() ) )
-        {
-            for( int i = 1; i < sbu.getSize(); ++i )
-                configs.strategyConfigFileNames.push_back( cString( sbu[i].c_str() ) );
-            foundStrategyConfigFile = true;
-        }
-
-        if( Compare( "DataFormat", sbu[0].c_str() ) )
-        {
-            configs.oldFormat = Compare( "Old", sbu[1].c_str() ) ? true : false;
-            foundDataFormat = true;
-        }
-
-        if( Compare( "DataLoadDirectory", sbu[0].c_str() ) )
-        {
-            configs.dataLoadDirectory = cString( sbu[1].c_str() );
-            foundDataloadDirectory = true;
-        }
-    }
-
-    ifs.close();
-
-    if( !foundStart )
-        yr_error( "start date missing for backtesting" );
-
-    if( !foundEnd )
-        yr_error( "start date missing for backtesting" );
-
-    if( !foundStrategyName )
-        yr_error( "strategy name missing for backtesting" );
-
-    if( !foundStrategyConfigFile )
-        yr_error( "strategy config missing for backtesting" );
-    else
-    {
-        // check whether the strategy config file exists on file
-        ifstream ifs2;
-        for( int i = 0; i < configs.strategyConfigFileNames.getSize(); ++i )
-        {
-            cString stratFullDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + configs.strategyConfigFileNames[i] + ".txt";
-            ifs2.open( stratFullDir.c_str(), ios::in );
-            if( !ifs2 )
-                yr_error( "file %s cannot be open!", stratFullDir.c_str() );
-            ifs2.close();
-        }
-    }
-
-    if( !foundDataFormat )
-        configs.oldFormat = false;
-
-    if( !foundDataloadDirectory )
-        configs.dataLoadDirectory = "C\\Temp\\";
-
-
-}
-
-void autotrade_loadconfig_trade( sATTradeConfig& configs )
-{
-    cString fileName;
-
-    autotrade_loadconfig_general( configs.generalConfig, fileName );
-    
-    cString configDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + fileName + ".txt";
-    ifstream ifs;
-    ifs.open( configDir.c_str(), ios::in );
-    if( !ifs )
-        yr_error( "file %s cannot be open!", configDir.c_str() );
-    
-    string line;
-    bool foundStrategyConfigFile = false;
-    bool foundLogFileName = false;
-    
-    while( getline( ifs, line ) )
-    {
-        string buff;
-        stringstream ss( line );
-        cArray< string > sbu;
-        while( ss >> buff )
-            sbu.push_back( buff );
-        
-        if( sbu.getSize() < 1 )
-            continue;
-
-        if( Compare( "StrategyConfigFile", sbu[0].c_str() ) )
-        {
-            for( int i = 1; i < sbu.getSize(); ++i )
-                configs.strategyConfigFileNames.push_back( cString( sbu[i].c_str() ) );
-            foundStrategyConfigFile = true;
-        }
-
-        if( Compare( "LogFileName", sbu[0].c_str() ) )
-        {
-            configs.logFileName = cString( sbu[1].c_str() );
-            foundLogFileName = true;
-        }
-    }
-
-    ifs.close();
-
-    if( !foundStrategyConfigFile )
-        yr_error( "invalid StrategyConfigFile input!" );
-
-    if( !foundLogFileName )
-        configs.logFileName = theString;
-}
+//
+//void autotrade_loadconfig_general( sATGeneralConfig& configs, cString& fileName )
+//{
+//    printf( "\nplease save your configuration file in the folder %s", ( cSystem::GetEnv( "MYDATADIR" ) + "configs\\" ).c_str() );
+//
+//    char configFileName[256];
+//
+//    printf( "\nplease input the configuration file name:" );
+//    cin >> configFileName;
+//
+//    fileName = cString( configFileName );
+//    
+//    cString configDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + configFileName + ".txt";
+//    
+//    ifstream ifs;
+//    ifs.open( configDir.c_str(), ios::in );
+//    if( !ifs )
+//        yr_error( "file %s cannot be open!", configDir.c_str() );
+//
+//    string line;
+//    bool foundGenLog = false;
+//    bool foundDataoutputDirectory = false;
+//    bool foundTickDataFolderName = false;
+//    bool foundCandleDataFolderName = false;
+//    bool foundLogFileFolderName = false;
+//    bool foundUnderlyings = false;
+//    bool foundDisplayTick = false;
+//    bool foundDisplayCandle = false;
+//    bool foundDisplaySignal = false;
+//    bool foundDisplayOrder = false;
+//    bool foundDisplayTrade = false;
+//
+//    cArray< bool > displayTickArray;
+//    cArray< bool > displayCandleArray;
+//    cArray< bool > displaySignalArray;
+//    cArray< bool > displayOrderArray;
+//    cArray< bool > displayTradeArray;
+//
+//
+//    while( getline( ifs, line ) )
+//    {
+//        string buff;
+//        stringstream ss( line );
+//        cArray< string > sbu;
+//        while( ss >> buff )
+//            sbu.push_back( buff );
+//
+//        if( sbu.getSize() < 1 )
+//            continue;
+//
+//        if( Compare( "GenLog", sbu[0].c_str() ) )
+//        {
+//            configs.genLog = Compare( sbu[1].c_str(), "YES" ) ? true : false;
+//            foundGenLog = true;
+//        }
+//
+//        if( Compare( "DataOutputDirectory", sbu[0].c_str() ) )
+//        {
+//            configs.dataoutputDirectory = cString( sbu[1].c_str() );
+//            foundDataoutputDirectory = true;
+//        }
+//
+//        if( Compare( "TickDataFolderName", sbu[0].c_str() ) )
+//        {
+//            configs.tickDataFolderName = cString( sbu[1].c_str() );
+//            foundTickDataFolderName = true;
+//        }
+//
+//        if( Compare( "CandleDataFolderName", sbu[0].c_str() ) )
+//        {
+//            configs.candleDataFolderName = cString( sbu[1].c_str() );
+//            foundCandleDataFolderName = true;
+//        }
+//
+//        if( Compare( "LogFileFolderName", sbu[0].c_str() ) )
+//        {
+//            configs.logFileFolderName = cString( sbu[1].c_str() );
+//            foundLogFileFolderName = true;
+//        }
+//
+//        if( Compare( "Underlyings", sbu[0].c_str() ) )
+//        {
+//            for( int i = 1; i < sbu.getSize(); ++i )
+//                configs.underlyings.push_back( cString( sbu[i].c_str() ) );
+//            foundUnderlyings = true;
+//        }
+//
+//
+//        if( Compare( "DisplayTick", sbu[0].c_str() ) )
+//        {
+//            for( int i = 1; i < sbu.getSize(); ++i )
+//                displayTickArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
+//            foundDisplayTick = true;
+//        }
+//
+//        if( Compare( "DisplayCandle", sbu[0].c_str() ) )
+//        {
+//            for( int i = 1; i < sbu.getSize(); ++i )
+//                displayCandleArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
+//            foundDisplayCandle = true;
+//        }
+//
+//        if( Compare( "DisplaySignal", sbu[0].c_str() ) )
+//        {
+//            for( int i = 1; i < sbu.getSize(); ++i )
+//                displaySignalArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
+//            foundDisplaySignal = true;
+//        }
+//
+//        if( Compare( "DisplayOrder", sbu[0].c_str() ) )
+//        {
+//            for( int i = 1; i < sbu.getSize(); ++i )
+//                displayOrderArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
+//            foundDisplayOrder = true;
+//        }
+//
+//        if( Compare( "DisplayTrade", sbu[0].c_str() ) )
+//        {
+//            for( int i = 1; i < sbu.getSize(); ++i )
+//                displayTradeArray.push_back( Compare( "YES", sbu[i].c_str() ) ? true : false );
+//            foundDisplayTrade = true;
+//        }
+//    }
+//
+//    ifs.close();
+//
+//    
+//    /* Set default values */
+//    if( !foundDataoutputDirectory )
+//        configs.dataoutputDirectory = "C:\\Temp\\";
+//
+//    if( !foundUnderlyings )
+//        yr_error( "invalid underlying input..." );
+//
+//    if( !foundGenLog )
+//        configs.genLog = false;
+//
+//    if( !foundDataoutputDirectory )
+//        configs.dataoutputDirectory = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() );
+//    
+//
+//    if( !foundTickDataFolderName )
+//        configs.tickDataFolderName = "tick";
+//
+//    if( !foundCandleDataFolderName )
+//        configs.candleDataFolderName = "candle";
+//
+//    if( !foundLogFileFolderName )
+//        configs.logFileFolderName = "log";
+//
+//    if( !foundDisplayTick )
+//    {
+//        for( int i = 0; i < configs.underlyings.getSize(); ++i )
+//            displayTickArray.push_back( false );
+//    }
+//
+//    if( !foundDisplayCandle )
+//    {
+//        for( int i = 0; i < configs.underlyings.getSize(); ++i )
+//            displayCandleArray.push_back( false );
+//    }
+//
+//    if( !foundDisplaySignal )
+//    {
+//        for( int i = 0; i < configs.underlyings.getSize(); ++i )
+//            displaySignalArray.push_back( false );
+//    }
+//
+//    if( !foundDisplayOrder )
+//    {
+//        for( int i = 0; i < configs.underlyings.getSize(); ++i )
+//            displayOrderArray.push_back( false );
+//    }
+//
+//    if( !foundDisplayTrade )
+//    {
+//        for( int i = 0; i < configs.underlyings.getSize(); ++i )
+//            displayTradeArray.push_back( false );
+//    }
+//
+//    for( int i = 0; i < configs.underlyings.getSize(); ++i )
+//    {
+//        map< cString, bool >::iterator it = configs.displayTick.find( configs.underlyings[i] );
+//        if( it == configs.displayTick.end() )
+//            configs.displayTick.insert( map< cString, bool >::value_type( configs.underlyings[i], displayTickArray[i] ) );
+//        else
+//            (*it).second = displayTickArray[i];
+//
+//        map< cString, bool >::iterator it2 = configs.displayCandle.find( configs.underlyings[i] );
+//        if( it2 == configs.displayCandle.end() )
+//            configs.displayCandle.insert( map< cString, bool >::value_type( configs.underlyings[i], displayCandleArray[i] ) );
+//        else
+//            (*it2).second = displayCandleArray[i];
+//
+//        map< cString, bool >::iterator it3 = configs.displaySignal.find( configs.underlyings[i] );
+//        if( it3 == configs.displaySignal.end() )
+//            configs.displaySignal.insert( map< cString, bool >::value_type( configs.underlyings[i], displaySignalArray[i] ) );
+//        else
+//            (*it3).second = displaySignalArray[i];
+//
+//        map< cString, bool >::iterator it4 = configs.displayOrder.find( configs.underlyings[i] );
+//        if( it4 == configs.displayOrder.end() )
+//            configs.displayOrder.insert( map< cString, bool >::value_type( configs.underlyings[i], displayOrderArray[i] ) );
+//        else
+//            (*it4).second = displayOrderArray[i];
+//
+//        map< cString, bool >::iterator it5 = configs.displayTrade.find( configs.underlyings[i] );
+//        if( it5 == configs.displayTrade.end() )
+//            configs.displayTrade.insert( map< cString, bool >::value_type( configs.underlyings[i], displayTradeArray[i] ) );
+//        else
+//            (*it5).second = displayTradeArray[i];
+//    }
+//    
+//    cSystem::FirstTimeInit( configs.dataoutputDirectory.c_str(), configs.tickDataFolderName.c_str(), configs.candleDataFolderName.c_str(), configs.logFileFolderName.c_str() );
+//
+//}
+//
+//void autotrade_loadconfig_downloadmarketdata( sATDownloadMarketDataConfig& configs )
+//{
+//
+//    cString fileName;
+//    
+//    autotrade_loadconfig_general( configs.generalConfig, fileName );
+//    
+//    cString configDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + fileName + ".txt";
+//    ifstream ifs;
+//    ifs.open( configDir.c_str(), ios::in );
+//    string line;
+//    
+//    bool foundLogFileName = false;
+//
+//    while( getline( ifs, line ) )
+//    {
+//        string buff;
+//        stringstream ss( line );
+//        cArray< string > sbu;
+//        while( ss >> buff )
+//            sbu.push_back( buff );
+//
+//        if( sbu.getSize() < 1 )
+//            continue;
+//
+//        if( Compare( "LogFileName", sbu[0].c_str() ) )
+//        {
+//            configs.logFileName = cString( sbu[1].c_str() );
+//            foundLogFileName = true;
+//        }    
+//    }
+//
+//    ifs.close();
+//
+//    if( !foundLogFileName )
+//        configs.logFileName = theString;
+//    
+//}
+//
+//void autotrade_loadconfig_backtest( sATBacktestConfig& configs )
+//{
+//    cString fileName;
+//
+//    autotrade_loadconfig_general( configs.generalConfig, fileName );
+//    
+//    cString configDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + fileName + ".txt";
+//    ifstream ifs;
+//    ifs.open( configDir.c_str(), ios::in );
+//    if( !ifs )
+//        yr_error( "file %s cannot be open!", configDir.c_str() );
+//    
+//    string line;
+//    bool foundStart = false;
+//    bool foundEnd = false;
+//    
+//    bool foundStrategyName = false;
+//    bool foundStrategyConfigFile = false;
+//    bool foundDataFormat = false;
+//    bool foundDisplaySignal = false;
+//    bool foundDataloadDirectory = false;
+//    
+//    while( getline( ifs, line ) )
+//    {
+//        string buff;
+//        stringstream ss( line );
+//        cArray< string > sbu;
+//        while( ss >> buff )
+//            sbu.push_back( buff );
+//        
+//        if( sbu.getSize() < 1 )
+//            continue;
+//
+//        if( Compare( "Start", sbu[0].c_str() ) )
+//        {
+//            configs.dateStart = cString( sbu[1].c_str() );
+//            foundStart = true;
+//        }
+//
+//        if( Compare( "End", sbu[0].c_str() ) )
+//        {
+//            configs.dateEnd = cString( sbu[1].c_str() );
+//            foundEnd = true;
+//        }
+//
+//        if( Compare( "StrategyName", sbu[0].c_str() ) )
+//        {
+//            configs.strategyName = cString( sbu[1].c_str() );
+//            foundStrategyName = true;
+//        }
+//        
+//        if( Compare( "StrategyConfigFile", sbu[0].c_str() ) )
+//        {
+//            for( int i = 1; i < sbu.getSize(); ++i )
+//                configs.strategyConfigFileNames.push_back( cString( sbu[i].c_str() ) );
+//            foundStrategyConfigFile = true;
+//        }
+//
+//        if( Compare( "DataFormat", sbu[0].c_str() ) )
+//        {
+//            configs.oldFormat = Compare( "Old", sbu[1].c_str() ) ? true : false;
+//            foundDataFormat = true;
+//        }
+//
+//        if( Compare( "DataLoadDirectory", sbu[0].c_str() ) )
+//        {
+//            configs.dataLoadDirectory = cString( sbu[1].c_str() );
+//            foundDataloadDirectory = true;
+//        }
+//    }
+//
+//    ifs.close();
+//
+//    if( !foundStart )
+//        yr_error( "start date missing for backtesting" );
+//
+//    if( !foundEnd )
+//        yr_error( "start date missing for backtesting" );
+//
+//    if( !foundStrategyName )
+//        yr_error( "strategy name missing for backtesting" );
+//
+//    if( !foundStrategyConfigFile )
+//        yr_error( "strategy config missing for backtesting" );
+//    else
+//    {
+//         check whether the strategy config file exists on file
+//        ifstream ifs2;
+//        for( int i = 0; i < configs.strategyConfigFileNames.getSize(); ++i )
+//        {
+//            cString stratFullDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + configs.strategyConfigFileNames[i] + ".txt";
+//            ifs2.open( stratFullDir.c_str(), ios::in );
+//            if( !ifs2 )
+//                yr_error( "file %s cannot be open!", stratFullDir.c_str() );
+//            ifs2.close();
+//        }
+//    }
+//
+//    if( !foundDataFormat )
+//        configs.oldFormat = false;
+//
+//    if( !foundDataloadDirectory )
+//        configs.dataLoadDirectory = "C\\Temp\\";
+//
+//
+//}
+//
+//void autotrade_loadconfig_trade( sATTradeConfig& configs )
+//{
+//    cString fileName;
+//
+//    autotrade_loadconfig_general( configs.generalConfig, fileName );
+//    
+//    cString configDir = cString( cSystem::GetEnv( "MYDATADIR" ).c_str() ) + "configs\\" + fileName + ".txt";
+//    ifstream ifs;
+//    ifs.open( configDir.c_str(), ios::in );
+//    if( !ifs )
+//        yr_error( "file %s cannot be open!", configDir.c_str() );
+//    
+//    string line;
+//    bool foundStrategyConfigFile = false;
+//    bool foundLogFileName = false;
+//    
+//    while( getline( ifs, line ) )
+//    {
+//        string buff;
+//        stringstream ss( line );
+//        cArray< string > sbu;
+//        while( ss >> buff )
+//            sbu.push_back( buff );
+//        
+//        if( sbu.getSize() < 1 )
+//            continue;
+//
+//        if( Compare( "StrategyConfigFile", sbu[0].c_str() ) )
+//        {
+//            for( int i = 1; i < sbu.getSize(); ++i )
+//                configs.strategyConfigFileNames.push_back( cString( sbu[i].c_str() ) );
+//            foundStrategyConfigFile = true;
+//        }
+//
+//        if( Compare( "LogFileName", sbu[0].c_str() ) )
+//        {
+//            configs.logFileName = cString( sbu[1].c_str() );
+//            foundLogFileName = true;
+//        }
+//    }
+//
+//    ifs.close();
+//
+//    if( !foundStrategyConfigFile )
+//        yr_error( "invalid StrategyConfigFile input!" );
+//
+//    if( !foundLogFileName )
+//        configs.logFileName = theString;
+//}

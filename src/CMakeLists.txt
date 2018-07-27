@@ -23,7 +23,10 @@ include_directories(core
                     utility/ta-lib/include
                     utility/easylogging
                     utility/mongo
-                    utility)
+                    utility
+                    ${LIBMONGOCXX_INCLUDE_DIRS}
+                    ${Boost_INCLUDE_DIRS}
+                    )
             
 link_directories(ThostTraderApi
                  utility/ta-lib/lib
@@ -32,22 +35,18 @@ link_directories(ThostTraderApi
 add_executable(autoTrade ${CPP_FILES} ${HEADER_FILES})
 
 target_link_libraries(autoTrade
-                        ${Boost_LIBRARIES}
-                        ${MONGOC_STATIC_LIBRARIES}
                         thostmduserapi
                         thosttraderapi
                         ta_abstract_cdd
                         ta_common_cdd
                         ta_func_cdd
                         ta_libc_cdd
-
-                        libmongocxx
-                        libbsoncxx)
-
+                        ${LIBMONGOCXX_LIBRARIES}
+                        )
 target_compile_definitions(autoTrade
-    PRIVATE ${MONGOC_STATIC_DEFINITIONS}
-    PRIVATE MONGOCXX_STATIC
-    PRIVATE BSONCXX_STATIC)
+  PRIVATE ${LIBMONGOCXX_DEFINITIONS}
+)
+
 # target_compile_options(ctp-marketdata-collector PRIVATE "/utf-8")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
