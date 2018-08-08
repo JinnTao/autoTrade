@@ -43,6 +43,4 @@ private:
 
 typedef shared_ptr< cMarketData > cMarketDataPtr;
 
-
-
 #endif

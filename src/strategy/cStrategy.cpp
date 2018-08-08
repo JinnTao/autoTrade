@@ -212,5 +212,5 @@ bool cStrategy::mode5() {
     //    newState = false;
     //}
     //return newState;
-    return;
+    return true;
 }

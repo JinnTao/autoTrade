@@ -42,7 +42,7 @@ void cStrategyKingKeltner::run(){
     std::lock_guard<std::mutex> lock(global::run_mutex);
     if (this->m_marketData->GetMarketDataHandle(m_inst) && isTradeTime()) {
         CThostFtdcDepthMarketDataField lastData = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
-        int tickMinute = cDateTime(cSystem::GetCurrentTimeBuffer().c_str()).Minute();
+        int                            tickMinute = 1;  // cDateTime(cSystem::GetCurrentTimeBuffer().c_str()).Minute();
         // new Candle
         if (tickMinute != m_candleMinute) {
             if (m_candleMinute != -1) {

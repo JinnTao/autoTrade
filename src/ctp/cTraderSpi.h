@@ -7,12 +7,11 @@
 #include <cOrderCollection.h>
 #include <cMdSpi.h>
 #include <regex> // ÕýÔò
-#include <cMarketDataCollection.h>
+#include "cMarketDataCollection.h"
+//#include "helloWorld.h"
 #include "cStrategy.h"
-
-using namespace std;
-
 class cStrategy;
+using namespace std;
 
 class cTraderSpi : public CThostFtdcTraderSpi
 {
@@ -184,6 +183,7 @@ private:
     shared_ptr<vector<string>> m_pSubscribeInst;
     // marketData
     cMarketDataCollectionPtr m_pMarketDataEngine;
+    //cMarketDataHelloWorld    ets;
     // Instrument detail Message Map    
     map<string, std::shared_ptr<CThostFtdcInstrumentField>>* m_InstMeassageMap = nullptr;
 

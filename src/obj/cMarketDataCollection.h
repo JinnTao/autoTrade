@@ -9,7 +9,7 @@
 #include "cTick.h"
 #include "cHistoryMarketData.h"
 #include "autotrade_config.h"
-#include "mongo\mongostore.h"
+//#include "mongo\mongostore.h"
 
 using std::map;
 using std::vector;

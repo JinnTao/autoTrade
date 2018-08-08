@@ -50,7 +50,7 @@ void cTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin,
         m_SESSION_ID      = pRspUserLogin->SessionID;
         int iNextOrderRef = atoi(pRspUserLogin->MaxOrderRef);
         m_tradeDay        = string(pRspUserLogin->TradingDay);
-        m_actionDay       = cSystem::GetCurrentDayBuffer();
+        m_actionDay       = "";  // cSystem::GetCurrentDayBuffer();
 
         iNextOrderRef++;
         sprintf(m_ORDER_REF, "%d", iNextOrderRef);

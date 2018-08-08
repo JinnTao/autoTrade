@@ -41,7 +41,7 @@ void cStrategyTemplate::onTrade(CThostFtdcTradeField p){
 void cStrategyTemplate::run(){
     if(this->m_marketData->GetMarketDataHandle(m_inst) && isTradeTime()){
         CThostFtdcDepthMarketDataField lastData = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
-        int tickMinute = cDateTime(cSystem::GetCurrentTimeBuffer().c_str()).Minute();
+        int tickMinute = 1;//cDateTime(cSystem::GetCurrentTimeBuffer().c_str()).Minute();
         // new Candle
         if(tickMinute != m_candleMinute){
             if(m_candleMinute != -1){
@@ -93,7 +93,7 @@ void cStrategyTemplate::on1MBar(){
 
         // ==============================================================日志输出========================================================
         double rsiValue = outReal[0];
-        cout << cSystem::GetCurrentTimeBuffer() << " RSI: " << rsiValue << " "<< m_lastOpen << " " << m_lastHigh << " " << m_lastLow << " " << m_lastClose << endl;
+        //cout << cSystem::GetCurrentTimeBuffer() << " RSI: " << rsiValue << " "<< m_lastOpen << " " << m_lastHigh << " " << m_lastLow << " " << m_lastClose << endl;
         // ===========================================================下单逻辑============================================================
         int longPos = this->m_pPositionC.get()->getPosition(m_inst,DIRE::AUTO_LONG);
         int shortPos = this->m_pPositionC.get()->getPosition(m_inst,DIRE::AUTO_SHORT);
@@ -125,9 +125,9 @@ void cStrategyTemplate::unInit(){
 
 bool cStrategyTemplate::isTradeTime(){
     DateTimeFormat s0900 = 900,s1015 = 1015,s1030 = 1030,s1130 = 1130,s1330 = 1330,s1500 = 1500,s2100 = 2100,s2330 = 2330;
-    cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
-    DateTimeFormat hour = nowDateTime.Hour();
-    DateTimeFormat min = nowDateTime.Minute();
+    //cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
+    DateTimeFormat hour = 1;  // nowDateTime.Hour();
+    DateTimeFormat min  = 1;  // nowDateTime.Minute();
 
     DateTimeFormat nowTime = hour *100 + min;
     bool newState;

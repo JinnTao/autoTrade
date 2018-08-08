@@ -1,7 +1,5 @@
 #include "IniFile.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
+
 using namespace std;
 /************************************************************************/
 /* 字符串的迭代器定义                                                         */

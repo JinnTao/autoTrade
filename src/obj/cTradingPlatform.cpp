@@ -9,6 +9,7 @@
 #include <io.h>
 #include "IniFile.h"
 #include "global.h"
+#include "cMarketDataCollection.h"
 using std::string;
 
 #ifndef _DEBUG
