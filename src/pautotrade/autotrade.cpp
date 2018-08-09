@@ -2,9 +2,6 @@
 #include <chrono>
 #include <thread>
 
-#include <map>
-#include <regex>  // ÕýÔò
-
 #include "cTradingPlatform.h"
 
 #define TRADE_CONFIG_FILE "setting.ini"
