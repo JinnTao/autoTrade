@@ -1,6 +1,5 @@
 #include "cStrategyKingKeltner.h"
-#include "easylogging\easylogging++.h"
-#include "global.h"
+
 cStrategyKingKeltner::cStrategyKingKeltner(void)
 {
     m_candleMinute = -1;
@@ -76,10 +75,7 @@ void cStrategyKingKeltner::run(){
         }
         else {
             // update bar data
-            m_lastHigh = 
-                
-                
-                (m_lastHigh, lastData.LastPrice);
+            m_lastHigh = max(m_lastHigh, lastData.LastPrice);
 
             m_lastLow = min(m_lastLow, lastData.LastPrice);
 
@@ -92,9 +88,11 @@ void cStrategyKingKeltner::run(){
         this->processStopOrder(m_inst, m_lastClose);
     }else{
         auto tick = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
-        LOG(INFO) << m_inst << " cStrategyKingKeltner "
-                  << " wait: " << m_lots << " last Price" << tick.LastPrice << " updateTime: " << tick.LastPrice;
-
+        ILOG("cStrategyKingKeltner,Inst:{},Lots:{},LastPrice:{},UpdateTime:{}.",
+             m_inst,
+             m_lots,
+             tick.LastPrice,
+             tick.UpdateTime);
     }
 }
 
@@ -164,7 +162,7 @@ void cStrategyKingKeltner::on1MBar(){
 
     // ==============================================================日志输出========================================================
     //double rsiValue = outReal[0];
-    LOG(INFO)  << " netPos " << m_netPos << " up: " << up << " down: " << down << " lastPrice " << m_lastHigh << endl;
+    ILOG("NetPos:{},Up:{},Down:{},LastClosePrice:{}.", m_netPos, up, down, m_lastClose);
     printStatus();
 
 }
@@ -182,10 +180,10 @@ bool cStrategyKingKeltner::keltner( int kkLength, double kkDev, double& kkUp,dou
         int outNBElement_ATR[100] = {};
         double outReal_ATR[100] = {};
         // 输出的值 在out_real中的最后一个数据中，前提要求输入数据从old到new
-        TA_SMA(m_close.size() - kkLength, m_close.size(), &m_close[0], kkLength, outBegIdx_SMA, outNBElement_SMA, outReal_SMA);
+        TA_SMA(int(m_close.size()) - kkLength, int(m_close.size()), &m_close[0], kkLength, outBegIdx_SMA, outNBElement_SMA, outReal_SMA);
 
-        TA_ATR(m_close.size() - kkLength, m_close.size(), &m_high[0], &m_low[0], &m_close[0], kkLength, outBegIdx_ATR, outNBElement_ATR, outReal_ATR);
-
+        TA_ATR(int(m_close.size()) - kkLength, int(m_close.size()), &m_high[0], &m_low[0], &m_close[0], kkLength, outBegIdx_ATR, outNBElement_ATR, outReal_ATR);
+        
         kkUp = outReal_SMA[kkLength - 1] + outReal_ATR[kkLength - 1] * kkDev;
 
         kkDown = outReal_SMA[kkLength - 1] - outReal_ATR[kkLength - 1] * kkDev;
@@ -205,16 +203,15 @@ void cStrategyKingKeltner::onTrade(CThostFtdcTradeField pTrade) {
         //LOG(INFO) << "Not " << m_inst << " on trade";
     }
     else{
-        LOG(INFO) << this->m_strategyName << " onTrade " << endl;
+        ILOG("OnTrade:{}.", this->m_strategyName);
         if (m_netPos != 0) {
             if (m_netPos > 0) {
                 for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
 
                     if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::sell) {
                         i->status = false;
-                        LOG(INFO) << " cancle sell "
-                                  << ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open ")
-                                  << " stop order" << endl;
+                        ILOG("Cancel sell {} stop order.",
+                             ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open "));
                     }
                 }
             }
@@ -222,9 +219,8 @@ void cStrategyKingKeltner::onTrade(CThostFtdcTradeField pTrade) {
                 for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
                     if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::buy) {
                         i->status = false;
-                        LOG(INFO) << " cancle buy "
-                                  << ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open ")
-                                  << " stop order" << endl;
+                        ILOG("Cancel buy {} stop order.",
+                             ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open "));
                     }
                 }
             }
@@ -245,11 +241,15 @@ void cStrategyKingKeltner::printStatus() {
                 (int)ptm->tm_year + 1900, (int)ptm->tm_mon + 1, (int)ptm->tm_mday,
                 (int)ptm->tm_hour, (int)ptm->tm_min, (int)ptm->tm_sec);
             string orderDateTime = string(date);
-            LOG(INFO) << orderDateTime << " " << var.instrument << " stop order "
-                      << ((var.direction == traderTag::DIRECTION::buy) ? "buy" : "sell") << " "
-                      << ((var.offset == traderTag::OFFSETFLAG::close) ? "close " : "open ") << var.price << " "
-                      << var.volume
-                      << " " << var.slipTickNum << " " << var.strategyName << endl;
+            ILOG("{} {} stop order {} {} {} {} {} {}.",
+                 orderDateTime,
+                 var.instrument,
+                 ((var.direction == traderTag::DIRECTION::buy) ? "buy" : "sell"),
+                 ((var.offset == traderTag::OFFSETFLAG::close) ? "close " : "open "),
+                 var.price,
+                 var.volume,
+                 var.slipTickNum,
+                 var.strategyName);
 
         }
 

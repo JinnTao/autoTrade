@@ -4,16 +4,31 @@
 #include <atomic>
 #include <queue>
 #include <vector>
-
-#include "autotrade_config.h"
-#include "common.h"
-//
+#include <string>
+#include <chrono>
+#include <cstdint>
+#include <iostream>
+#include <vector>
 
 #include <mongocxx/client.hpp>
+#include <mongocxx/stdx.hpp>
+#include <mongocxx/uri.hpp>
 #include <mongocxx/instance.hpp>
+#include <bsoncxx/json.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/types.hpp>
 
+#include "common.h"
+#include "global.h"
 
- using std::vector;
+using bsoncxx::builder::stream::close_array;
+using bsoncxx::builder::stream::close_document;
+using bsoncxx::builder::stream::document;
+using bsoncxx::builder::stream::finalize;
+using bsoncxx::builder::stream::open_array;
+using bsoncxx::builder::stream::open_document;
 
  class MongoStore {
  public:
@@ -25,8 +40,13 @@
     int32_t start();
     int32_t stop();
     bool getData(string collectionName, std::chrono::time_point<std::chrono::system_clock> sTimePoint,
-    std::chrono::time_point<std::chrono::system_clock> eTimePoint, vector<double> &close, vector<double> &open,
-    vector<double> &high, vector<double> &low, vector<double> &volume, vector<string> &dateTime);
+                    std::chrono::time_point<std::chrono::system_clock> eTimePoint,
+                    std::vector<double>&                               close,
+                    std::vector<double>&                               open,
+                    std::vector<double>&                               high,
+                    std::vector<double>&                               low,
+                    std::vector<double>&                               volume,
+                    std::vector<string>&                               dateTime);
  private:
     //void loop();
     //void process();

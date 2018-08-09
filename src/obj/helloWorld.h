@@ -5,7 +5,6 @@
 #include <map>
 #include <vector>
 #include <fstream>
-#include "cCandle.h"
 #include "cTick.h"
 #include "cHistoryMarketData.h"
 #include "autotrade_config.h"

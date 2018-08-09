@@ -86,7 +86,7 @@ void cStrategyTemplate::on1MBar(){
         int outBegIdx[100]={};
         int outNBElement [100]={};
         double outReal[100]={};    
-        TA_RSI(m_close.size()-14,m_close.size()-1, &m_close[0],14,outBegIdx,outNBElement,outReal);
+        TA_RSI(int(m_close.size())-14,int(m_close.size())-1, &m_close[0],14,outBegIdx,outNBElement,outReal);
 
         //=============================================================取消前面所有未成交单 ==============================================
         this->m_pTradeSpi->cancleMyPendingOrder();

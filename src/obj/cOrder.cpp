@@ -1,5 +1,4 @@
-#include <cOrder.h>
-#include "easylogging++.h"
+#include "cOrder.h"
 
 cOrder::cOrder()
     : m_orderID(-1)

@@ -1,5 +1,6 @@
-#include <cMarketDataCollection.h>
+
 #include <time.h>
+#include "cMarketDataCollection.h"
 
 cMarketDataCollection::cMarketDataCollection()
 {
@@ -109,6 +110,5 @@ void cMarketDataCollection::loadHistoryFromMongo(string collection, string sDate
     std::tm eTimeTm{eS,eM,eH,eDay,eMon-1,eYear-1900};
     this->m_sDateTimePoint = std::chrono::system_clock::from_time_t(mktime(&sTimeTm));
     this->m_eDateTimePoint = std::chrono::system_clock::from_time_t(mktime(&eTimeTm));
-    //m_mongoStore.getData(collection, m_sDateTimePoint, m_eDateTimePoint, close, open, high, low, volume, dateTime);
-
+    m_mongoStore.getData(collection, m_sDateTimePoint, m_eDateTimePoint, close, open, high, low, volume, dateTime);
 }

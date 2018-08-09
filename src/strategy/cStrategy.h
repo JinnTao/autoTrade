@@ -2,25 +2,25 @@
 #define __CSTRATEGY_H__
 
 #include <map>
-
-#include <Windows.h>
-
-#include <cTick.h>
-#include <cCandle.h>
-#include <cMarketDataCollection.h>
-#include <cTradeCollection.h>
-#include <cPositionCollection.h>
-#include <cOrderCollection.h>
-#include "autotrade_config.h"
-
-#include "ta_libc.h"
-#include "cTraderSpi.h"
-#include "cMdSpi.h"
-
 #include <thread>
 #include <atomic>
 
+#include "ta_libc.h"
+
+#include "cMarketDataCollection.h"
+#include "cTradeCollection.h"
+#include "cPositionCollection.h"
+#include "cOrderCollection.h"
+
+#include "cTraderSpi.h"
+#include "cMdSpi.h"
+
+#include "logger.h"
+#include "common.h"
+#include "global.h"
+
 class cTraderSpi;
+
 typedef unsigned int DateTimeFormat;
 
 class cStrategy {
@@ -63,7 +63,7 @@ public:
                                traderTag::DIRECTION  inDirection,
                                traderTag::OFFSETFLAG inOffset,
                                double                price,
-                               UINT                  volume,
+                               int                   volume,
                                string                strategy,
                                int                   slipNum = 1);
 
@@ -129,7 +129,7 @@ protected:
     string strategy_id_name_;
 
 private:
-    DWORD               AutoTrading();
+    int               AutoTrading();
     std::thread         m_thread;
     std::atomic<bool>   m_isRuning{ATOMIC_FLAG_INIT};
 };

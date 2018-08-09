@@ -1,6 +1,6 @@
 #include <cPosition.h>
 #include <cTrade.h>
-#include <easylogging++.h>
+#include "logger.h"
 cPositionDetail::cPositionDetail(string inst) {
     memset(this, 0, sizeof(this));
 
@@ -39,7 +39,7 @@ void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition)
             posi_direction_ = DIRE::AUTO_SHORT;
             lamda           = -1;
         } else {
-            LOG(INFO) << "cPostionDetail PosiDirection error";
+            ILOG("cPostionDetail PosiDirection error.");
         }
         if (pInvestorPosition->Position > 0) {
             position_ += pInvestorPosition->Position;
@@ -57,21 +57,37 @@ void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition)
             FloatProfit = lamda * (last_price_ - open_price_) * position_ * double(inst_field_->VolumeMultiple);
 
             if (position_ != (today_pos_ + yd_pos_)){
-                 LOG(INFO)<< "Inst" << pInvestorPosition->InstrumentID << "position" << pInvestorPosition->Position
-                          <<"ydPos" << pInvestorPosition->YdPosition
-                          << " tdPos " << pInvestorPosition->TodayPosition
-                         << " Margin " << pInvestorPosition->UseMargin
-                         << " CloseProfit " << pInvestorPosition->CloseProfit << " PositionProfit " <<
-                         pInvestorPosition->PositionProfit
-                          << " position_date_ " << pInvestorPosition->PositionDate << " commission_ "
-                          << pInvestorPosition->Commission << " settle_price_ " << pInvestorPosition->SettlementPrice
-                          << " margin_rate_ " << pInvestorPosition->ExchangeMargin
-                    << "openVolume"<< pInvestorPosition->OpenVolume
-                    << " closeV " << pInvestorPosition->CloseVolume;
+                 //LOG(INFO)<< "Inst" << pInvestorPosition->InstrumentID << "position" << pInvestorPosition->Position
+                 //         <<"ydPos" << pInvestorPosition->YdPosition
+                 //         << " tdPos " << pInvestorPosition->TodayPosition
+                 //        << " Margin " << pInvestorPosition->UseMargin
+                 //        << " CloseProfit " << pInvestorPosition->CloseProfit << " PositionProfit " <<
+                 //        pInvestorPosition->PositionProfit
+                 //         << " position_date_ " << pInvestorPosition->PositionDate << " commission_ "
+                 //         << pInvestorPosition->Commission << " settle_price_ " << pInvestorPosition->SettlementPrice
+                 //         << " margin_rate_ " << pInvestorPosition->ExchangeMargin
+                 //   << "openVolume"<< pInvestorPosition->OpenVolume
+                 //   << " closeV " << pInvestorPosition->CloseVolume;
+                ILOG(
+                    "Inst:{},position:{},ydPos:{},tdPos{},margin:{},CloseProfit:{},PositionProfit:{},PositionDate:{},"
+                    "comssition:{},settlePrice:{},Marginrate:{},OpenVolume:{},CloseVol{}.",
+                     pInvestorPosition->InstrumentID,
+                     pInvestorPosition->Position,
+                     pInvestorPosition->YdPosition,
+                     pInvestorPosition->TodayPosition,
+                     pInvestorPosition->UseMargin,
+                     pInvestorPosition->CloseProfit,
+                     pInvestorPosition->PositionProfit,
+                     pInvestorPosition->PositionDate,
+                     pInvestorPosition->Commission,
+                     pInvestorPosition->SettlementPrice,
+                     pInvestorPosition->ExchangeMargin,
+                     pInvestorPosition->OpenVolume,
+                     pInvestorPosition->CloseVolume);
             }
         }
     } else {
-        LOG(INFO) << "cPostionDetail update error";
+        WLOG("cPostionDetail update error.");
     }
 }
 
@@ -91,7 +107,7 @@ void cPositionDetail::update(CThostFtdcDepthMarketDataField* pDepthMarketData) {
             }
         }
     } else {
-        LOG(INFO) << "cPositionDetail update marketData inst not match.";
+        WLOG("cPositionDetail update marketData inst not match.");
     }
 }
 //  identification long & short at outer func..
@@ -154,8 +170,12 @@ void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
             }
 
             if (position_ != (yd_pos_ + today_pos_)) {
-                LOG(INFO) << "Position error: pos " << position_ << " yd_pos: " << yd_pos_ << " td_pos_: " << today_pos_
-                          << " offset: " << pTrade->OffsetFlag << " Vol" << pTrade->Volume;
+                WLOG("Position error: pos:{},ydPos:{},tdPos:{},offset:{},vol:{}.",
+                     position_,
+                     yd_pos_,
+                     today_pos_,
+                     pTrade->OffsetFlag,
+                     pTrade->Volume);
             }
         }
 
@@ -165,7 +185,8 @@ void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
         // LOG(INFO) << "price :" << pTrade->Price << " pos: " << position_ << "tradding day" << trade_date_;
 
     } else {
-        LOG(INFO) << "cPostionDetail update error";
+        //LOG(INFO) << "cPostionDetail update error";
+        WLOG("cPostionDetail update error!");
     }
 }
 

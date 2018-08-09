@@ -13,9 +13,7 @@
 namespace logger {
 
     inline int initLogger() {
-
-        spdlog::init_thread_pool(8192, 1);
-
+        
         auto console_sink = std::make_shared<spdlog::sinks::wincolor_stdout_sink_st>();
         auto file_sink = std::make_shared<spdlog::sinks::daily_file_sink_st>("logs/log", 00,00);
         auto combined_logger = std::make_shared<spdlog::logger>("global", spdlog::sinks_init_list{ console_sink, file_sink });

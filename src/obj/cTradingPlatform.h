@@ -1,21 +1,21 @@
 #ifndef __CTRADINGPLATFORM_H__
 #define __CTRADINGPLATFORM_H__
+#include <iostream>
+#include <string>
 
-class cString;
-class cTraderSpi;
-#include "cMdSpi.h"
-#include <cMarketDataCollection.h>
-#include <cStrategy.h>
-#include <cOrderCollection.h>
-#include <cTradeCollection.h>
-#include <cPositionCollection.h>
+#include "cOrderCollection.h"
+#include "cTradeCollection.h"
+#include "cPositionCollection.h"
+#include "cMarketDataCollection.h"
+
+#include "cStrategy.h"
 #include "cStrategyTemplate.h"
 #include "cStrategyBayes.h"
 #include "cStrategyKingKeltner.h"
-#include "autotrade_config.h"
+
 #include "common.h"
-#include "cMarketDataCollection.h"
-//#include "mongo\mongostore.h"
+#include "global.h"
+#include "logger.h"
 
 class cTradingPlatform {
 public:
@@ -23,11 +23,10 @@ public:
     ~cTradingPlatform();
     //
     /* realtime trading */
-    DWORD AutoTrading();
+    int32 AutoTrading();
 
     void insertOrder(string inst, string dire, string flag, int vol, double orderPrice, string tag);
     void cancleOrder(string order, int seqNo);
-    void cancleAllOrder(string order, string tag);
     void readDay(string fileName, map<string, int>& workDay);
 
     std::vector<std::string> cTradingPlatform::splitToStr(std::string str, std::string pattern);
@@ -64,13 +63,9 @@ private:
     cInstrumentCommissionRateFieldMapPtr inst_commission_rate_field_map_;
     map<string, int>                     trade_day_list_;
     shared_ptr<vector<string>>           subscribe_inst_v_;
-    // MongoStore                              mongo_store_;
+
 
     std::thread inter_thread_;  // for process()
-
-    DISALLOW_COPY_AND_ASSIGN(cTradingPlatform);
 };
-
-typedef shared_ptr<cTradingPlatform> cTradingPlatformPtr;
 
 #endif

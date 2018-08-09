@@ -1,7 +1,8 @@
 #include <cMdSpi.h>
 #include <iostream>
 #include <cMarketDataCollection.h>
-#include "easylogging++.h"
+//#include "easylogging++.h"
+#include "logger.h"
 #include <future>
 #include <chrono>
 #include "global.h"
@@ -12,13 +13,13 @@ using namespace std;
 
 void cMdSpi::OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) {
 
-    LOG(INFO) << "cMdSpi::OnRspError" ;
+    ILOG(" cMdSpi::OnRspError.");
     IsErrorRspInfo(pRspInfo);
 }
 
 void cMdSpi::OnFrontDisconnected(int nReason) {
 
-    LOG(INFO) << "Md front disconnect!Reason:" << nReason;
+    ILOG("cMdSpi::OnFrontDisconnected,Reason:{}.", nReason);
     std::lock_guard<std::mutex> guard(mut_);
     if (on_disconnected_fun_) {
         std::invoke(on_disconnected_fun_, nReason);
@@ -27,13 +28,13 @@ void cMdSpi::OnFrontDisconnected(int nReason) {
 
 void cMdSpi::OnHeartBeatWarning(int nTimeLapse) {
 
-    cout << "cMdSpi::OnHeartBeatWarning" << nTimeLapse << endl;
+    ILOG("cMdSpi::OnHeartBeatWarning,timeLapse:{}.", nTimeLapse);
 }
 
 void cMdSpi::OnFrontConnected() {
 
     std::lock_guard<std::mutex> guard(mut_);
-    LOG(INFO) << "Md connected to front";
+    ILOG("cMdSpi::OnFrontConnected.");
     if (on_connected_fun_) {
         std::invoke(on_connected_fun_);
     }
@@ -48,8 +49,10 @@ void cMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin,
     std::lock_guard<std::mutex> guard(mut_);
     if (pRspUserLogin && !IsErrorRspInfo(pRspInfo)) {
 
-        LOG(INFO) << "OnRspUserLogin Success! TradeDate: " << pRspUserLogin->TradingDay
-                  << " SessionId: " << pRspUserLogin->SessionID << " FrontID: " << pRspUserLogin->FrontID;
+        ILOG("cMdSpi::OnRspUserLogin,TradeData:{},SessionId:{},FrontID:{}",
+             pRspUserLogin->TradingDay,
+             pRspUserLogin->SessionID,
+             pRspUserLogin->FrontID);
     }
     if (bIsLast) {
         // using namespace std::chrono_literals;
@@ -81,7 +84,7 @@ void cMdSpi::SubscribeMarketData(char* instIdList) {
     }
 
     int ret = ctpmdapi_->SubscribeMarketData(pInstId, len);
-    LOG(INFO) << "SubscribeMarketData,Inst: " << pInstId[0] << " result: " << ret;
+    ILOG("SubscribeMarketData,Inst:{},result:{}", instIdList, ret);
 }
 void cMdSpi::SubscribeMarketData(string inst) {
     char p[50];
@@ -165,8 +168,7 @@ bool cMdSpi::IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo) {
     // 如果ErrorID != 0, 说明收到了错误的响应
     bool bResult = ((pRspInfo) && (pRspInfo->ErrorID != 0));
     if (bResult) {
-        
-        LOG(INFO) << "cMdSpi:IsErrorRspInfo, ErrorId: " << pRspInfo->ErrorID << " ErrorMsg:" << pRspInfo->ErrorMsg;
+        ILOG("cMdSpi:IsErrorRspInfo, ErrorId:{},ErrorMsg:{}.", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
     }
     return bResult;
 }
@@ -190,7 +192,7 @@ int32 cMdSpi::init(const ctpConfig& ctp_config) {
 
         auto mdapi = CThostFtdcMdApi::CreateFtdcMdApi(ctp_config.md_flow_path_);
         if (mdapi == nullptr) {
-            LOG(ERROR) << "Md create instance failed!";
+            WLOG("CreateFtdcMdApi instance failed!");
             return -1;
         }
         // unique_ptr->ctp's document release call Release api,maybe release then join 2018/07/11 JinnTao
@@ -199,10 +201,10 @@ int32 cMdSpi::init(const ctpConfig& ctp_config) {
                              mdapi->RegisterSpi(NULL);
                              mdapi->Release();
                          }
-                         LOG(INFO) << "Release mdapi";
+                         WLOG("Release mdapi.");
                      }};
         ctpmdapi_->RegisterSpi(this);
-        LOG(INFO) << "Md create instance success!";
+        ILOG("CreateFtdcMdApi instance success!");
     }
 
     // 2.connect to md Front
@@ -217,7 +219,7 @@ int32 cMdSpi::init(const ctpConfig& ctp_config) {
         if (wait_result != std::future_status::ready || is_connected.get() != true) {
             return -2;
         }
-        LOG(INFO) << "Md connect front success!";
+        ILOG("Md connect front success!");
     }
 
     // 3.login to md.
@@ -243,14 +245,14 @@ int32 cMdSpi::init(const ctpConfig& ctp_config) {
         // Try login
         auto req_login_result = ctpmdapi_->ReqUserLogin(&req, ++request_id_);
         if (req_login_result != 0) {
-            LOG(ERROR) << "Md request login failed!";
+            WLOG("Md request login failed!");
             return -3;
         }
         auto wait_result = is_logined.wait_for(5s);
         if (wait_result != std::future_status::ready || is_logined.get() != true) {
             return -3;
         }
-        LOG(INFO) << "Md login success!";
+        ILOG(" Md login success !");
     }
 
     // 4.set callback
@@ -259,7 +261,8 @@ int32 cMdSpi::init(const ctpConfig& ctp_config) {
         global::need_reconnect.store(false,
                                      std::memory_order_release);  // current write/read cannot set this store back;
         on_disconnected_fun_ = [](int32 reason) {
-            LOG(INFO) << "Md disconnect,try reconnect! reason:" << reason;
+            WLOG("Md disconnect,try reconnect! reason:{}." ,reason);
+            
             global::need_reconnect.store(true, std::memory_order_release);
         };
     }
@@ -277,7 +280,7 @@ int32 cMdSpi::reConnect(const ctpConfig& ctp_config) {
     return 0;
 }
 int32 cMdSpi::start() {
-    LOG(INFO) << "Md start success!";
+    ILOG("Md start success!");
     return 0;
 }
 

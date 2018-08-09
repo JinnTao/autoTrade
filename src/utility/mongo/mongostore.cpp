@@ -1,14 +1,9 @@
-﻿#include "mongostore.h"
-#include "easylogging++.h"
-#include <bsoncxx/builder/basic/document.hpp>
-#include <bsoncxx/builder/basic/kvp.hpp>
-#include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/types.hpp>
-#include <bsoncxx/json.hpp>
-#include <ratio>
- //initial easylogging
- //INITIALIZE_EASYLOGGINGPP
+﻿
 
+#include <ratio>
+#include <iostream>
+#include "mongostore.h"
+#include "logger.h"
 mongocxx::instance MongoStore::instance_ = {};
 
 MongoStore::~MongoStore() {
@@ -23,7 +18,7 @@ int32 MongoStore::init(const mongoConfig& mongo_config) {
         client_        = {uri_};
         db_            = client_.database(string(mongo_config.database));
     } catch (const std::exception& e) {
-        //LOG(INFO) << "MongoDb init failed! " << e.what();
+        ILOG("MongoDb init failed!Msg:{}.", e.what());
         return -1;
     }
 
@@ -43,12 +38,12 @@ int32 MongoStore::stop() {
 bool MongoStore::getData(string                                             collectionName,
                          std::chrono::time_point<std::chrono::system_clock> sTimePoint,
                          std::chrono::time_point<std::chrono::system_clock> eTimePoint,
-                         vector<double>&                                    close,
-                         vector<double>&                                    open,
-                         vector<double>&                                    high,
-                         vector<double>&                                    low,
-                         vector<double>&                                    volume,
-                         vector<string>&                                    dateTime) {
+                         std::vector<double>&                                    close,
+                         std::vector<double>&                               open,
+                         std::vector<double>&                               high,
+                         std::vector<double>&                               low,
+                         std::vector<double>&                               volume,
+                         std::vector<string>&                               dateTime) {
     try {
         using bsoncxx::builder::stream::close_array;
         using bsoncxx::builder::stream::close_document;
@@ -67,8 +62,8 @@ bool MongoStore::getData(string                                             coll
         eTimePoint            = eTimePoint + 8 * one_hour;
         std::time_t endTime   = std::chrono::system_clock::to_time_t(eTimePoint);
         std::time_t startTime = std::chrono::system_clock::to_time_t(sTimePoint);
-
-        std::cout << " s " << std::ctime(&startTime) << " e " << std::ctime(&endTime) << std::endl;
+        
+        //std::cout << " s " << std::ctime(&startTime) << " e " << std::ctime(&endTime) << std::endl;
         filter_builder << "recordTime" << open_document << "$gte" << bsoncxx::types::b_date(sTimePoint) << "$lte"
                        << bsoncxx::types::b_date(eTimePoint) << close_document;
         bsoncxx::builder::stream::document sort_filter;
@@ -99,47 +94,3 @@ bool MongoStore::getData(string                                             coll
         return false;
     }
 }
-//
-// void MongoStore::loop() {
-//    while (is_running_.load(std::memory_order_relaxed)) {
-//        process();
-//    }
-//}
-//
-// void MongoStore::process() {
-//    auto count = buffer_.read_available();
-//    if (count == 0) {
-//        // should yield?
-//        std::this_thread::yield();
-//        return;
-//    }
-//    DLOG("MongoDb {} data", count);
-//    MarketData data;
-//    while (buffer_.pop(data)) {
-//        DLOG("MongoDb pop data");
-//        try {
-//            using bsoncxx::builder::basic::kvp;
-//            bsoncxx::builder::basic::document builder{};
-//            builder.append(kvp("id", data.instrument_id));
-//            builder.append(kvp("actionDate", data.action_day));
-//            builder.append(kvp("actionTime", data.action_time));
-//            builder.append(kvp("exchange", data.exchange_id));
-//            builder.append(kvp("high", data.high));
-//            builder.append(kvp("close", (data.close)));
-//            builder.append(kvp("open", (data.open)));
-//            builder.append(kvp("low", (data.low)));
-//            builder.append(kvp("volume", (data.volume)));
-//            builder.append(kvp("BidVolume1", (data.bid_volume1)));
-//            builder.append(kvp("AskVolume1", (data.ask_volume1)));
-//            builder.append(kvp("mdTradingDay", data.md_trading_day));
-//            builder.append(kvp("mdUpdateTime", data.md_update_time));
-//            builder.append(kvp("recordTime", bsoncxx::types::b_date(data.last_record_time)));
-//
-//            db_[data.destination_id].insert_one(builder.view());
-//            DLOG("MongoDb record one data ok!");
-//        } catch (const std::exception& e) {
-//            ELOG("MongoDb insert failed! {}", e.what());
-//        }
-//    }
-//}
-//

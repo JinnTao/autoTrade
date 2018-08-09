@@ -1,6 +1,6 @@
-#include <cPositionCollection.h>
-#include <cTrade.h>
-#include <easylogging++.h>
+#include "cPositionCollection.h"
+#include "cTrade.h"
+#include "logger.h"
 
 #ifndef _DEBUG
 #define _DEBUG 0
@@ -26,8 +26,7 @@ void cPositionCollection::PrintDetail() {
                  closeProfit += elem.second->CloseProfit;
                  positionProfit += elem.second->PositionProfit;
              });
-    LOG(INFO) << "TotalP&L: " << closeProfit + positionProfit << " positionP&L: " << positionProfit
-              << " closeP&L: " << closeProfit;
+    ILOG("TotalP&L: {},PositionPnl:{},ClosePnl:{}.", closeProfit + positionProfit, positionProfit, closeProfit);
 }
 void cPositionCollection::update(CThostFtdcInvestorPositionField* pInvestorPosition) {
 

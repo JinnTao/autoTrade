@@ -1,50 +1,14 @@
-//
-#include <cTradingPlatform.h>
-#include <cTraderSpi.h>
-#include <cTick.h>
-
-#include <iostream>
-#include <string>
-#include "easylogging\easylogging++.h"
 #include <io.h>
+#include <direct.h>
+
+#include "cTradingPlatform.h"
 #include "IniFile.h"
-#include "global.h"
-#include "cMarketDataCollection.h"
+
 using std::string;
 
-#ifndef _DEBUG
-#define _DEBUG 0
-#endif
-
-
-// cTradingPlatform::cTradingPlatform()
-//: m_pTraderSpi( NULL )
-//, m_nRequestID( 0 )
-//, m_runAutoTrade( true )
-//{
-//    if( m_pMarketDataEngine.get() )
-//        m_pMarketDataEngine.reset();
-//
-//    if( m_pStrategy.get() )
-//        m_pStrategy.reset();
-//
-//    m_pPositions = make_shared< cPositionCollection >();
-//    m_pOrders = make_shared< cOrderCollection >();
-//    m_pTrades = make_shared< cTradeCollection >();
-//    m_pSubscribeInst = make_shared<vector<string>>();
-//    m_pInstMessageMap = new map<string, CThostFtdcInstrumentField*>();
-//    m_pInstCommissionRate = new map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>>();
-//
-////    m_pInstMessageMap = make_shared<map<string,CThostFtdcInstrumentField*>>();
-//}
-
-// cTradingPlatform::~cTradingPlatform()
-//{
-//    ClearPlatform();
-//}
 cTradingPlatform::cTradingPlatform() {}
 cTradingPlatform::~cTradingPlatform() {
-    LOG(INFO) << "Clear trading platform.";
+    ILOG("Clear trading platform.");
     trade_day_list_.clear();
     strategy_list_.clear();
     subscribe_inst_v_.reset();
@@ -64,14 +28,13 @@ cTradingPlatform::~cTradingPlatform() {
 }
 
 //×Ö·û´®·Ö¸îº¯Êý
-
 std::vector<std::string> cTradingPlatform::splitToStr(std::string str, std::string pattern) {
     std::string::size_type   pos;
     std::vector<std::string> result;
     str += pattern;  //À©Õ¹×Ö·û´®ÒÔ·½±ã²Ù×÷
     size_t size = str.size();
 
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         pos = str.find(pattern, i);
         if (pos < size) {
             std::string s = str.substr(i, pos - i);
@@ -86,9 +49,9 @@ std::vector<int32> cTradingPlatform::splitToInt(std::string str, std::string pat
     std::string::size_type pos;
     std::vector<int32>     result;
     str += pattern;  //À©Õ¹×Ö·û´®ÒÔ·½±ã²Ù×÷
-    uint32 size = str.size();
+    size_t size = str.size();
 
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         pos = str.find(pattern, i);
         if (pos < size) {
             std::string s = str.substr(i, pos - i);
@@ -119,15 +82,15 @@ void cTradingPlatform::readDay(string fileName, map<string, int>& workDay) {
     }
 }
 
-DWORD cTradingPlatform::AutoTrading() {
+int32 cTradingPlatform::AutoTrading() {
     std::this_thread::sleep_for(std::chrono::microseconds(1000));
     string str;
     char   dire[50], offset[50], inst[50], price[50], order[50];
     int    vol, mark = 0, orderNo;
     char   tag[10];
-    LOG(INFO) << "--------------------Human-computer interaction function Start--------------------------------";
-    LOG(INFO) << "OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| "
-                 "cancel seqNo.";
+    ILOG("--------------------Human-computer interaction function Start--------------------------------");
+    ILOG(
+        "OrderList: help | show | order| trade | stop | run |close |buy/sell open/close inst vol price| cancel seqNo.");
 
     while (global::is_running) {
         memset(price, 0, 50);
@@ -210,15 +173,6 @@ void cTradingPlatform::cancleOrder(string order, int seqNo) {
         }
     }
 }
-void cTradingPlatform::cancleAllOrder(string order, string tag) {
-    // if(order == "cancle" && tag == "all"){
-    //    vector<cOrderPtr> vOrder = this->m_pOrders->GetAllOrder();
-    //    for(auto it = vOrder.begin();it!=vOrder.end();it++){
-
-    //        this->m_pTraderSpi->ReqOrderAction(it->get()->GetOrderID());
-    //    }
-    //}
-}
 
 void cTradingPlatform::insertOrder(string inst, string dire, string flag, int vol, double orderPrice, string tag) {
     // get parameters type
@@ -245,7 +199,6 @@ void cTradingPlatform::insertOrder(string inst, string dire, string flag, int vo
 
     // go into order
     this->ctp_td_spi_->insertOrder(inst, eDire, eFlag, vol, orderPrice, tag);
-    _sleep(500);  // wait 500ms for pTrader response.
 }
 
 int32 cTradingPlatform::loadConfig(const string& config_file) {
@@ -292,7 +245,7 @@ int32 cTradingPlatform::loadConfig(const string& config_file) {
         strategyConfig_.initDays      = ini.ReadDouble("KingKeltner", "initDays", 1);
         return 0;
     } catch (std::exception& e) {
-        LOG(ERROR) << "Errpr:" << e.what();
+        WLOG("Error:{}", e.what());
         return -1;
     }
 }
@@ -300,13 +253,13 @@ int32 cTradingPlatform::loadConfig(const string& config_file) {
 int32 cTradingPlatform::createPath() {
     try {
         auto createFile = [this](std::string path) -> bool {
-            if (access(path.c_str(), 0) == -1) {
+            if (_access(path.c_str(), 0) == -1) {
 #ifdef WIN32
-                int flag = mkdir(path.c_str());
+                int flag = _mkdir(path.c_str());
 #endif  // WIN32
 #ifdef linux
-                int flag = mkdir(path.c_str(), 0777);  // 0777: the biggest access
-#endif                                                 // linux
+                int flag = _mkdir(path.c_str(), 0777);  // 0777: the biggest access
+#endif                                                  // linux
                 if (flag == 0) {
                     return true;
                 } else {
@@ -317,17 +270,21 @@ int32 cTradingPlatform::createPath() {
             }
         };
         if (!createFile(ctpConfig_.md_flow_path_)) {
-            LOG(ERROR) << "md flow path create failed";
+            WLOG("md flow path create failed.");
             return -1;
         }
         if (!createFile(ctpConfig_.td_flow_path_)) {
-            LOG(ERROR) << "td flow path create failed";
+            WLOG("td flow path create failed.");
             return -2;
         }
+        // if (!createFile("logs")) {
+        //    WLOG("logs path create failed.");
+        //    return -3;
+        //}
         return 0;
 
     } catch (std::exception& e) {
-        LOG(ERROR) << "Error:" << e.what();
+        WLOG("Error:{}.", e.what());
         return -1;
     }
 }
@@ -335,12 +292,6 @@ int32 cTradingPlatform::createPath() {
 int32 cTradingPlatform::init() {
     int32 init_result = 0;
     try {
-        // mongo store
-        // init_result = mongo_store_.init(mongoConfig_);
-        // if (init_result != 0){
-        //    LOG(ERROR) << "MongoDb init failed! Result:" << init_result;
-        //}
-
         // md init
         if (ctp_md_spi_) {
             ctp_md_spi_.reset();
@@ -348,7 +299,7 @@ int32 cTradingPlatform::init() {
         ctp_md_spi_ = std::make_shared<cMdSpi>();
         init_result = ctp_md_spi_->init(ctpConfig_);
         if (init_result != 0) {
-            LOG(ERROR) << "Md init failed! Result:" << init_result;
+            WLOG("Md init failed! Result:{}", init_result);
             return -1;
         }
         // td init
@@ -358,7 +309,7 @@ int32 cTradingPlatform::init() {
         ctp_td_spi_ = std::make_shared<cTraderSpi>();
         init_result = ctp_td_spi_->init(ctpConfig_);
         if (init_result != 0) {
-            LOG(ERROR) << "Td init failed! Result:" << init_result;
+            WLOG("Td init failed! Result:{}", init_result);
             return -2;
         }
 
@@ -368,40 +319,40 @@ int32 cTradingPlatform::init() {
                 marketdate_collection_.reset();
             }
             marketdate_collection_ = std::make_shared<cMarketDataCollection>();
-            LOG(INFO) << "Market data collection create success!";
+            ILOG("Market data collection create success!");
 
             if (position_collection_) {
                 position_collection_.reset();
             }
             position_collection_ = std::make_shared<cPositionCollection>();
-            LOG(INFO) << "Position collection create success!";
+            ILOG("Position collection create success!");
             if (order_collection_) {
                 order_collection_.reset();
             }
             order_collection_ = std::make_shared<cOrderCollection>();
-            LOG(INFO) << "order collection create success!";
+            ILOG("Order collection create success!");
             if (trade_collection_) {
                 trade_collection_.reset();
             }
             trade_collection_ = std::make_shared<cTradeCollection>();
-            LOG(INFO) << "Trade collection create success!";
+            ILOG("Trade collection create success!");
             if (inst_field_map_) {
                 inst_field_map_.reset();
             }
             inst_field_map_ = std::make_shared<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentField>>>();
-            LOG(INFO) << "Inst field list create success!";
+            ILOG("Inst field list create success!");
             if (inst_commission_rate_field_map_) {
                 inst_commission_rate_field_map_.reset();
             }
             inst_commission_rate_field_map_ =
                 std::make_shared<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>>();
-            LOG(INFO) << "Inst commission rate field map create success!";
+            ILOG("Inst commission rate field map create success!");
 
             if (subscribe_inst_v_) {
                 subscribe_inst_v_.reset();
             }
             subscribe_inst_v_ = std::make_shared<std::vector<std::string>>();
-            LOG(INFO) << "Subscribe inst vector success!";
+            ILOG("Subscribe inst vector success!");
         }
         // init connection
         {
@@ -437,19 +388,19 @@ int32 cTradingPlatform::init() {
         }
         init_result = ctp_td_spi_->start();
         if (init_result != 0) {
-            LOG(ERROR) << "Td start failed! Result: " << init_result;
+            WLOG("Td start failed! Result:{}", init_result);
             return -3;
         }
 
         init_result = ctp_md_spi_->start();
         ctp_md_spi_->SubscribeMarketData(this->subscribe_inst_v_);
         if (init_result != 0) {
-            LOG(ERROR) << "Md start failed! Result: " << init_result;
+            WLOG("Md start failed! Result:{}", init_result);
             return -4;
         }
 
     } catch (std::exception& e) {
-        LOG(ERROR) << "Init failed! " << e.what();
+        WLOG("Init failed!Msg:{}", e.what());
         return -5;
     }
     return init_result;
@@ -468,7 +419,10 @@ int32 cTradingPlatform::start() {
 
             if (instList.size() != lotsList.size() || timeModeList.size() != lotsList.size() ||
                 collectionList.size() != lotsList.size()) {
-                LOG(INFO) << " InitStrategy  inst lot timeMode Error:size not match, init Strategy Failed";
+                ILOG(" InitStrategy  inst lot timeMode Error,InitListSize:{},timeModeListSize:{},collectionListSize:{}",
+                     lotsList.size(),
+                     timeModeList.size(),
+                     collectionList.size());
                 return -3;
             }
             for (int i = 0; i < instList.size(); i++) {
@@ -496,8 +450,11 @@ int32 cTradingPlatform::start() {
 
                 subscribe_inst_v_->push_back(instList[i]);
                 strategy_list_.push_back(pStrategy);
-                LOG(INFO) << "Init strategy inst:" << instList[i] << " lots:" << lotsList[i]
-                          << " timeMode: " << timeModeList[i] << " collectionList: " << collectionList[i];
+                ILOG("Init strategy inst:{},Lost:{},timeMode:{},Collection:{}",
+                     instList[i],
+                     lotsList[i],
+                     timeModeList[i],
+                     collectionList[i]);
             }
         }
 
@@ -508,7 +465,7 @@ int32 cTradingPlatform::start() {
         }
 
     } catch (std::exception& e) {
-        LOG(ERROR) << "Start error: " << e.what();
+        WLOG("Trader Start error:{}.", e.what());
         return -2;
     }
     return 0;
@@ -516,15 +473,15 @@ int32 cTradingPlatform::start() {
 
 int32 cTradingPlatform::reConnect() {
     try {
-        LOG(INFO) << "try reConnect!";
+        ILOG("try reConnect!");
         auto result = stop();
         result      = init();
         if (result != 0) {
-            LOG(ERROR) << "Trader init failed! Result: " << result;
+            WLOG("Trader init failed! Result:{}.", result);
             auto result = stop();
             return -3;
         }
-        LOG(INFO) << "Trader init success!";
+        ILOG("Trader init success!");
         // result = start();
         // if (result != 0) {
         //    LOG(ERROR) << "Trader start failed! Result: " << result;
@@ -532,10 +489,10 @@ int32 cTradingPlatform::reConnect() {
         //}
         return 0;
     } catch (std::exception& e) {
-        LOG(INFO) << "TradingPlatform reconnect failed :" << e.what();
+        WLOG("TradingPlatform reconnect failed!Msg:{}.", e.what());
         return -1;
     } catch (...) {
-        LOG(INFO) << "TradingPlatform reconnect failed! ";
+        WLOG("TradingPlatform reconnect failed!");
         return -2;
     }
 }
@@ -556,9 +513,9 @@ int32 cTradingPlatform::stop() {
         }
 
     } catch (std::exception& e) {
-        LOG(INFO) << "stop failed:" << e.what();
+        WLOG("Stop Failed!Msg:{}.", e.what());
     } catch (...) {
-        LOG(INFO) << "stop failed:noknow error";
+        WLOG("stop failed:noknow error.");
     }
     return 0;
 }

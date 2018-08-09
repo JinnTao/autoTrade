@@ -1,9 +1,10 @@
 #ifndef __CORDERCOLLECTION_H__
 #define __CORDERCOLLECTION_H__
 
-#include <cOrder.h>
+
 #include <vector>
 #include <map>
+#include "cOrder.h"
 
 typedef std::map< std::string, std::vector< const cOrder* > > orderStore;
 typedef std::map< int, cOrderPtr > orderHandle;
@@ -21,8 +22,7 @@ public:
     int Count() const;
     void GetInstrumentIDs( std::vector< std::string >& instrumentIDs ) const;
     void GetOrderIDs( std::vector<int>& orderIDs ) const;
-
-    bool getOrderByNo(int,std::shared_ptr<cOrder>& );
+    bool      getOrderByNo(TThostFtdcSequenceNoType orderSequenceNo, std::shared_ptr<cOrder>& pOrder);
     cOrder* GetOrderHandle( int );
     cOrderPtr GetOrderHandleSharedPtr( int );
     std::vector< const cOrder* > GetOrderByInstrument( const std::string& ) const;

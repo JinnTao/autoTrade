@@ -1,5 +1,5 @@
-#include <cOrderCollection.h>
-#include "easylogging++.h"
+#include "cOrderCollection.h"
+
 cOrderCollection::cOrderCollection()
 {
     _it = _map_order.end();

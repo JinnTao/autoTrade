@@ -5,14 +5,12 @@
 #include <ThostFtdcTraderApi.h>
 
 #include <memory>
-#include "autotrade_config.h"
-#include "common.h"
 #include <functional>
 #include <mutex>
 #include "cPositionCollection.h"
 #include "cMarketDataCollection.h"
-//
-//class cMarketDataCollection;
+#include "common.h"
+#include "global.h"
 
 
 class cMdSpi : public CThostFtdcMdSpi {

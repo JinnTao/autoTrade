@@ -1,5 +1,5 @@
-#include <cTrade.h>
-#include <cOrder.h>
+#include "cTrade.h"
+#include "cOrder.h"
 
 cTrade::cTrade()
 :m_tradeID( -1 )

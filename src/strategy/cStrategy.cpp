@@ -1,5 +1,4 @@
-#include <cStrategy.h>
-#include "easylogging\easylogging++.h"
+#include "cStrategy.h"
 
 cStrategy::cStrategy() {
     // m_thread =  thread(&cStrategy::AutoTrading,this);
@@ -17,13 +16,9 @@ cStrategy::cStrategy(const string& strategyID) {
 cStrategy::~cStrategy() {}
 
 void cStrategy::start() {
-    // this->m_status = true;
     this->m_isRuning.store(true, std::memory_order_release);
     m_thread = std::thread(&cStrategy::AutoTrading, this);
-    LOG(INFO) << "Strategy Inst: " << m_inst << " timeMode: " << m_timeMode << " lots: " << m_lots << " start success!";
-
-    // m_thread.join();
-    // m_pTradingThread->Init();
+    ILOG("Strategy Inst:{},timeMode:{},Lots{},Start.", m_inst, m_timeMode, m_lots);
 }
 
 void cStrategy::stop() {
@@ -31,11 +26,10 @@ void cStrategy::stop() {
     if (m_thread.joinable()) {
         m_thread.join();
     }
-    LOG(INFO) << "Strategy Inst: " << m_inst << " timeMode: " << m_timeMode << " lots: " << m_lots << " stop success!";
-    // this->m_status = false;
+    ILOG("Strategy Inst:{},timeMode:{},Lots{},Stop.", m_inst, m_timeMode, m_lots);
 }
 
-DWORD cStrategy::AutoTrading() {
+int cStrategy::AutoTrading() {
     init();
     while (this->m_isRuning.load(std::memory_order_relaxed)) {
         this->run();
@@ -57,7 +51,7 @@ void cStrategy::sendStopOrder(string                inst,
                               traderTag::DIRECTION  inDirection,
                               traderTag::OFFSETFLAG inOffset,
                               double                price,
-                              UINT                  volume,
+                              int                   volume,
                               string                strategy,
                               int                   slipNum) {
     cStopOrder order;

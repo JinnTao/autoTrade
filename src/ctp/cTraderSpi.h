@@ -2,15 +2,17 @@
 #define __CTRADERSPI_H__
 
 #include <map>
-#include <cPositionCollection.h>
-#include <cTradeCollection.h>
-#include <cOrderCollection.h>
-#include <cMdSpi.h>
-#include <regex> // 正则
+#include <regex>  // 正则
+
+#include "cPositionCollection.h"
+#include "cTradeCollection.h"
+#include "cOrderCollection.h"
 #include "cMarketDataCollection.h"
-//#include "helloWorld.h"
+#include "cMdSpi.h"
 #include "cStrategy.h"
+
 class cStrategy;
+
 using namespace std;
 
 class cTraderSpi : public CThostFtdcTraderSpi
@@ -211,7 +213,7 @@ private:
 
     using CtpTdApiPtr = std::unique_ptr<CThostFtdcTraderApi, std::function<void(CThostFtdcTraderApi*)>>;
     CtpTdApiPtr ctpTdApi_;
-    int32       request_id_;
+    int32       request_id_ = 0;
     std::function<void()> on_connected_fun_;
     std::function<void(CThostFtdcRspUserLoginField*,CThostFtdcRspInfoField*)> on_login_fun_;
     std::function<void(int32)>                                                on_disconnected_fun_;

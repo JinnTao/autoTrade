@@ -1,9 +1,9 @@
 #ifndef __CPOSITION_H__
 #define __CPOSITION_H__
 #include <iostream>
-#include <ThostFtdcUserApiStruct.h>
 #include <map>
 
+#include "ThostFtdcUserApiStruct.h"
 using namespace std;
 
 enum DIRE { AUTO_LONG, AUTO_SHORT, AUTO_UNDEFINE };

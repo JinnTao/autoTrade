@@ -23,10 +23,11 @@ include_directories(core
                     utility/ta-lib/include
                     utility/easylogging
                     utility/mongo
+                    utility/ini
                     utility
                     ${LIBMONGOCXX_INCLUDE_DIRS}
                     ${Boost_INCLUDE_DIRS}
-                    spdlog
+                    
                     )
             
 link_directories(ThostTraderApi
@@ -43,6 +44,7 @@ target_link_libraries(autoTrade
                         ta_func_cdd
                         ta_libc_cdd
                         ${LIBMONGOCXX_LIBRARIES}
+                        spdlog::spdlog
                         )
 target_compile_definitions(autoTrade
   PRIVATE ${LIBMONGOCXX_DEFINITIONS}

@@ -1,11 +1,13 @@
 #ifndef __CTRADE_H__
 #define __CTRADE_H__
 
-#include "ThostFtdcUserApiDataType.h"
-#include <ThostFtdcUserApiStruct.h>
 #include <memory>
 #include <string>
 #include <iostream>
+
+#include "ThostFtdcUserApiDataType.h"
+#include "ThostFtdcUserApiStruct.h"
+
 class cTrade
 {
 public:

@@ -1,11 +1,11 @@
 #include <cTraderSpi.h>
 #include <cTrade.h>
-#include "easylogging\easylogging++.h"
 #include <memory>
 #include <future>
 #include <chrono>
 #include <thread>
 #include "global.h"
+#include "logger.h"
 #define ROHON 1
 //#undef  ROHON
 #define _CTP 1
@@ -23,7 +23,8 @@ cTraderSpi::~cTraderSpi() {
 
 // After making a succeed connection with the CTP server, the client should send the login request to the CTP server.
 void cTraderSpi::OnFrontConnected() {
-    LOG(INFO) << "Td connected to front";
+    
+    ILOG("cTraderSpi::OnFrontConnected.");
     if (on_connected_fun_) {
         std::invoke(on_connected_fun_);
     }
@@ -32,7 +33,7 @@ void cTraderSpi::OnFrontConnected() {
 // When the connection between client and the CTP server disconnected, the following function will be called
 void cTraderSpi::OnFrontDisconnected(int nReason) {
     // in this case, API will reconnect, the client application can ignore this
-    LOG(INFO) << "Td front disconnect!Reason:" << nReason;
+    ILOG("cTraderSpi::OnFrontDisconnected,Reason:{}.", nReason);
     if (on_disconnected_fun_) {
         std::invoke(on_disconnected_fun_, nReason);
     }
@@ -55,9 +56,11 @@ void cTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin,
         iNextOrderRef++;
         sprintf(m_ORDER_REF, "%d", iNextOrderRef);
 
-        LOG(INFO) << "OnRspUserLogin Success! TradeDate: " << pRspUserLogin->TradingDay
-                  << " SessionId: " << pRspUserLogin->SessionID << " FrontID: " << pRspUserLogin->FrontID
-                  << " MaxOrderRef: " << pRspUserLogin->MaxOrderRef;
+        ILOG("cTraderSpi::OnRspUserLogin,TradeDate:{},SessionID:{},FrontID:{},MaxOrderRef:{}.",
+             pRspUserLogin->TradingDay,
+             pRspUserLogin->SessionID,
+             pRspUserLogin->FrontID,
+             pRspUserLogin->MaxOrderRef);
     }
     if (bIsLast) {
         if (on_login_fun_) {
@@ -73,7 +76,7 @@ void cTraderSpi::ReqSettlementInfoConfirm() {
     strcpy_s(req.BrokerID, sizeof(TThostFtdcBrokerIDType), ctp_config_.brokerId);
     strcpy_s(req.InvestorID, sizeof(TThostFtdcUserIDType), ctp_config_.userId);
     int iResult = ctpTdApi_->ReqSettlementInfoConfirm(&req, ++request_id_);
-    LOG(INFO) << "ReqSettlementInforConrim result: " << iResult;
+    ILOG("ReqSettlementInforConrim,Result:{}.", iResult);
 }
 
 void cTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField* pSettlementInfoConfirm,
@@ -82,7 +85,8 @@ void cTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField
                                             bool                                  bIsLast) {
 
     if (!IsErrorRspInfo(pRspInfo) && pSettlementInfoConfirm) {
-        LOG(INFO) << "OnRspSettlementInfoConfirm: Success!";
+        
+        ILOG("OnRspSettlementInfoConfirm: Success!");
     }
     if (bIsLast) {
         ReqQryInstrument_all();
@@ -95,7 +99,7 @@ void cTraderSpi::ReqQryInstrument_all() {
     memset(&req, 0, sizeof(req));
     while (true) {
         int iResult = ctpTdApi_->ReqQryInstrument(&req, ++request_id_);
-        LOG(INFO) << "ReqQryInstrument, result: " << iResult;
+        ILOG("ReqQryInstrument, result:{}",iResult);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
@@ -120,7 +124,7 @@ void cTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField* pInstrument,
     }
     if (bIsLast) {
         m_first_inquiry_Instrument = false;
-        LOG(INFO) << "OnRspQryInstrument success, bIsLast: " << bIsLast;
+        ILOG("OnRspQryInstrument,bIsLast:{}.", bIsLast);
         ReqQryOrder();
 
     }
@@ -133,7 +137,7 @@ void cTraderSpi::ReqQryOrder() {
 
     while (true) {
         int iResult = ctpTdApi_->ReqQryOrder(&req, ++request_id_);
-        LOG(INFO) << "ReqQryOrder result: " << iResult;
+        ILOG("ReqQryOrder result:{}.", iResult);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
@@ -153,10 +157,8 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField*   pOrder,
     } 
     if (bIsLast) {
         m_first_inquiry_order = false;
-        LOG(INFO) << "OnRspQryOrder: Success!";
-        LOG(INFO) << "--------------Order Start--------------";
+        ILOG("OnRspQryOrder,bIslast:{}.", bIsLast);
         this->m_orderCollection->PrintAllOrders();  // should save ?
-        LOG(INFO) << "--------------Order End----------------";
         ReqQryInvestorPositionDetail();
     }
 }
@@ -170,7 +172,7 @@ void cTraderSpi::ReqQryInvestorPositionDetail() {
 
     while (true) {
         int iResult = ctpTdApi_->ReqQryInvestorPositionDetail(&req, ++request_id_);
-        LOG(INFO) << "ReqQryInvestorPositionDetail,result : " << iResult;
+        ILOG("ReqQryInvestorPositionDetail,result:{}.", iResult);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
@@ -188,21 +190,24 @@ void cTraderSpi::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetail
     if (!IsErrorRspInfo(pRspInfo) && pInvestorPositionDetail) {
         // all Instrument
         if (m_firs_inquiry_Detail == true) {
-            LOG(INFO) << "Inst: " << pInvestorPositionDetail->InstrumentID
-                      << " Dire:" << (pInvestorPositionDetail->Direction == '0' ? "long" : "short")
-                      << " OpenPrice:" << pInvestorPositionDetail->OpenPrice
-                      << " Volume:" << pInvestorPositionDetail->Volume
-                      << " OpenDate:" << pInvestorPositionDetail->OpenDate
-                      << " TradingDay:" << pInvestorPositionDetail->TradingDay
-                      << " ExchangeID:" << pInvestorPositionDetail->ExchangeID
-                      << " Margin:" << pInvestorPositionDetail->Margin
-                      << " MarginRateByMoney:" << pInvestorPositionDetail->MarginRateByMoney;
+            ILOG(
+                "Inst:{},Dire:{},OpenPrice{},Vol:{},OpenDate:{},TradingDay:{},ExchangeId:{},Margin:{}."
+                "MarginRateByMoney:{}.",
+                pInvestorPositionDetail->InstrumentID,
+                (pInvestorPositionDetail->Direction == '0' ? "long" : "short"),
+                pInvestorPositionDetail->OpenPrice,
+                pInvestorPositionDetail->Volume,
+                pInvestorPositionDetail->OpenDate,
+                pInvestorPositionDetail->TradingDay,
+                pInvestorPositionDetail->ExchangeID,
+                pInvestorPositionDetail->Margin,
+                pInvestorPositionDetail->MarginRateByMoney);
         }
     } 
     //输出所有合约的持仓明细，要在这边进行下一步的查询ReqQryTradingAccount();
     if (bIsLast) {
         m_firs_inquiry_Detail = false;
-        LOG(INFO) << "OnRspQryInvestorPositionDetail success.";
+        ILOG("OnRspQryInvestorPositionDetail,bIsLast:{}.", bIsLast);
         ReqQryTradingAccount();
     }
 }
@@ -215,13 +220,13 @@ void cTraderSpi::ReqQryTradingAccount() {
     strcpy_s(req.InvestorID, sizeof TThostFtdcUserIDType, ctp_config_.userId);
     while (true) {
         int iResult = ctpTdApi_->ReqQryTradingAccount(&req, ++request_id_);
-        LOG(INFO) << "ReqQryTradingAccount, result: " << iResult;
+        ILOG("ReqQryTradingAccount, result:{}.", iResult);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
             break;
         }
-    }
+    } 
 
 }
 
@@ -229,9 +234,9 @@ void cTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField* pTradingA
                                         CThostFtdcRspInfoField*        pRspInfo,
                                         int                            nRequestID,
                                         bool                           bIsLast) {
+    m_accountInfo = new sTradingAccountInfo;
+    memset(m_accountInfo, 0, sizeof(sTradingAccountInfo));
     if (!IsErrorRspInfo(pRspInfo) && pTradingAccount) {
-        m_accountInfo = new sTradingAccountInfo;
-        memset(m_accountInfo, 0, sizeof(sTradingAccountInfo));
         strcpy_s(m_accountInfo->BrokerID, sizeof sTradingAccountInfo::BrokerID, pTradingAccount->BrokerID);
         strcpy_s(m_accountInfo->AccountID, sizeof sTradingAccountInfo::AccountID, pTradingAccount->AccountID);
         m_accountInfo->PreBalance     = pTradingAccount->PreBalance;
@@ -259,7 +264,7 @@ void cTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField* pTradingA
         printf("   CurrMargin:%.2f\n", m_accountInfo->CurrMargin);
 
         if (m_firs_inquiry_TradingAccount){
-            LOG(INFO) << "OnRspQryTradingAccount success.isLast:" << bIsLast;
+            ILOG("OnRspQryTradingAccount,isLast:{}", bIsLast);
             ReqQryInvestorPosition_all();
         }
         m_firs_inquiry_TradingAccount = false;
@@ -272,7 +277,8 @@ void cTraderSpi::ReqQryInvestorPosition_all() {
     memset(&req, 0, sizeof(req));
     while (true) {
         int iResult = ctpTdApi_->ReqQryInvestorPosition(&req, ++request_id_);
-        LOG(INFO) << "ReqQryInvestorPostiion,result: " << iResult;
+        
+        ILOG("ReqQryInvestorPostiion,result:{}", iResult);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
@@ -297,7 +303,7 @@ void cTraderSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* pInve
     if (bIsLast) {
         m_firs_inquiry_Position = false;
         this->m_positionCollection->PrintDetail();
-        LOG(INFO) << "OnRspQryInvestorPosition success.isLast: " << bIsLast;
+        ILOG("OnRspQryInvestorPosition isLast:{}.",bIsLast);
         //融航需要指定合约
 #ifdef ROHON
         m_itMap = m_InstMeassageMap->begin();
@@ -318,7 +324,7 @@ void cTraderSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* pInve
             }
 
             if (m_pInstCommissionMap->size() > 10) {
-                LOG(INFO) << "Exist commission file,go to qry trade straightly";
+                ILOG("Exist commission file,go to qry trade.");
                 ReqQryTrade();
                 return;
             }
@@ -335,11 +341,10 @@ void cTraderSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* pInve
 // 这种循环查询 手续费的方式：因为接口一次只能查询一个，为了方便，查询出来的结果
 // 保存到txt中，第二次启动时直接从文件读取，速度就快很多，但是第一次查询需要花费10Min
 void cTraderSpi::ReqQryInstrumentCommissionRate(bool qryTrade) {
-    std::lock_guard<std::mutex> guard(mut_,std::adopt_lock);
+    std::lock_guard<std::mutex> guard(mut_);
 #ifdef ROHON
     if (qryTrade == true) {
-        guard.~lock_guard();
-        LOG(INFO) << "Go qry trade straightly.";
+        //guard.~lock_guard();
         ReqQryTrade();
         return;
     }
@@ -353,12 +358,13 @@ void cTraderSpi::ReqQryInstrumentCommissionRate(bool qryTrade) {
     while (m_itMap != this->m_InstMeassageMap->end() &&
            (string(m_itMap->second->ExpireDate) == m_actionDay ||
             (!isValidInsturment(string(m_itMap->second->InstrumentID), instName)))) {
-        LOG(INFO) << "Ignore: " << m_itMap->second->InstrumentID;
+        ILOG("Ignore:{}.", m_itMap->second->InstrumentID);
         m_itMap++;
     }
     // over QryTrade；
     if (m_itMap == this->m_InstMeassageMap->end()) {
-        LOG(INFO) << "Finish qry instrument ";
+        //LOG(INFO) << "Finish qry instrument ";
+        ILOG("Finish qry instrument.");
         ReqQryTrade();
 
         return;
@@ -366,7 +372,7 @@ void cTraderSpi::ReqQryInstrumentCommissionRate(bool qryTrade) {
     strcpy_s(req.InstrumentID, sizeof TThostFtdcInstrumentIDType, m_itMap->second->InstrumentID);
     while (true) {
         int iResult = ctpTdApi_->ReqQryInstrumentCommissionRate(&req, ++request_id_);
-        LOG(INFO) << " ReqQryInstrumentCommissionRate Inst " << req.InstrumentID << " result : " << iResult;
+        ILOG("ReqQryInstrumentCommissionRate Inst:{},Result:{}.", req.InstrumentID, iResult);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
@@ -410,7 +416,8 @@ void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommission
         if (m_itMap != this->m_InstMeassageMap->end()) {
             ReqQryInstrumentCommissionRate();
         } else {
-            LOG(INFO) << "Finish qry commissionRate";
+            
+            ILOG("Finish qry commissionRate.");
             ReqQryTrade();
         }
     }
@@ -441,7 +448,7 @@ void cTraderSpi::ReqQryTrade() {
     strcpy_s(req.InvestorID, sizeof TThostFtdcInvestorIDType, ctp_config_.userId);  //
     while (true) {
         int  iResult = ctpTdApi_->ReqQryTrade(&req, ++request_id_);
-        LOG(INFO) << "ReqQryTrade, result: " << iResult;
+        ILOG("ReqQryTrade, result:{}.", iResult);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }else{
@@ -470,12 +477,11 @@ void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField*   pTrade,
     } 
     if (bIsLast) {
         mut_.try_lock();
-        LOG(INFO) << "--------------Trade Start----------------";
+        ILOG("OnRspQryTrade,bIsLast:{}.", bIsLast);
         this->m_tradeCollection->PrintAll();
-        LOG(INFO) << "--------------Trade End----------------";
         if (m_first_inquiry_trade) {
             m_first_inquiry_trade = false;
-            LOG(INFO) << "Td start success!";
+            ILOG("Td start success!");
             if (on_started_fun_) {
                 std::invoke(on_started_fun_);
             }
@@ -525,7 +531,7 @@ void cTraderSpi::ReqOrderInsert(TThostFtdcInstrumentIDType   instId,
     req.UserForceClose   = 0;                             //用户强评标志:否
 
     int iResult = ctpTdApi_->ReqOrderInsert(&req, ++request_id_);
-    LOG(INFO) << "ReqOrderInsert,result: " << iResult;
+    ILOG("ReqOrderInsert,result:{}", iResult);
     if (iResult == 0) {
         int orderRef = atoi(m_ORDER_REF);
         m_allOrderRef.push_back(orderRef);
@@ -579,20 +585,23 @@ void cTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField* pInputOrder,
                                   bool                       bIsLast) {
     // output the order insertion result
     // it seems that this function is called only when error occurs during inserting orders
-    LOG(INFO) << "OnRspOrderInsert";
     if (!IsErrorRspInfo(pRspInfo) && pInputOrder) {
-        LOG(INFO) << "Inst: " << pInputOrder->InstrumentID << ",requestId: " << pInputOrder->RequestID;
+        //LOG(INFO) << "cTraderSpi::OnRspOrderInsert,Inst: " << pInputOrder->InstrumentID << ",requestId: " << pInputOrder->RequestID;
+        ILOG("cTraderSpi::OnRspOrderInsert,Inst: {},requestId: {}.", pInputOrder->InstrumentID, pInputOrder->RequestID);
     }
     if (bIsLast){
-        LOG(INFO) << "Inst: " << pInputOrder->InstrumentID << ",requestId: " << pInputOrder->RequestID;
+        //LOG(INFO) << "cTraderSpi::OnRspOrderInsert,Inst: " << pInputOrder->InstrumentID << ",requestId: " << pInputOrder->RequestID;
+        ILOG("cTraderSpi::OnRspOrderInsert,Inst: {},requestId:{}.", pInputOrder->InstrumentID, pInputOrder->RequestID);
     }
 }
 void cTraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo) {
-    LOG(INFO) << "OnErrRtnOrderInsert";
+    //LOG(INFO) << "OnErrRtnOrderInsert";
+    WLOG("OnErrRtnOrderInsert");
 }
 ///报单操作错误回报
 void cTraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo){
-    LOG(INFO) << "OnErrRtnOrderAction";
+    //LOG(INFO) << "OnErrRtnOrderAction";
+    WLOG("OnErrRtnOrderAction");
 }
 // order insertion return
 void cTraderSpi::OnRtnOrder(CThostFtdcOrderField* pOrder) {
@@ -600,11 +609,9 @@ void cTraderSpi::OnRtnOrder(CThostFtdcOrderField* pOrder) {
     if (pOrder && !strcmp(pOrder->InvestorID, this->ctp_config_.userId)) {
         m_orderCollection->Add( pOrder );
         if (!IsMyOrder(pOrder)) {
-            LOG(INFO) << "Other No" << pOrder->OrderSysID << "  Status:" << pOrder->OrderStatus << " "
-                      << pOrder->StatusMsg;
+            ILOG("Other NO:{},Status:{},Msg:{}.", pOrder->OrderSysID, pOrder->OrderStatus, pOrder->StatusMsg);
         } else {
-            LOG(INFO) << "My No" << pOrder->OrderSysID << "  Status:" << pOrder->OrderStatus << " "
-                      << pOrder->StatusMsg;
+            ILOG("My NO:{},Status:{},Msg:{}.", pOrder->OrderSysID, pOrder->OrderStatus, pOrder->StatusMsg);
         }
     }
 
@@ -615,7 +622,8 @@ void cTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField* pInputOrderAc
                                   int                              nRequestID,
                                   bool                             bIsLast) {
     /* calling this function in case the order cancellation is failed */
-    LOG(INFO) << "OnRspOrderAction";
+    //LOG(INFO) << "OnRspOrderAction";
+    ILOG("OnRspOrderAction.");
     if (!IsErrorRspInfo(pRspInfo)) {
     }
 }
@@ -641,13 +649,16 @@ void cTraderSpi::OnRtnTrade(CThostFtdcTradeField* pTrade) {
 
 // the error notification caused by client request
 void cTraderSpi::OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) {
-    LOG(INFO) << "OnRspError,error code: " << pRspInfo->ErrorID << " error msg: " << pRspInfo->ErrorMsg << " RequestId: " << nRequestID << " isLast" << bIsLast; 
+    WLOG("OnRspError,error code:{},Msg:{},RequestId:{},isLast:{}.",
+         pRspInfo->ErrorID,
+         pRspInfo->ErrorMsg,
+         nRequestID,
+         bIsLast);
 }
 
 void cTraderSpi::OnHeartBeatWarning(int nTimeLapse) {
-    cout << "--->>> "
-         << "OnHeartBeatWarning" << endl;
-    cout << "--->>> nTimerLapse = " << nTimeLapse << endl;
+
+    ILOG("OnHeartBeatWarning,TimeLaps:{}.", nTimeLapse);
 }
 
 // ReqOrderAction is used for order cancellation
@@ -665,14 +676,15 @@ void cTraderSpi::ReqOrderAction(shared_ptr<cOrder> pOrder) {
     req.ActionFlag = THOST_FTDC_AF_Delete;
 
     int iResult = ctpTdApi_->ReqOrderAction(&req, ++request_id_);
-    LOG(INFO) << "ReqOrderAction,result: " << iResult;
+    //LOG(INFO) << "ReqOrderAction,result: " << iResult;
+    ILOG("ReqOrderAction,result: {}.",iResult);
 
 }
 
 bool cTraderSpi::IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo) {
     bool bResult = ((pRspInfo) && (pRspInfo->ErrorID != 0));
     if (bResult) {
-        LOG(INFO) << "ErrorId:" << pRspInfo->ErrorID << "ErrorMsg:" << pRspInfo->ErrorMsg;
+        WLOG("ErrorID:{},ErrorMsg:{}.", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
     }
     return bResult;
 }
@@ -827,7 +839,9 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
         // SPD 指令平仓需要注意
 
         if (this->m_positionCollection->getPosition(instId, DIRE::AUTO_LONG) < vol) {
-            LOG(INFO) << "Long:close vol more than hold vol";
+            WLOG("Long:close vol more than hold vol.,position:{},vol:{}.",
+                 this->m_positionCollection->getPosition(instId, DIRE::AUTO_LONG),
+                 vol);
             return;
         }
 
@@ -839,7 +853,7 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
                     } else if (strcmp(tag.c_str(), "T") == 0) {
                         strcpy(kpp, "3");
                     } else {
-                        LOG(INFO) << "close error command";
+                        WLOG("close error command.");
                         return;
                     }
 
@@ -872,8 +886,9 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
     // close short
     else {
         if (this->m_positionCollection->getPosition(instId, DIRE::AUTO_SHORT) < vol) {
-            LOG(INFO) << "short:close vol more than hold vol,position: "
-                      << this->m_positionCollection->getPosition(instId, DIRE::AUTO_SHORT) << " vol" << vol;
+            WLOG("short:close vol more than hold vol,position:{},vol:{}.",
+                 this->m_positionCollection->getPosition(instId, DIRE::AUTO_SHORT),
+                 vol);
             return;
         }
 
@@ -1014,7 +1029,7 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
     {
         auto tdapi = CThostFtdcTraderApi::CreateFtdcTraderApi(ctp_config.td_flow_path_);
         if (tdapi == nullptr) {
-            LOG(ERROR) << "Td create instance failed!";
+            WLOG("CreateFtdcTraderApi instance failed");
             return -1;
         }
         // unique_ptr->ctp's document release just call Release api, release 2018/07/11 JinnTao
@@ -1022,10 +1037,10 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
                          if (tdapi != nullptr) {
                              tdapi->Release();
                          }
-                         LOG(INFO) << "Release tradeApi";
+                         WLOG("Release tradeApi.");
                      }};
         ctpTdApi_->RegisterSpi(this);
-        LOG(INFO) << "Td create instance success!";
+        ILOG("Td create instance success!");
     }
 
     // 2.connect to td Front
@@ -1041,7 +1056,7 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
         if (wait_result != std::future_status::ready || is_connected.get() != true) {
             return -2;
         }
-        LOG(INFO) << "Td connect front success!";
+        ILOG("Td connect front success!");
         ctpTdApi_->SubscribePrivateTopic(THOST_TERT_QUICK);  // Private QUICK recieve exchange send all msg after login
         ctpTdApi_->SubscribePublicTopic(THOST_TERT_QUICK);   // Public QUICK recieve exchange send all msg after login
     }
@@ -1068,15 +1083,15 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
         // Try login
         auto req_login_result = ctpTdApi_->ReqUserLogin(&req, ++request_id_);
         if (req_login_result != 0) {
-            LOG(ERROR) << "Td request login failed!";
+            WLOG("Td request login failed!");
             return -3;
         }
         auto wait_result = is_logined.wait_for(5s);
         if (wait_result != std::future_status::ready || is_logined.get() != true) {
+            WLOG("Td request login TimeOut!");
             return -3;
         }
-
-        LOG(INFO) << "Td login success!";
+        ILOG("Td login success");
     }
 
     // 4.set callback
@@ -1085,7 +1100,7 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
         global::need_reconnect.store(false,
                                      std::memory_order_release);  // current write/read cannot set this store back;
         on_disconnected_fun_ = [](int32 reason) {
-            LOG(INFO) << "Td disconnect,try reconnect! reason:" << reason;
+            WLOG("Td disconnect,try reconnect! reason:{}", reason);
             global::need_reconnect.store(true, std::memory_order_release);
         };
     }
@@ -1105,12 +1120,12 @@ int32 cTraderSpi::start() {
     std::future<bool>  is_started = start_result.get_future();
     on_started_fun_               = [&start_result]() { start_result.set_value(true); };
     this->ReqSettlementInfoConfirm();
-    auto wait_result = is_started.wait_for(2min);
+    auto wait_result = is_started.wait_for(20min);
     if (wait_result == std::future_status::timeout) {
-        LOG(INFO) << "Td start timeout";
+        WLOG("Td start timeout.");
         return -1;
     } else if (wait_result != std::future_status::ready || is_started.get() != true) {
-        LOG(INFO) << "Td start failed,but not timeout with 20min";
+        WLOG("Td start failed,but not timeout with 20min");
         return -2;
     }
 

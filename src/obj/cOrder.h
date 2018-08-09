@@ -1,11 +1,14 @@
 #ifndef __CORDER_H__
 #define __COREDR_H__
 
-#include <ThostFtdcUserApiStruct.h>
+
 #include <chrono>
 #include <string>
 #include <memory>
-#include <autotrade_config.h>
+
+#include "global.h"
+#include "ThostFtdcUserApiStruct.h"
+
 class cOrder {
     using cTickTime = std::chrono::system_clock::time_point;
 
@@ -113,11 +116,11 @@ public:
     traderTag::DIRECTION  direction;
     traderTag::OFFSETFLAG offset;
 
-    double price;
-    unsigned int   volume;
-    std::string strategyName;
-    bool   status;
-    size_t slipTickNum;
+    double       price;
+    unsigned int volume;
+    std::string  strategyName;
+    bool         status;
+    size_t       slipTickNum;
 
     std::chrono::system_clock::time_point orderTime;
 

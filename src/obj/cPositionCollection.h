@@ -1,16 +1,11 @@
 #ifndef __CPOSITIONCOLLECTION_H__
 #define __CPOSITIONCOLLECTION_H__
 
-#include <cPosition.h>
+
 #include <map>
 #include <list>
-// template< class T > class cArray;
-//
-//// instrument string versus array of sPositionDetail, i.e. IF1603 vs. 2 different positions
-// typedef map< cString, cArray< const cPositionDetail* > > positionStore;
-//// trade ID versus cMarketDataPtr, i.e. 44060
-// typedef map< int, cPositionDetailPtr > positionHandle;
 
+#include "cPosition.h"
 
 class cPositionCollection {
 public:

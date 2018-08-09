@@ -1,5 +1,6 @@
-#include <cTradeCollection.h>
 #include <direct.h>
+
+#include "cTradeCollection.h"
 cTradeCollection::cTradeCollection()
 {
     _it = _map_trade.end();
@@ -35,7 +36,7 @@ void cTradeCollection::Add(cTradePtr p_element, CThostFtdcInstrumentCommissionRa
 int cTradeCollection::Count() const
 {
     int count = 0;
-    for (mapType::const_iterator it = _map_trade.begin(); it != _map_trade.end(); ++it)
+    for (std::map<int, cTradePtr>::const_iterator it = _map_trade.begin(); it != _map_trade.end(); ++it)
         ++count;
     return count;
 }
@@ -52,7 +53,7 @@ void cTradeCollection::GetOrderIDs(std::vector<int>& orderIDs) const {
 }
 
 void cTradeCollection::GetTradeIDs(std::vector<int>& tradeIDs) const {
-    for (mapType::const_iterator it = _map_trade.begin(); it != _map_trade.end(); ++it)
+    for (std::map<int, cTradePtr>::const_iterator it = _map_trade.begin(); it != _map_trade.end(); ++it)
         tradeIDs.push_back((*it).first);
 }
 

@@ -1,20 +1,21 @@
 #ifndef __CTRADECOLLECTION_H__
 #define __CTRADECOLLECTION_H__
 
-#include <cTrade.h>
+
 #include <iostream>
 #include <map>
 #include <memory>
 #include <vector>
 #include <fstream>
+
+#include "cTrade.h"
+
 using namespace std;
-//template< class T > class cArray;
-//
-//typedef map< cString, cArray< const cTrade* > > tradeStoreByInstrument;
-//typedef map< int, cArray< const cTrade* > > tradeStoreByOrder;
-typedef map< int, cTradePtr > tradeHandle;
+
 using tradeStoreByInstrument = std::map<std::string,std::vector<const cTrade*>>;
 using tradeStoreByOrder      = std::map<int, std::vector<const cTrade*>>;
+using tradeHandle            = map<int, cTradePtr>;
+
 class cTradeCollection
 {
 public: 
@@ -38,11 +39,10 @@ public:
     void PrintAll() const;
     void PrintTrade( int );
 
-    typedef map< int, cTradePtr > mapType;
 
 protected:
-    mapType _map_trade;
-    mapType::iterator _it;
+    std::map <int,cTradePtr> _map_trade;
+    std::map <int,cTradePtr> ::iterator _it;
     tradeStoreByInstrument _m_trade_instrument;
     tradeStoreByOrder    _m_trade_order;
     tradeHandle    _m_trade_handle;
@@ -51,6 +51,6 @@ private:
     void AddToMapInternal( shared_ptr< cTrade >& element ,CThostFtdcInstrumentCommissionRateField*,CThostFtdcInstrumentField*);
 };
 
-typedef shared_ptr< cTradeCollection > cTradeCollectionPtr;
+using cTradeCollectionPtr = shared_ptr<cTradeCollection>;
 
 #endif
