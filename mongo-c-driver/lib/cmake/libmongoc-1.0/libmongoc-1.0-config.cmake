@@ -13,11 +13,11 @@
 # limitations under the License.
 
 set (MONGOC_MAJOR_VERSION 1)
-set (MONGOC_MINOR_VERSION 13)
+set (MONGOC_MINOR_VERSION 12)
 set (MONGOC_MICRO_VERSION 0)
-set (MONGOC_VERSION 1.13.0-dev)
+set (MONGOC_VERSION 1.12.0)
 
-find_package (libbson-1.0 "1.13" REQUIRED)
+find_package (libbson-1.0 "1.12" REQUIRED)
 
 
 ####### Expanded from @PACKAGE_INIT@ by configure_package_config_file() #######

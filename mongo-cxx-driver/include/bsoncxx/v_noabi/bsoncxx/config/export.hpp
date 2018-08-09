@@ -39,4 +39,4 @@
 #  endif
 #endif
 
-#endif
+#endif /* BSONCXX_API_H */

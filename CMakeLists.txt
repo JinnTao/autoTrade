@@ -1,9 +1,10 @@
 
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
-
-
 project(autoTrade LANGUAGES C CXX)
+
+#prepare
+set(CMAKE_PREFIX_PATH "src/utility/spdlog" "mongo-cxx-driver" "mongo-c-driver" "C:/boost_1_67_0/boost_1_67_0")
 
 # Enforce the C++ standard, and disable extensions.
 if(NOT DEFINED CMAKE_CXX_STANDARD)
@@ -23,5 +24,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     find_package(Boost 1.56.0 REQUIRED)
 endif()
 
+
+# spdlog package
+ find_package(spdlog CONFIG REQUIRED)
 
 add_subdirectory(src)

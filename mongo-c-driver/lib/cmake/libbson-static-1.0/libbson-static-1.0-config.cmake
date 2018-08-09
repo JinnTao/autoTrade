@@ -13,9 +13,9 @@
 # limitations under the License.
 
 set (BSON_STATIC_MAJOR_VERSION 1)
-set (BSON_STATIC_MINOR_VERSION 13)
+set (BSON_STATIC_MINOR_VERSION 12)
 set (BSON_STATIC_MICRO_VERSION 0)
-set (BSON_STATIC_VERSION 1.13.0-dev)
+set (BSON_STATIC_VERSION 1.12.0)
 
 
 ####### Expanded from @PACKAGE_INIT@ by configure_package_config_file() #######

@@ -39,4 +39,4 @@
 #  endif
 #endif
 
-#endif
+#endif /* MONGOCXX_API_H */

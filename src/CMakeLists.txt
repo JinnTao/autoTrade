@@ -26,6 +26,7 @@ include_directories(core
                     utility
                     ${LIBMONGOCXX_INCLUDE_DIRS}
                     ${Boost_INCLUDE_DIRS}
+                    spdlog
                     )
             
 link_directories(ThostTraderApi
