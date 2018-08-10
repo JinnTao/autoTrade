@@ -68,8 +68,7 @@ void cTradingPlatform::readDay(string fileName, map<string, int>& workDay) {
     string   date;
     int      i = 1;
     if (!file1) {
-        cout << "no such file!" << endl;
-        // abort();
+        cout << "Not exist trade day file!" << endl;
         return;
     }
     while (file1.getline(dataline, 1024, '\n'))  // while开始，读取一行1024够大？

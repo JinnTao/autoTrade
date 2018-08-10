@@ -35,7 +35,8 @@ private:
     vector<double> m_high;
     vector<double> m_low;
     vector<double> m_close;
-    vector<double> m_volume;
+    vector<int32_t> m_volume;
+    vector<string> m_dateTime;
 
     double *m_buffer;
 

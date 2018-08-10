@@ -168,7 +168,7 @@ private:
     TThostFtdcFrontIDType    m_FRONT_ID;
     TThostFtdcSessionIDType    m_SESSION_ID;
     
-    sTradingAccountInfo* m_accountInfo;
+    sTradingAccountInfo* m_accountInfo = nullptr;
    //
     /* postions */
     cPositionCollectionPtr m_positionCollection;

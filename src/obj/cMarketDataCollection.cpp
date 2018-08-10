@@ -100,8 +100,16 @@ void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,strin
 
 }
 
-void cMarketDataCollection::loadHistoryFromMongo(string collection, string sDateTime, string eDateTime, vector<double>& open, vector<double>& high, vector<double> &low, vector<double>& close, vector<double> &volume) {
-    vector<string> dateTime;
+void cMarketDataCollection::loadHistoryFromMongo(string          collection,
+                                                 string          sDateTime,
+                                                 string          eDateTime,
+                                                 vector<double>& open,
+                                                 vector<double>& high,
+                                                 vector<double>& low,
+                                                 vector<double>& close,
+                                                 vector<int32_t>& volume,
+                                                 vector<string>&  dateTime) {
+
     int sYear, sMon, sDay, eYear, eMon, eDay;
     int sH, sM, sS, eH, eM, eS;
     sscanf_s(sDateTime.c_str(), "%4d%2d%2d-%2d:%2d:%2d", &sYear, &sMon, &sDay, &sH, &sM, &sS);

@@ -45,7 +45,7 @@ using bsoncxx::builder::stream::open_document;
                     std::vector<double>&                               open,
                     std::vector<double>&                               high,
                     std::vector<double>&                               low,
-                    std::vector<double>&                               volume,
+                    std::vector<int32_t>&                              volume,
                     std::vector<string>&                               dateTime);
  private:
     //void loop();

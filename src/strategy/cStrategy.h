@@ -85,12 +85,12 @@ public:
     bool GetStrategyStatus() { return m_isRuning; };
     //    void RegisterTradePlatForm(cTradingPlatform *p){m_pTradePlatform = p;}
 protected:
-    bool mode1();
-    bool mode2();
-    bool mode3();
-    bool mode4();
-    bool mode5();
-
+    bool mode1(DateTimeFormat hourMinTime);
+    bool mode2(DateTimeFormat hourMinTime);
+    bool mode3(DateTimeFormat hourMinTime);
+    bool mode4(DateTimeFormat hourMinTime);
+    bool mode5(DateTimeFormat hourMinTime);
+    tm*   getLocalNowTm();
     // base collection
     cMarketDataCollectionPtr m_marketData;
     // base mdptr tdptr

@@ -85,56 +85,45 @@ void cStrategy::processStopOrder(string inst, double lastPrice) {
     }
 }
 bool cStrategy::isTradeTime() {
+
+    struct tm*     timeInfo = getLocalNowTm();
+    DateTimeFormat nowTime  = timeInfo->tm_hour * 100 + timeInfo->tm_min;
     if (m_timeMode == 1) {
-        return mode1();
+        return mode1(nowTime);
     }
     if (m_timeMode == 2) {
-        return mode2();
+        return mode2(nowTime);
     }
     if (m_timeMode == 3) {
-        return mode3();
+        return mode3(nowTime);
     }
     if (m_timeMode == 4) {
-        return mode4();
+        return mode4(nowTime);
     }
     if (m_timeMode == 5) {
-        return mode5();
+        return mode5(nowTime);
     }
     return false;
 }
-bool cStrategy::mode1() {
-    
-    //DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500;
-    //auto           nowMinutes     = std::chrono::floor<std::chrono::>(std::chrono::system_clock::now());
-    //std::date
-    //auto           midNight     = std::chrono::floor<std::>(std::chrono::system_clock::now());
-    //auto           nowDatatime    = std::chrono::system_clock::now();
-    //auto mi cDateTime nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
-    //DateTimeFormat    hour        = nowDateTime.Hour();
-    //DateTimeFormat    min         = nowDateTime.Minute();
+bool cStrategy::mode1(DateTimeFormat nowTime) {
 
-    //DateTimeFormat nowTime = hour * 100 + min;
-    //bool           newState;
-    //if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
-    //    (nowTime >= s1330 && nowTime < s1500)) {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500;
+    bool           newState;
+    if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
+        (nowTime >= s1330 && nowTime < s1500)) {
 
-    //    newState = true;
-    //} else {
+        newState = true;
+    } else {
 
-     //   newState = false;
-    //}
-    //return newState;
+        newState = false;
+    }
+    return newState;
     return true;
 }
-bool cStrategy::mode2() {
-  /*  DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
-                   s2300       = 2300;
-    cDateTime      nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
-    DateTimeFormat hour        = nowDateTime.Hour();
-    DateTimeFormat min         = nowDateTime.Minute();
-
-    DateTimeFormat nowTime = hour * 100 + min;
-    bool           newState;
+bool cStrategy::mode2(DateTimeFormat nowTime) {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
+                   s2300 = 2300;
+    bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
         (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2300)) {
 
@@ -143,18 +132,12 @@ bool cStrategy::mode2() {
 
         newState = false;
     }
-    return newState;*/
-    return true;
+    return newState;
 }
-bool cStrategy::mode3() {
-    /*DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
-                   s2330       = 2330;
-    cDateTime      nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
-    DateTimeFormat hour        = nowDateTime.Hour();
-    DateTimeFormat min         = nowDateTime.Minute();
-
-    DateTimeFormat nowTime = hour * 100 + min;
-    bool           newState;
+bool cStrategy::mode3(DateTimeFormat nowTime) {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
+                   s2330 = 2330;
+    bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
         (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2330)) {
 
@@ -163,18 +146,12 @@ bool cStrategy::mode3() {
 
         newState = false;
     }
-    return newState;*/
-    return true;
+    return newState;
 }
-bool cStrategy::mode4() {
-   /* DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
+bool cStrategy::mode4(DateTimeFormat nowTime) {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
                    s2359 = 2359, s0000 = 0, s0100 = 100;
-    cDateTime      nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
-    DateTimeFormat hour        = nowDateTime.Hour();
-    DateTimeFormat min         = nowDateTime.Minute();
-
-    DateTimeFormat nowTime = hour * 100 + min;
-    bool           newState;
+    bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
         (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2359) ||
         (nowTime >= s0000 && nowTime < s0100)) {
@@ -184,27 +161,27 @@ bool cStrategy::mode4() {
 
         newState = false;
     }
-    return newState;*/
-    return true;
+    return newState;
 }
-bool cStrategy::mode5() {
-    //DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
-    //               s2359 = 2359, s0000 = 0, s0200 = 200;
-    //cDateTime      nowDateTime = cDateTime(cSystem::GetCurrentTimeBuffer().c_str());
-    //DateTimeFormat hour        = nowDateTime.Hour();
-    //DateTimeFormat min         = nowDateTime.Minute();
+bool cStrategy::mode5(DateTimeFormat nowTime) {
+    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
+                   s2359 = 2359, s0000 = 0, s0200 = 200;
+    bool newState;
+    if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
+        (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2359) ||
+        (nowTime >= s0000 && nowTime < s0200)) {
 
-    //DateTimeFormat nowTime = hour * 100 + min;
-    //bool           newState;
-    //if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
-    //    (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2359) ||
-    //    (nowTime >= s0000 && nowTime < s0200)) {
+        newState = true;
+    } else {
 
-    //    newState = true;
-    //} else {
+        newState = false;
+    }
+    return newState;
+}
 
-    //    newState = false;
-    //}
-    //return newState;
-    return true;
+tm* cStrategy::getLocalNowTm() {
+    auto           local_now    = std::chrono::system_clock::now();
+    time_t         local_now_tm = std::chrono::system_clock::to_time_t(local_now);
+    struct tm*     timeInfo     = localtime(&local_now_tm);
+    return timeInfo;
 }

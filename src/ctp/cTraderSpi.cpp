@@ -18,7 +18,9 @@ bool IsFlowControl(int iResult) {
 cTraderSpi::cTraderSpi() {
 }
 cTraderSpi::~cTraderSpi() {
-    delete m_accountInfo;
+    if (m_accountInfo){
+        delete m_accountInfo;
+    }
 }
 
 // After making a succeed connection with the CTP server, the client should send the login request to the CTP server.
@@ -406,10 +408,13 @@ void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommission
             std::make_shared<CThostFtdcInstrumentCommissionRateField>(*pInstrumentCommissionRate);
         m_pInstCommissionMap->insert(pair<string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>(
             pInstrumentCommissionRate->InstrumentID, instField));
-        m_output << m_itMap->second->InstrumentID << " " << instField->CloseRatioByMoney << " "
-                 << instField->CloseRatioByVolume << " " << instField->CloseTodayRatioByMoney << " "
-                 << instField->CloseTodayRatioByVolume << " " << instField->OpenRatioByMoney << " "
-                 << instField->OpenRatioByVolume << endl;
+        if (m_output){
+            m_output << m_itMap->second->InstrumentID << " " << instField->CloseRatioByMoney << " "
+                     << instField->CloseRatioByVolume << " " << instField->CloseTodayRatioByMoney << " "
+                     << instField->CloseTodayRatioByVolume << " " << instField->OpenRatioByMoney << " "
+                     << instField->OpenRatioByVolume << endl;
+        }
+
     } 
     if (bIsLast) {
         m_itMap++;

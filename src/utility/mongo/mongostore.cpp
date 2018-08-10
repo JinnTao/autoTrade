@@ -11,14 +11,16 @@ MongoStore::~MongoStore() {
 }
 
 int32 MongoStore::init(const mongoConfig& mongo_config) {
+    ILOG("MongoDb Init uri:{},database:{}", mongo_config.address, mongo_config.database);
     try {
         config_        = mongo_config;
         string address = string(mongo_config.address);
         uri_           = {address};
         client_        = {uri_};
         db_            = client_.database(string(mongo_config.database));
+
     } catch (const std::exception& e) {
-        ILOG("MongoDb init failed!Msg:{}.", e.what());
+        WLOG("MongoDb init failed!Msg:{}.", e.what());
         return -1;
     }
 
@@ -42,7 +44,7 @@ bool MongoStore::getData(string                                             coll
                          std::vector<double>&                               open,
                          std::vector<double>&                               high,
                          std::vector<double>&                               low,
-                         std::vector<double>&                               volume,
+                         std::vector<int32_t>&                               volume,
                          std::vector<string>&                               dateTime) {
     try {
         using bsoncxx::builder::stream::close_array;
@@ -72,19 +74,27 @@ bool MongoStore::getData(string                                             coll
         out.sort(sort_filter.view());
 
         mongocxx::cursor cursor = coll.find(filter_builder.view(), out);
-        // document{} << "recordTime" << open_document << "$gte" << bsoncxx::types::b_date(sTimePoint) << "$lte" <<
-        // bsoncxx::types::b_date(sTimePoint) << close_document << finalize);
-        //LOG(INFO) << "input Data from mongoDb";
+
         for (auto&& doc : cursor) {
             close.push_back(doc["close"].get_double());
             high.push_back(doc["high"].get_double());
             low.push_back(doc["low"].get_double());
             open.push_back(doc["open"].get_double());
-            // volume.push_back(doc["volume"].get_double());
+            volume.push_back(doc["marketVol"].get_int32());
+            std::chrono::system_clock::time_point DateTime = doc["recordTime"].get_date();
+            std::time_t                           c = std::chrono::system_clock::to_time_t(DateTime - 8 * one_hour);
+            string timeS                                    = std::ctime(&c);
+            timeS.pop_back();
+            dateTime.push_back(timeS);
 
-            //LOG(INFO) << doc["actionDate"].get_utf8().value << " " << doc["actionTime"].get_utf8().value << " close "
-             //         << doc["close"].get_double().value;
-            // std::cout << bsoncxx::to_json(doc) << std::endl;
+            ILOG("collectionName:{},{},close:{},high:{},low:{},open:{}",
+                 collectionName,
+                 dateTime.at(dateTime.size()-1),
+                 doc["close"].get_double(),
+                 doc["high"].get_double(),
+                 doc["low"].get_double(),
+                 doc["open"].get_double()
+                );
         }
         //LOG(INFO) << " finish import Data";
         return true;

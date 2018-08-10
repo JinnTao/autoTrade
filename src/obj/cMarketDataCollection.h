@@ -43,7 +43,8 @@ public:
                               std::vector<double>& high,
                               std::vector<double>& low,
                               std::vector<double>& close,
-                              std::vector<double>& volume);
+                              std::vector<int32_t>& volume,
+                              std::vector<string>& dateTime);
 
 
     void setTradeDayList(std::map<string,int> *p){m_pTradeDayList = p;}

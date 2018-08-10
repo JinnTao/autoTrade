@@ -19,7 +19,7 @@ namespace logger {
         auto combined_logger = std::make_shared<spdlog::logger>("global", spdlog::sinks_init_list{ console_sink, file_sink });
         combined_logger->flush_on(spdlog::level::err);
         combined_logger->set_level(spdlog::level::trace);
-        combined_logger->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e][%l][%t]%$%v");
+        combined_logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e][%l][%t]%^%v%$");
         spdlog::register_logger(combined_logger);
 
         return 0;

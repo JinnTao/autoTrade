@@ -25,7 +25,7 @@ void cStrategyKingKeltner::init(){
     if (m_close.size() == 0) {
         // Start Time 
         //this->m_marketData->loadSeriesHistory(m_oneMinuteDataDir, m_startDate, m_endDate, m_open, m_high, m_low, m_close, m_volume);
-        this->m_marketData->loadHistoryFromMongo(m_collectionName,m_pAutoSetting->startDateTime,m_pAutoSetting->endDateTime, m_open, m_high, m_low, m_close, m_volume);
+        this->m_marketData->loadHistoryFromMongo(m_collectionName,m_pAutoSetting->startDateTime,m_pAutoSetting->endDateTime, m_open, m_high, m_low, m_close, m_volume,m_dateTime);
     }
     this->m_pMdSpi->SubscribeMarketData(m_inst);// trade 1801
 
@@ -41,7 +41,8 @@ void cStrategyKingKeltner::run(){
     std::lock_guard<std::mutex> lock(global::run_mutex);
     if (this->m_marketData->GetMarketDataHandle(m_inst) && isTradeTime()) {
         CThostFtdcDepthMarketDataField lastData = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
-        int                            tickMinute = 1;  // cDateTime(cSystem::GetCurrentTimeBuffer().c_str()).Minute();
+        tm*                            localNow = this->getLocalNowTm();
+        int                            tickMinute = localNow->tm_min;
         // new Candle
         if (tickMinute != m_candleMinute) {
             if (m_candleMinute != -1) {
@@ -86,14 +87,14 @@ void cStrategyKingKeltner::run(){
         }
         // ´¦ÀíÍ£Ö¹µ¥
         this->processStopOrder(m_inst, m_lastClose);
-    }else{
+    }/*else{
         auto tick = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
         ILOG("cStrategyKingKeltner,Inst:{},Lots:{},LastPrice:{},UpdateTime:{}.",
              m_inst,
              m_lots,
              tick.LastPrice,
              tick.UpdateTime);
-    }
+    }*/
 }
 
 void cStrategyKingKeltner::sendOcoOrder(double upPrice, double downPrice, int fixedSize) {
