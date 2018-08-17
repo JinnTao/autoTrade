@@ -18,7 +18,7 @@ public:
     //
     /* Get Method */
     int    GetTradeID() const { return m_tradeID; }
-    string GetInstrumentID() const { return m_instrumentID; }
+    string GetInstrumentID() const { return instrument_id_; }
     int    getPosition() { return position_; }
     int    getTodayPosition() { return today_pos_; }
     int    getYdPostion() { return yd_pos_; }
@@ -31,7 +31,7 @@ public:
     double Margin = 0;          //持仓占用保证金
 private:
     int    m_tradeID = 0;
-    string m_instrumentID;            //合约代码
+    string instrument_id_;            //合约代码
     double position_price_      = 0;  //持仓成本
     double open_price_          = 0;  //开仓成本
     int    position_            = 0;  //总持仓量

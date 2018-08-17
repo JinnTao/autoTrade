@@ -4,7 +4,7 @@
 cPositionDetail::cPositionDetail(string inst) {
     memset(this, 0, sizeof(this));
 
-    this->m_instrumentID = inst;
+    instrument_id_ = inst;
     position_price_      = 0;  //持仓成本
     open_price_          = 0;  //开仓成本
     position_            = 0;  //总持仓量
@@ -22,7 +22,7 @@ cPositionDetail::cPositionDetail(string inst) {
 
 void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition) {
     double lamda = 1;
-    if (strcmp(pInvestorPosition->InstrumentID, this->m_instrumentID.c_str()) == 0) {
+    if (strcmp(pInvestorPosition->InstrumentID, instrument_id_.c_str()) == 0) {
 
         Margin += pInvestorPosition->UseMargin;
         CloseProfit += pInvestorPosition->CloseProfit;
@@ -92,7 +92,7 @@ void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition)
 }
 
 void cPositionDetail::update(CThostFtdcDepthMarketDataField* pDepthMarketData) {
-    if (strcmp(pDepthMarketData->InstrumentID, this->m_instrumentID.c_str()) == 0) {
+    if (strcmp(pDepthMarketData->InstrumentID, instrument_id_.c_str()) == 0) {
         last_price_  = pDepthMarketData->LastPrice;
         exchange_id_ = pDepthMarketData->ExchangeID;
         update_time_ = string(pDepthMarketData->TradingDay + string(" ") + pDepthMarketData->UpdateTime);
@@ -113,7 +113,7 @@ void cPositionDetail::update(CThostFtdcDepthMarketDataField* pDepthMarketData) {
 //  identification long & short at outer func..
 void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
 
-    if (strcmp(pTrade->InstrumentID, this->m_instrumentID.c_str()) == 0) {
+    if (strcmp(pTrade->InstrumentID, instrument_id_.c_str()) == 0) {
 
         int old_pos = position_;
 
@@ -192,7 +192,7 @@ void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
 
 void cPositionDetail::Print() {
     string posi_dire[] = {"Long", "Short", "error"};
-    cerr << this->m_instrumentID << "\t Pos:" << position_ << "\t Dire: " << posi_dire[posi_direction_]
+    cerr << instrument_id_ << "\t Pos:" << position_ << "\t Dire: " << posi_dire[posi_direction_]
          << "\t Td:" << today_pos_ << "\t Yd:" << yd_pos_ << "\t PositionP&L:" << PositionProfit
          << "\t Float P&L:" << FloatProfit  //<< "\t CloseP&L:" << CloseProfit
          << "\t openPrice:" << open_price_ << "\t posiPrice: " << position_price_ << "\t lastPrice: " << last_price_

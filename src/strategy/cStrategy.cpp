@@ -1,14 +1,10 @@
 #include "cStrategy.h"
 
 cStrategy::cStrategy() {
-    // m_thread =  thread(&cStrategy::AutoTrading,this);
-    // m_pTradingThread = new cThread< cStrategy >( this, &cStrategy::AutoTrading );
     m_timeSpan = 500;
 }
 
 cStrategy::cStrategy(const string& strategyID) {
-    // m_thread = thread(&cStrategy::AutoTrading, this);
-    // m_pTradingThread = new cThread< cStrategy >( this, &cStrategy::AutoTrading );
     m_timeSpan           = 500;
     this->m_strategyName = strategyID;
 }
@@ -16,9 +12,14 @@ cStrategy::cStrategy(const string& strategyID) {
 cStrategy::~cStrategy() {}
 
 void cStrategy::start() {
-    this->m_isRuning.store(true, std::memory_order_release);
-    m_thread = std::thread(&cStrategy::AutoTrading, this);
-    ILOG("Strategy Inst:{},timeMode:{},Lots{},Start.", m_inst, m_timeMode, m_lots);
+    if (!this->m_isRuning.load()) {
+        this->m_isRuning.store(true, std::memory_order_release);
+        m_thread = std::thread(&cStrategy::AutoTrading, this);
+        ILOG("Strategy Inst:{},timeMode:{},Lots{},Start.", m_inst, m_timeMode, m_lots);
+
+    } else {
+        ILOG("Strategy status: {}.", this->m_isRuning.load());
+    }
 }
 
 void cStrategy::stop() {
@@ -180,8 +181,8 @@ bool cStrategy::mode5(DateTimeFormat nowTime) {
 }
 
 tm* cStrategy::getLocalNowTm() {
-    auto           local_now    = std::chrono::system_clock::now();
-    time_t         local_now_tm = std::chrono::system_clock::to_time_t(local_now);
-    struct tm*     timeInfo     = localtime(&local_now_tm);
+    auto       local_now    = std::chrono::system_clock::now();
+    time_t     local_now_tm = std::chrono::system_clock::to_time_t(local_now);
+    struct tm* timeInfo     = localtime(&local_now_tm);
     return timeInfo;
 }

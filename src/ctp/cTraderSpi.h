@@ -112,11 +112,10 @@ public:
 
     void ReqOrderAction( shared_ptr<cOrder> pOrder );
 
-    void ReqQryInstrumentCommissionRate(bool qryTrade = false);
+    void ReqQryInstrumentCommissionRate(std::string inst = "");
 
 
     const sTradingAccountInfo* GetTradingAccountInfo() const { return m_accountInfo; }
-
 
     void showPositionDetail();
 
@@ -160,6 +159,8 @@ public:
     void clearCallBack();
 
     void clear();
+
+    bool IsFlowControl(int iResult);
 
 private:
  
@@ -218,6 +219,7 @@ private:
     std::function<void(CThostFtdcRspUserLoginField*,CThostFtdcRspInfoField*)> on_login_fun_;
     std::function<void(int32)>                                                on_disconnected_fun_;
     std::function<void()>                                                     on_started_fun_;
+    std::function<void()>                                                     on_obtain_commssion_fun_;
     std::mutex                                                                mut_;
     ctpConfig                                                                 ctp_config_;
     cMdSpi*                                                                   ctp_md_spi_;

@@ -119,7 +119,7 @@ int32 cTradingPlatform::AutoTrading() {
             this->order_collection_->PrintPendingOrders();
         } else if (str == "trade") {
             // 首先查询手续费 再查询成交
-            this->ctp_td_spi_->ReqQryInstrumentCommissionRate(true);
+            this->ctp_td_spi_->ReqQryTrade();
         } else if (str == "help") {
             cerr << "OrderList: show | order| trade | stop | run |close |buy/sell open/close inst vol price -> ";
         } else if (str == "account") {

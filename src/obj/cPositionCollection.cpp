@@ -22,7 +22,7 @@ void cPositionCollection::PrintDetail() {
                  if (elem.second->getPosition() != 0) {
                      elem.second->Print();
                  }
-                 //elem.second->Print();
+                 // elem.second->Print();
                  closeProfit += elem.second->CloseProfit;
                  positionProfit += elem.second->PositionProfit;
              });
@@ -55,23 +55,22 @@ void cPositionCollection::update(CThostFtdcTradeField* pTrade) {
     string                                              inst(pTrade->InstrumentID);
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
-        //LOG(INFO) << "offset" << pTrade->OffsetFlag << " posDire:" << pos->second->getPosiDire()
+        // LOG(INFO) << "offset" << pTrade->OffsetFlag << " posDire:" << pos->second->getPosiDire()
         //          << "  tradeDire:" << pTrade->Direction;
-        // open should find  pos dire equal trade dire 
+        // open should find  pos dire equal trade dire
         if (this->posDireEqual(pos->second->getPosiDire(), pTrade->Direction) &&
             pTrade->OffsetFlag == THOST_FTDC_OF_Open) {
             is_find_position = true;
             break;
-        } 
+        }
         // close should find pos dire not equal trade dire
         else if (pTrade->OffsetFlag != THOST_FTDC_OF_Open &&
-                   !this->posDireEqual(pos->second->getPosiDire(), pTrade->Direction)) {
+                 !this->posDireEqual(pos->second->getPosiDire(), pTrade->Direction)) {
             is_find_position = true;
             break;
         }
-
     }
-    //LOG(INFO) << "is_find:" << is_find_position;
+    // LOG(INFO) << "is_find:" << is_find_position;
     if (!is_find_position) {
         cPositionDetailPtr position_detail = make_shared<cPositionDetail>(inst);
         pos = position_map_.insert(pair<string, cPositionDetailPtr>(inst, position_detail));
@@ -149,4 +148,18 @@ bool cPositionCollection::posDireEqual(DIRE dire, TThostFtdcPosiDirectionType ft
         is_equal = true;
     }
     return is_equal;
+}
+void cPositionCollection::registerInstFiledMap(cInstrumentFieldMapPtr p) {
+    inst_field_map_ = p;
+};
+
+std::list<std::string> cPositionCollection::getPositionInstList() {
+    std::list<std::string> instList;
+    std::multimap<string, cPositionDetailPtr>::iterator pos;
+    for (pos = position_map_.begin(); pos != position_map_.end(); ++pos) {
+        instList.emplace_back(pos->second->GetInstrumentID());
+    }
+    // unique list
+    instList.unique();
+    return instList;
 }

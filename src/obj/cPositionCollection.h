@@ -4,6 +4,7 @@
 
 #include <map>
 #include <list>
+#include <string>
 
 #include "cPosition.h"
 
@@ -16,20 +17,17 @@ public:
     void update(CThostFtdcInvestorPositionField* pInvestorPositionDetail);
     void update(CThostFtdcTradeField* pTrade);
     void update(CThostFtdcDepthMarketDataField* pDepthMarket);
-    int  getPosition(string instID, DIRE dire);
-    int  getYdPosition(string instID, DIRE dire);
-    int  getTdPosition(string instID, DIRE dire);
-    bool posDireEqual(DIRE, TThostFtdcPosiDirectionType);
-    void registerInstFiledMap(cInstrumentFieldMapPtr p){inst_field_map_ = p;};
+    int                    getPosition(string instID, DIRE dire);
+    int                    getYdPosition(string instID, DIRE dire);
+    int                    getTdPosition(string instID, DIRE dire);
+    bool                   posDireEqual(DIRE, TThostFtdcPosiDirectionType);
+    void                   registerInstFiledMap(cInstrumentFieldMapPtr p);
+    std::list<std::string> getPositionInstList();
 
 protected:
-    //用最简单的方式实现，如果太多的tyedef 是不是结构过于复杂，还是有新的想法？
-    // mapType _map_position;
-    // mapType::iterator _it;
-    // positionStore _m_position_instrument;
-    // positionHandle _m_position_tradeid;
+
     std::multimap<string, cPositionDetailPtr> position_map_;
-    cInstrumentFieldMapPtr inst_field_map_;
+    cInstrumentFieldMapPtr inst_field_map_; // record instument field
 
 private:
 };
