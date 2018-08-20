@@ -45,13 +45,15 @@ void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition)
             position_ += pInvestorPosition->Position;
             today_pos_ += pInvestorPosition->TodayPosition;
             yd_pos_ += pInvestorPosition->YdPosition;
+            open_cost_ += pInvestorPosition->OpenCost;
+            position_cost_ += pInvestorPosition->PositionCost;
             settle_price_  = pInvestorPosition->SettlementPrice;
             margin_rate_   = pInvestorPosition->ExchangeMargin;
             position_date_ = pInvestorPosition->PositionDate;
             trade_date_    = pInvestorPosition->TradingDay;
 
-            open_price_     = pInvestorPosition->OpenCost / double(inst_field_->VolumeMultiple) / double(position_);
-            position_price_ = pInvestorPosition->PositionCost / double(inst_field_->VolumeMultiple) / double(position_);
+            open_price_     = open_cost_ / double(inst_field_->VolumeMultiple) / double(position_);
+            position_price_ = position_cost_ / double(inst_field_->VolumeMultiple) / double(position_);
             last_price_ =
                 position_price_ + lamda * PositionProfit / double(position_ * double(inst_field_->VolumeMultiple));
             FloatProfit = lamda * (last_price_ - open_price_) * position_ * double(inst_field_->VolumeMultiple);

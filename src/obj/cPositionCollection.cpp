@@ -14,19 +14,25 @@ cPositionCollection::cPositionCollection() {
 cPositionCollection::~cPositionCollection() {}
 
 void cPositionCollection::PrintDetail() {
-    double closeProfit = 0, positionProfit = 0;
+    double closeProfit = 0, positionProfit = 0, commission = 0;
 
     for_each(position_map_.begin(),
              position_map_.end(),
-             [&closeProfit, &positionProfit](const std::multimap<string, cPositionDetailPtr>::value_type& elem) {
+             [&closeProfit, &positionProfit, &commission](
+                 const std::multimap<string, cPositionDetailPtr>::value_type& elem) {
                  if (elem.second->getPosition() != 0) {
                      elem.second->Print();
                  }
                  // elem.second->Print();
                  closeProfit += elem.second->CloseProfit;
                  positionProfit += elem.second->PositionProfit;
+                 commission += elem.second->getCommission();
              });
-    ILOG("TotalP&L: {},PositionPnl:{},ClosePnl:{}.", closeProfit + positionProfit, positionProfit, closeProfit);
+    ILOG("TotalP&L: {},PositionPnl:{},ClosePnl:{},commission:{}",
+         closeProfit + positionProfit,
+         positionProfit,
+         closeProfit,
+         commission);
 }
 void cPositionCollection::update(CThostFtdcInvestorPositionField* pInvestorPosition) {
 
@@ -106,6 +112,16 @@ int cPositionCollection::getPosition(string inst, DIRE dire) {
         return 0;
     }
 }
+
+int cPositionCollection::getPosition(string inst) {
+    bool                                                is_find_position = false;
+    std::multimap<string, cPositionDetailPtr>::iterator pos;
+    int                                                 position = 0;
+    for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
+        position += pos->second->getPosition();
+    }
+    return position;
+}
 int cPositionCollection::getYdPosition(string inst, DIRE dire) {
     bool                                                is_find_position = false;
     std::multimap<string, cPositionDetailPtr>::iterator pos;
@@ -153,11 +169,13 @@ void cPositionCollection::registerInstFiledMap(cInstrumentFieldMapPtr p) {
     inst_field_map_ = p;
 };
 
-std::list<std::string> cPositionCollection::getPositionInstList() {
-    std::list<std::string> instList;
+std::list<std::string> cPositionCollection::getTradeButNotPositionInstList() {
+    std::list<std::string>                              instList = {};
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     for (pos = position_map_.begin(); pos != position_map_.end(); ++pos) {
-        instList.emplace_back(pos->second->GetInstrumentID());
+        if (this->getPosition(pos->first) == 0) {
+            instList.emplace_back(pos->second->GetInstrumentID());
+        }
     }
     // unique list
     instList.unique();

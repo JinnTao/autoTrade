@@ -65,6 +65,38 @@ void cTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin,
         }
     }
 }
+void cTraderSpi::ReqQrySettlementInfoConfirm(){
+    std::lock_guard<std::mutex>          guard(mut_);
+    CThostFtdcQrySettlementInfoConfirmField req;
+    memset(&req, 0, sizeof(req));
+    strcpy_s(req.BrokerID, sizeof(TThostFtdcBrokerIDType), ctp_config_.brokerId);
+    strcpy_s(req.InvestorID, sizeof(TThostFtdcUserIDType), ctp_config_.userId);
+    int iResult = ctpTdApi_->ReqQrySettlementInfoConfirm(&req, ++request_id_);
+    ILOG("ReqSettlementInforConrim,Result:{},requestId:{}.", iResult, request_id_);
+}
+
+void cTraderSpi::OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField* pSettlementInfoConfirm,
+                                           CThostFtdcRspInfoField*               pRspInfo,
+                                           int                                   nRequestID,
+                                           bool                                  bIsLast){
+    if (!IsErrorRspInfo(pRspInfo) && pSettlementInfoConfirm) {
+        ILOG("OnRspSettlementInfoConfirm: Success!ConfirmDate:{},ConfirmTime:{},settlementID:{},nRequestID:{}.",
+             pSettlementInfoConfirm->ConfirmDate,
+             pSettlementInfoConfirm->ConfirmTime,
+             pSettlementInfoConfirm->SettlementID,
+             nRequestID);
+    }
+    if (bIsLast) {
+        if (pSettlementInfoConfirm && strcmp(pSettlementInfoConfirm->ConfirmDate,"") == 0 ){
+            ReqSettlementInfoConfirm();
+        }else{
+            ReqQryInstrument_all();
+        }
+       
+    }
+
+}
+
 
 void cTraderSpi::ReqSettlementInfoConfirm() {
     std::lock_guard<std::mutex>          guard(mut_);
@@ -72,8 +104,8 @@ void cTraderSpi::ReqSettlementInfoConfirm() {
     memset(&req, 0, sizeof(req));
     strcpy_s(req.BrokerID, sizeof(TThostFtdcBrokerIDType), ctp_config_.brokerId);
     strcpy_s(req.InvestorID, sizeof(TThostFtdcUserIDType), ctp_config_.userId);
-    int iResult = ctpTdApi_->ReqSettlementInfoConfirm(&req, ++request_id_);
-    ILOG("ReqSettlementInforConrim,Result:{}.", iResult);
+    int iResult = ctpTdApi_->ReqSettlementInfoConfirm(&req, ++request_id_); 
+    ILOG("First ReqSettlementInforConrim,Result:{}.request_id:{}.", iResult, request_id_);
 }
 
 void cTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField* pSettlementInfoConfirm,
@@ -83,10 +115,14 @@ void cTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField
 
     if (!IsErrorRspInfo(pRspInfo) && pSettlementInfoConfirm) {
         
-        ILOG("OnRspSettlementInfoConfirm: Success!");
+        ILOG("OnRspSettlementInfoConfirm: Success!ConfirmDate:{},ConfirmTime:{},settlementID:{},nRequestID:{}.",
+             pSettlementInfoConfirm->ConfirmDate,
+             pSettlementInfoConfirm->ConfirmTime,
+             pSettlementInfoConfirm->SettlementID,
+             nRequestID);
     }
     if (bIsLast) {
-        ReqQryInstrument_all();
+        ReqQrySettlementInfoConfirm();
     }
 }
 
@@ -96,7 +132,7 @@ void cTraderSpi::ReqQryInstrument_all() {
     memset(&req, 0, sizeof(req));
     while (true) {
         int iResult = ctpTdApi_->ReqQryInstrument(&req, ++request_id_);
-        ILOG("ReqQryInstrument, result:{}",iResult);
+        ILOG("ReqQryInstrument, result:{},requestId:{}.", iResult, request_id_);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
@@ -121,7 +157,7 @@ void cTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField* pInstrument,
     }
     if (bIsLast) {
         m_first_inquiry_Instrument = false;
-        ILOG("OnRspQryInstrument,bIsLast:{}.", bIsLast);
+        ILOG("OnRspQryInstrument,bIsLast:{},nRequestID:{}.", bIsLast, nRequestID);
         ReqQryOrder();
 
     }
@@ -134,7 +170,7 @@ void cTraderSpi::ReqQryOrder() {
 
     while (true) {
         int iResult = ctpTdApi_->ReqQryOrder(&req, ++request_id_);
-        ILOG("ReqQryOrder result:{}.", iResult);
+        ILOG("ReqQryOrder result:{},request_id:{}.", iResult, request_id_);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
@@ -154,7 +190,7 @@ void cTraderSpi::OnRspQryOrder(CThostFtdcOrderField*   pOrder,
     } 
     if (bIsLast) {
         m_first_inquiry_order = false;
-        ILOG("OnRspQryOrder,bIslast:{}.", bIsLast);
+        ILOG("OnRspQryOrder,bIslast:{},nRequestID:{}.", bIsLast, nRequestID);
         this->m_orderCollection->PrintAllOrders();  // should save ?
         ReqQryInvestorPositionDetail();
     }
@@ -169,7 +205,7 @@ void cTraderSpi::ReqQryInvestorPositionDetail() {
 
     while (true) {
         int iResult = ctpTdApi_->ReqQryInvestorPositionDetail(&req, ++request_id_);
-        ILOG("ReqQryInvestorPositionDetail,result:{}.", iResult);
+        ILOG("ReqQryInvestorPositionDetail,result:{},request_id:{}.", iResult, request_id_);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
@@ -204,7 +240,7 @@ void cTraderSpi::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetail
     //输出所有合约的持仓明细，要在这边进行下一步的查询ReqQryTradingAccount();
     if (bIsLast) {
         m_firs_inquiry_Detail = false;
-        ILOG("OnRspQryInvestorPositionDetail,bIsLast:{}.", bIsLast);
+        ILOG("OnRspQryInvestorPositionDetail,bIsLast:{}.nRequestID:{}.", bIsLast,nRequestID);
         ReqQryTradingAccount();
     }
 }
@@ -212,12 +248,15 @@ void cTraderSpi::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetail
 void cTraderSpi::ReqQryTradingAccount() {
     std::lock_guard<std::mutex>      guard(mut_);
     CThostFtdcQryTradingAccountField req;
+
+
     memset(&req, 0, sizeof(req));
     strcpy_s(req.BrokerID, sizeof TThostFtdcBrokerIDType, ctp_config_.brokerId);
     strcpy_s(req.InvestorID, sizeof TThostFtdcUserIDType, ctp_config_.userId);
+    strcpy_s(req.AccountID, sizeof TThostFtdcAccountIDType, ctp_config_.userId);
     while (true) {
         int iResult = ctpTdApi_->ReqQryTradingAccount(&req, ++request_id_);
-        ILOG("ReqQryTradingAccount, result:{}.", iResult);
+        ILOG("ReqQryTradingAccount, result:{}.request_id:{}.", iResult, request_id_);
         if (IsFlowControl(iResult)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else {
@@ -261,7 +300,7 @@ void cTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField* pTradingA
         printf("   CurrMargin:%.2f\n", m_accountInfo->CurrMargin);
 
         if (m_firs_inquiry_TradingAccount){
-            ILOG("OnRspQryTradingAccount,isLast:{}", bIsLast);
+            ILOG("OnRspQryTradingAccount,isLast:{},nRequestID:{}.", bIsLast,nRequestID);
             ReqQryInvestorPosition_all();
         }
         m_firs_inquiry_TradingAccount = false;
@@ -301,6 +340,9 @@ void cTraderSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* pInve
         m_firs_inquiry_Position = false;
         this->m_positionCollection->PrintDetail();
         ILOG("OnRspQryInvestorPosition isLast:{}.",bIsLast);
+        // 
+        this->trade_not_in_position_list_ = this->m_positionCollection->getTradeButNotPositionInstList();
+        
         ReqQryInstrumentCommissionRate();
 
     }
@@ -312,6 +354,7 @@ void cTraderSpi::ReqQryInstrumentCommissionRate(std::string inst) {
     memset(&req, 0, sizeof(req));
     strcpy_s(req.InvestorID, sizeof TThostFtdcInvestorIDType, ctp_config_.userId);
     strcpy_s(req.BrokerID, sizeof TThostFtdcBrokerIDType, ctp_config_.brokerId);
+
     if (inst.size() != 0){
         strcpy_s(req.InstrumentID, sizeof TThostFtdcBrokerIDType, inst.c_str());
     }
@@ -365,6 +408,14 @@ void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommission
     }
     if (bIsLast) {
         if (m_first_inquiry_commissionRate){
+            
+            if (trade_not_in_position_list_.size() != 0) {
+                auto var = trade_not_in_position_list_.begin();
+                ReqQryInstrumentCommissionRate(*var);
+                trade_not_in_position_list_.erase(var);
+                return;
+            }
+
             m_first_inquiry_commissionRate = false;
             if (m_output.is_open()) {
                 m_output.close();
@@ -570,54 +621,9 @@ void cTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField* pInputOrderAc
 // transaction notification
 // update m_positions
 void cTraderSpi::OnRtnTrade(CThostFtdcTradeField* pTrade) {
-    ///* update of m_tradeCollection */
-    auto findCommission = [this](CThostFtdcTradeField* pTrade) -> std::shared_ptr<CThostFtdcInstrumentCommissionRateField> {
-        for (auto ptr = this->m_pInstCommissionMap->begin(); ptr != this->m_pInstCommissionMap->end();ptr++){
-            std::regex reg(std::string(ptr->first) + std::string(".*"));
-            if (std::regex_match(std::string(pTrade->InstrumentID),reg)){
-                return ptr->second;
-            }
-        }
-        return nullptr;
-    };
-
-    auto iter = findCommission(pTrade);
-    while (iter == nullptr){
-        on_obtain_commssion_fun_ = {};
-
-        std::promise<bool> obtain_commission;
-        std::future<bool>  is_obtain_commssion = obtain_commission.get_future();
-        on_obtain_commssion_fun_               = [&obtain_commission]() { 
-            obtain_commission.set_value(true);
-        };
-        std::thread t(&cTraderSpi::ReqQryInstrumentCommissionRate, this,pTrade->InstrumentID);
-        t.detach();
-        if (is_obtain_commssion.valid() ){
-            auto wait_obtain_commission = is_obtain_commssion.wait_for(10s);
-            if (wait_obtain_commission != std::future_status::ready || is_obtain_commssion.get() != true){
-                ILOG("Obtain Inst:{} commission failed.", pTrade->InstrumentID);
-                //continue;
-            }else{
-                iter = findCommission(pTrade);
-            }
-
-        }
-    
-    }
-
-    m_tradeCollection->Add(pTrade, &*iter, &*(m_InstMeassageMap->at(pTrade->InstrumentID)));
-    int tradeID = atoi(pTrade->TradeID);
-    m_tradeCollection->PrintTrade(tradeID);
-
-    ///* update of m_positionDetail */
-    m_positionCollection->update( pTrade );
-
-    //subscirbe Instrument
-    this->subscribeInst(pTrade->InstrumentID,true);
-    for each (auto var in m_strategyList)
-    {
-        var->onTrade(*pTrade);
-    }
+    // donot block callback
+    std::thread t(&cTraderSpi::onFreshTrade, this, *pTrade);
+    t.detach();
 }
 
 // the error notification caused by client request
@@ -1092,7 +1098,7 @@ int32 cTraderSpi::start() {
     std::promise<bool> start_result;
     std::future<bool>  is_started = start_result.get_future();
     on_started_fun_               = [&start_result]() { start_result.set_value(true); };
-    this->ReqSettlementInfoConfirm();
+    this->ReqQrySettlementInfoConfirm();
     auto wait_result = is_started.wait_for(20min);
     if (wait_result == std::future_status::timeout) {
         WLOG("Td start timeout.");
@@ -1117,4 +1123,54 @@ void cTraderSpi::clear() {
 
 bool cTraderSpi::IsFlowControl(int iResult) {
     return ((iResult == -2) || (iResult == -3));
+}
+
+void cTraderSpi::onFreshTrade(CThostFtdcTradeField Trade){
+    auto pTrade = &Trade;
+
+        ///* update of m_tradeCollection */
+    auto findCommission = [this](CThostFtdcTradeField* pTrade) -> std::shared_ptr<CThostFtdcInstrumentCommissionRateField> {
+        for (auto ptr = this->m_pInstCommissionMap->begin(); ptr != this->m_pInstCommissionMap->end();ptr++){
+            std::regex reg(std::string(ptr->first) + std::string(".*"));
+            if (std::regex_match(std::string(pTrade->InstrumentID),reg)){
+                return ptr->second;
+            }
+        }
+        return nullptr;
+    };
+
+    auto iter = findCommission(pTrade);
+    if (iter == nullptr){
+        on_obtain_commssion_fun_ = {};
+
+        std::promise<bool> obtain_commission;
+        std::future<bool>  is_obtain_commssion = obtain_commission.get_future();
+        on_obtain_commssion_fun_               = [&obtain_commission]() { obtain_commission.set_value(true); };
+        this->ReqQryInstrumentCommissionRate(pTrade->InstrumentID);
+        if (is_obtain_commssion.valid()) {
+            auto wait_obtain_commission = is_obtain_commssion.wait_for(10s);
+            if (wait_obtain_commission != std::future_status::ready || is_obtain_commssion.get() != true) {
+                ILOG("Obtain Inst:{} commission failed.", pTrade->InstrumentID);
+                // continue;
+            } else {
+                iter = findCommission(pTrade);
+            }
+        }
+    }
+
+    this->m_tradeCollection->Add(pTrade, &*iter, &*(m_InstMeassageMap->at(pTrade->InstrumentID)));
+    int tradeID = atoi(pTrade->TradeID);
+    this->m_tradeCollection->PrintTrade(tradeID);
+
+    ///* update of m_positionDetail */
+    this->m_positionCollection->update(pTrade);
+
+    //subscirbe Instrument
+    this->subscribeInst(pTrade->InstrumentID,true);
+    for each (auto var in this->m_strategyList)
+    {
+        if (var->GetStrategyStatus()){
+            var->onTrade(*pTrade);
+        }
+    }
 }

@@ -13,8 +13,6 @@ cTradingPlatform::~cTradingPlatform() {
     strategy_list_.clear();
     subscribe_inst_v_.reset();
 
-    // inter thread start
-    // inter_thread_ = std::thread(&cTradingPlatform::AutoTrading, this);
     for (auto s : strategy_list_) {
         if (s->GetStrategyStatus()) {
             s->stop();
@@ -24,61 +22,6 @@ cTradingPlatform::~cTradingPlatform() {
         inter_thread_.join();
     }
 
-    // this->ctp_md_spi_.clear();
-}
-
-//字符串分割函数
-std::vector<std::string> cTradingPlatform::splitToStr(std::string str, std::string pattern) {
-    std::string::size_type   pos;
-    std::vector<std::string> result;
-    str += pattern;  //扩展字符串以方便操作
-    size_t size = str.size();
-
-    for (size_t i = 0; i < size; i++) {
-        pos = str.find(pattern, i);
-        if (pos < size) {
-            std::string s = str.substr(i, pos - i);
-            result.push_back(s);
-            i = pos + pattern.size() - 1;
-        }
-    }
-    return result;
-}
-
-std::vector<int32> cTradingPlatform::splitToInt(std::string str, std::string pattern) {
-    std::string::size_type pos;
-    std::vector<int32>     result;
-    str += pattern;  //扩展字符串以方便操作
-    size_t size = str.size();
-
-    for (size_t i = 0; i < size; i++) {
-        pos = str.find(pattern, i);
-        if (pos < size) {
-            std::string s = str.substr(i, pos - i);
-            result.push_back(std::atoi(s.c_str()));
-            i = pos + pattern.size() - 1;
-        }
-    }
-    return result;
-}
-
-void cTradingPlatform::readDay(string fileName, map<string, int>& workDay) {
-    ifstream file1(fileName, ios::in);  //以只读方式读入,读取原始数据
-    char     dataline[512];             //行数变量
-    string   date;
-    int      i = 1;
-    if (!file1) {
-        cout << "Not exist trade day file!" << endl;
-        return;
-    }
-    while (file1.getline(dataline, 1024, '\n'))  // while开始，读取一行1024够大？
-    {
-        // sscanf_s(dataline,"%s",date);
-        date = dataline;
-        workDay.insert(pair<string, int>(date, i));
-        i++;
-        // cout << date << endl;
-    }
 }
 
 int32 cTradingPlatform::AutoTrading() {
@@ -517,4 +460,57 @@ int32 cTradingPlatform::stop() {
         WLOG("stop failed:noknow error.");
     }
     return 0;
+}
+//字符串分割函数
+std::vector<std::string> cTradingPlatform::splitToStr(std::string str, std::string pattern) {
+    std::string::size_type   pos;
+    std::vector<std::string> result;
+    str += pattern;  //扩展字符串以方便操作
+    size_t size = str.size();
+
+    for (size_t i = 0; i < size; i++) {
+        pos = str.find(pattern, i);
+        if (pos < size) {
+            std::string s = str.substr(i, pos - i);
+            result.push_back(s);
+            i = pos + pattern.size() - 1;
+        }
+    }
+    return result;
+}
+
+std::vector<int32> cTradingPlatform::splitToInt(std::string str, std::string pattern) {
+    std::string::size_type pos;
+    std::vector<int32>     result;
+    str += pattern;  //扩展字符串以方便操作
+    size_t size = str.size();
+
+    for (size_t i = 0; i < size; i++) {
+        pos = str.find(pattern, i);
+        if (pos < size) {
+            std::string s = str.substr(i, pos - i);
+            result.push_back(std::atoi(s.c_str()));
+            i = pos + pattern.size() - 1;
+        }
+    }
+    return result;
+}
+
+void cTradingPlatform::readDay(string fileName, map<string, int>& workDay) {
+    ifstream file1(fileName, ios::in);  //以只读方式读入,读取原始数据
+    char     dataline[512];             //行数变量
+    string   date;
+    int      i = 1;
+    if (!file1) {
+        cout << "Not exist trade day file!" << endl;
+        return;
+    }
+    while (file1.getline(dataline, 1024, '\n'))  // while开始，读取一行1024够大？
+    {
+        // sscanf_s(dataline,"%s",date);
+        date = dataline;
+        workDay.insert(pair<string, int>(date, i));
+        i++;
+        // cout << date << endl;
+    }
 }

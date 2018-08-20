@@ -76,7 +76,14 @@ public:
 
     //请求查询合约手续费率响应
     virtual void OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) ;
-   
+
+    void         ReqQrySettlementInfoConfirm();
+
+    virtual void OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField* pSettlementInfoConfirm,
+                                               CThostFtdcRspInfoField*               pRspInfo,
+                                               int                                   nRequestID,
+                                               bool                                  bIsLast);
+
     void ReqSettlementInfoConfirm();
 
     bool IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo);
@@ -162,6 +169,8 @@ public:
 
     bool IsFlowControl(int iResult);
 
+    void onFreshTrade(CThostFtdcTradeField Trade);
+
 private:
  
 
@@ -223,6 +232,8 @@ private:
     std::mutex                                                                mut_;
     ctpConfig                                                                 ctp_config_;
     cMdSpi*                                                                   ctp_md_spi_;
+    std::list<std::string>                                                    trade_not_in_position_list_ = {}
+    ;
 
 };
 
