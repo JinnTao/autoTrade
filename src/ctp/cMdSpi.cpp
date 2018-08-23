@@ -258,11 +258,10 @@ int32 cMdSpi::init(const ctpConfig& ctp_config) {
     // 4.set callback
     {
         this->clearCallBack();
-        global::need_reconnect.store(false,
-                                     std::memory_order_release);  // current write/read cannot set this store back;
+        //global::need_reconnect.store(false,
+        //                             std::memory_order_release);  // current write/read cannot set this store back;
         on_disconnected_fun_ = [](int32 reason) {
             WLOG("Md disconnect,try reconnect! reason:{}." ,reason);
-            
             global::need_reconnect.store(true, std::memory_order_release);
         };
     }

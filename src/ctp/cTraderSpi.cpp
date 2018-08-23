@@ -87,12 +87,11 @@ void cTraderSpi::OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirmFi
              nRequestID);
     }
     if (bIsLast) {
-        if (pSettlementInfoConfirm && strcmp(pSettlementInfoConfirm->ConfirmDate,"") == 0 ){
-            ReqSettlementInfoConfirm();
-        }else{
+        if (pSettlementInfoConfirm) {
             ReqQryInstrument_all();
+        }else{
+            ReqSettlementInfoConfirm();
         }
-       
     }
 
 }
@@ -122,7 +121,7 @@ void cTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField
              nRequestID);
     }
     if (bIsLast) {
-        ReqQrySettlementInfoConfirm();
+        ReqQryInstrument_all();
     }
 }
 

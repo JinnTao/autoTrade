@@ -440,7 +440,6 @@ int32 cTradingPlatform::reConnect() {
 }
 
 int32 cTradingPlatform::stop() {
-    // strategy_list_.clear();
     // stop
     try {
         // should stop md than stop td?
