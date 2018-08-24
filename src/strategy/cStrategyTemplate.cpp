@@ -41,7 +41,8 @@ void cStrategyTemplate::onTrade(CThostFtdcTradeField p){
 void cStrategyTemplate::run(){
     if(this->m_marketData->GetMarketDataHandle(m_inst) && isTradeTime()){
         CThostFtdcDepthMarketDataField lastData = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
-        int tickMinute = 1;//cDateTime(cSystem::GetCurrentTimeBuffer().c_str()).Minute();
+        tm*                            localNow   = this->getLocalNowTm();
+        int                            tickMinute = localNow->tm_min;
         // new Candle
         if(tickMinute != m_candleMinute){
             if(m_candleMinute != -1){

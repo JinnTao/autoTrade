@@ -77,10 +77,13 @@ public:
     void RegisterPositionCollectionPtr(cPositionCollectionPtr p) { m_pPositionC = p; };
     void RegisterOrderCollectionPtr(cOrderCollectionPtr p) { m_pOrderC = p; }
     void RegisterTradeCollectionPtr(cTradeCollectionPtr p) { m_pTradeC = p; }
+
+
     void RegisterTxtDir(string tradeDayDir, string oneMinuteDataDir) {
         m_tradeDayDir      = tradeDayDir;
         m_oneMinuteDataDir = oneMinuteDataDir;
     }
+
     void RegisterAutoSetting(strategyConfig* p) { this->m_pAutoSetting = p; }
     bool GetStrategyStatus() { return m_isRuning; };
     //    void RegisterTradePlatForm(cTradingPlatform *p){m_pTradePlatform = p;}
