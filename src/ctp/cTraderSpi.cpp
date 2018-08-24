@@ -247,8 +247,6 @@ void cTraderSpi::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetail
 void cTraderSpi::ReqQryTradingAccount() {
     std::lock_guard<std::mutex>      guard(mut_);
     CThostFtdcQryTradingAccountField req;
-
-
     memset(&req, 0, sizeof(req));
     strcpy_s(req.BrokerID, sizeof TThostFtdcBrokerIDType, ctp_config_.brokerId);
     strcpy_s(req.InvestorID, sizeof TThostFtdcUserIDType, ctp_config_.userId);
@@ -465,7 +463,6 @@ void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField*   pTrade,
 
     } 
     if (bIsLast) {
-        mut_.try_lock();
         ILOG("OnRspQryTrade,bIsLast:{}.", bIsLast);
         this->m_tradeCollection->PrintAll();
         if (m_first_inquiry_trade) {
@@ -475,7 +472,7 @@ void cTraderSpi::OnRspQryTrade(CThostFtdcTradeField*   pTrade,
                 std::invoke(on_started_fun_);
             }
         }
-        mut_.unlock();
+
     }
 }
 
@@ -575,21 +572,17 @@ void cTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField* pInputOrder,
     // output the order insertion result
     // it seems that this function is called only when error occurs during inserting orders
     if (!IsErrorRspInfo(pRspInfo) && pInputOrder) {
-        //LOG(INFO) << "cTraderSpi::OnRspOrderInsert,Inst: " << pInputOrder->InstrumentID << ",requestId: " << pInputOrder->RequestID;
         ILOG("cTraderSpi::OnRspOrderInsert,Inst: {},requestId: {}.", pInputOrder->InstrumentID, pInputOrder->RequestID);
     }
     if (bIsLast){
-        //LOG(INFO) << "cTraderSpi::OnRspOrderInsert,Inst: " << pInputOrder->InstrumentID << ",requestId: " << pInputOrder->RequestID;
         ILOG("cTraderSpi::OnRspOrderInsert,Inst: {},requestId:{}.", pInputOrder->InstrumentID, pInputOrder->RequestID);
     }
 }
 void cTraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo) {
-    //LOG(INFO) << "OnErrRtnOrderInsert";
     WLOG("OnErrRtnOrderInsert");
 }
 ///报单操作错误回报
 void cTraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo){
-    //LOG(INFO) << "OnErrRtnOrderAction";
     WLOG("OnErrRtnOrderAction");
 }
 // order insertion return
@@ -611,7 +604,6 @@ void cTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField* pInputOrderAc
                                   int                              nRequestID,
                                   bool                             bIsLast) {
     /* calling this function in case the order cancellation is failed */
-    //LOG(INFO) << "OnRspOrderAction";
     ILOG("OnRspOrderAction.");
     if (!IsErrorRspInfo(pRspInfo)) {
     }
@@ -1157,15 +1149,16 @@ void cTraderSpi::onFreshTrade(CThostFtdcTradeField Trade){
         }
     }
 
-    this->m_tradeCollection->Add(pTrade, &*iter, &*(m_InstMeassageMap->at(pTrade->InstrumentID)));
+    auto tradePtr = this->m_tradeCollection->Add(pTrade, &*iter, &*(m_InstMeassageMap->at(pTrade->InstrumentID)));
     int tradeID = atoi(pTrade->TradeID);
     this->m_tradeCollection->PrintTrade(tradeID);
 
-    ///* update of m_positionDetail */
-    this->m_positionCollection->update(pTrade);
+    // update of m_positionDetail 
+    this->m_positionCollection->update(pTrade,tradePtr);
 
     //subscirbe Instrument
     this->subscribeInst(pTrade->InstrumentID,true);
+    
     for each (auto var in this->m_strategyList)
     {
         if (var->GetStrategyStatus()){

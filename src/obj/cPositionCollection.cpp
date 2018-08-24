@@ -1,10 +1,6 @@
 #include "cPositionCollection.h"
-#include "cTrade.h"
 #include "logger.h"
 
-#ifndef _DEBUG
-#define _DEBUG 0
-#endif
 cPositionCollection::cPositionCollection() {
     if (position_map_.size() != 0) {
         position_map_.clear();
@@ -54,15 +50,13 @@ void cPositionCollection::update(CThostFtdcInvestorPositionField* pInvestorPosit
     // update position
     pos->second->update(pInvestorPosition);
 }
-void cPositionCollection::update(CThostFtdcTradeField* pTrade) {
+void cPositionCollection::update(CThostFtdcTradeField* pTrade, shared_ptr<cTrade> pcTrade) {
 
     bool is_find_position = false;
 
     string                                              inst(pTrade->InstrumentID);
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
-        // LOG(INFO) << "offset" << pTrade->OffsetFlag << " posDire:" << pos->second->getPosiDire()
-        //          << "  tradeDire:" << pTrade->Direction;
         // open should find  pos dire equal trade dire
         if (this->posDireEqual(pos->second->getPosiDire(), pTrade->Direction) &&
             pTrade->OffsetFlag == THOST_FTDC_OF_Open) {
@@ -76,14 +70,13 @@ void cPositionCollection::update(CThostFtdcTradeField* pTrade) {
             break;
         }
     }
-    // LOG(INFO) << "is_find:" << is_find_position;
     if (!is_find_position) {
         cPositionDetailPtr position_detail = make_shared<cPositionDetail>(inst);
         pos = position_map_.insert(pair<string, cPositionDetailPtr>(inst, position_detail));
     }
     pos->second->registerInstField(inst_field_map_->at(inst));
     // update position
-    pos->second->update(pTrade);
+    pos->second->update(pTrade,pcTrade);
 }
 void cPositionCollection::update(CThostFtdcDepthMarketDataField* pDepthMarket) {
     bool is_find_position = false;

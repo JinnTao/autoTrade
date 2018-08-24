@@ -59,17 +59,6 @@ void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition)
             FloatProfit = lamda * (last_price_ - open_price_) * position_ * double(inst_field_->VolumeMultiple);
 
             if (position_ != (today_pos_ + yd_pos_)){
-                 //LOG(INFO)<< "Inst" << pInvestorPosition->InstrumentID << "position" << pInvestorPosition->Position
-                 //         <<"ydPos" << pInvestorPosition->YdPosition
-                 //         << " tdPos " << pInvestorPosition->TodayPosition
-                 //        << " Margin " << pInvestorPosition->UseMargin
-                 //        << " CloseProfit " << pInvestorPosition->CloseProfit << " PositionProfit " <<
-                 //        pInvestorPosition->PositionProfit
-                 //         << " position_date_ " << pInvestorPosition->PositionDate << " commission_ "
-                 //         << pInvestorPosition->Commission << " settle_price_ " << pInvestorPosition->SettlementPrice
-                 //         << " margin_rate_ " << pInvestorPosition->ExchangeMargin
-                 //   << "openVolume"<< pInvestorPosition->OpenVolume
-                 //   << " closeV " << pInvestorPosition->CloseVolume;
                 ILOG(
                     "Inst:{},position:{},ydPos:{},tdPos{},margin:{},CloseProfit:{},PositionProfit:{},PositionDate:{},"
                     "comssition:{},settlePrice:{},Marginrate:{},OpenVolume:{},CloseVol{}.",
@@ -113,12 +102,11 @@ void cPositionDetail::update(CThostFtdcDepthMarketDataField* pDepthMarketData) {
     }
 }
 //  identification long & short at outer func..
-void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
+void cPositionDetail::update(CThostFtdcTradeField* pTrade, shared_ptr<cTrade> pcTrade) {
 
     if (strcmp(pTrade->InstrumentID, instrument_id_.c_str()) == 0) {
 
         int old_pos = position_;
-
         // open
         if (pTrade->OffsetFlag == THOST_FTDC_OF_Open) {
             position_ += pTrade->Volume;
@@ -184,6 +172,7 @@ void cPositionDetail::update(CThostFtdcTradeField* pTrade) {
         position_date_ = pTrade->TradingDay;
         trade_date_    = pTrade->TradingDay;
         exchange_id_   = pTrade->ExchangeID;
+        commission_ += pcTrade->GetCommission();
         // LOG(INFO) << "price :" << pTrade->Price << " pos: " << position_ << "tradding day" << trade_date_;
 
     } else {

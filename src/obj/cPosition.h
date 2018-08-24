@@ -4,6 +4,7 @@
 #include <map>
 
 #include "ThostFtdcUserApiStruct.h"
+#include "cTrade.h"
 using namespace std;
 
 enum DIRE { AUTO_LONG, AUTO_SHORT, AUTO_UNDEFINE };
@@ -12,7 +13,7 @@ class cPositionDetail {
 public:
     cPositionDetail(string inst);
     void update(CThostFtdcInvestorPositionField* pInvestorPositionDetail);
-    void update(CThostFtdcTradeField* pTrade);
+    void update(CThostFtdcTradeField* pTrade, shared_ptr<cTrade> pcTrade);
     void update(CThostFtdcDepthMarketDataField* pDepthMarketData);
     ~cPositionDetail() {}
     //
