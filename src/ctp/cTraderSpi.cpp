@@ -70,7 +70,7 @@ void cTraderSpi::ReqQrySettlementInfoConfirm(){
     CThostFtdcQrySettlementInfoConfirmField req;
     memset(&req, 0, sizeof(req));
     strcpy_s(req.BrokerID, sizeof(TThostFtdcBrokerIDType), ctp_config_.brokerId);
-    strcpy_s(req.InvestorID, sizeof(TThostFtdcUserIDType), ctp_config_.userId);
+    strcpy_s(req.InvestorID, sizeof(TThostFtdcInvestorIDType), ctp_config_.userId);
     int iResult = ctpTdApi_->ReqQrySettlementInfoConfirm(&req, ++request_id_);
     ILOG("ReqSettlementInforConrim,Result:{},requestId:{}.", iResult, request_id_);
 }
@@ -102,7 +102,7 @@ void cTraderSpi::ReqSettlementInfoConfirm() {
     CThostFtdcSettlementInfoConfirmField req;
     memset(&req, 0, sizeof(req));
     strcpy_s(req.BrokerID, sizeof(TThostFtdcBrokerIDType), ctp_config_.brokerId);
-    strcpy_s(req.InvestorID, sizeof(TThostFtdcUserIDType), ctp_config_.userId);
+    strcpy_s(req.InvestorID, sizeof(TThostFtdcInvestorIDType), ctp_config_.userId);
     int iResult = ctpTdApi_->ReqSettlementInfoConfirm(&req, ++request_id_); 
     ILOG("First ReqSettlementInforConrim,Result:{}.request_id:{}.", iResult, request_id_);
 }
@@ -249,7 +249,7 @@ void cTraderSpi::ReqQryTradingAccount() {
     CThostFtdcQryTradingAccountField req;
     memset(&req, 0, sizeof(req));
     strcpy_s(req.BrokerID, sizeof TThostFtdcBrokerIDType, ctp_config_.brokerId);
-    strcpy_s(req.InvestorID, sizeof TThostFtdcUserIDType, ctp_config_.userId);
+    strcpy_s(req.InvestorID, sizeof TThostFtdcInvestorIDType, ctp_config_.userId);
     strcpy_s(req.AccountID, sizeof TThostFtdcAccountIDType, ctp_config_.userId);
     while (true) {
         int iResult = ctpTdApi_->ReqQryTradingAccount(&req, ++request_id_);
