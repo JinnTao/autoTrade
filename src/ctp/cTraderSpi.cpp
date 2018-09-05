@@ -391,7 +391,7 @@ void cTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommission
                      << pInstrumentCommissionRate->OpenRatioByMoney << " "
                      << pInstrumentCommissionRate->OpenRatioByVolume << endl;
         }
-        WLOG(
+        ILOG(
             "Instrument "
             "code:{},CloseRatioByMoney:{},CloseRatioByVolume:{},CloseTodayRatioByMoney:{},CloseTodayRatioByVolume:{},"
             "OpenRatioByMoney:{},OpenRatioByVolume{}",
@@ -518,6 +518,7 @@ void cTraderSpi::ReqOrderInsert(TThostFtdcInstrumentIDType   instId,
 
     int iResult = ctpTdApi_->ReqOrderInsert(&req, ++request_id_);
     ILOG("ReqOrderInsert,result:{}", iResult);
+    WLOG("Order Inst:{},Dire:{},Offset:{},Vol:{},Price:{}", instId, dir, kpp, vol, price);
     if (iResult == 0) {
         int orderRef = atoi(m_ORDER_REF);
         m_allOrderRef.push_back(orderRef);
@@ -579,11 +580,11 @@ void cTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField* pInputOrder,
     }
 }
 void cTraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo) {
-    WLOG("OnErrRtnOrderInsert");
+    ELOG("OnErrRtnOrderInsert");
 }
 ///报单操作错误回报
 void cTraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo){
-    WLOG("OnErrRtnOrderAction");
+    ELOG("OnErrRtnOrderAction");
 }
 // order insertion return
 void cTraderSpi::OnRtnOrder(CThostFtdcOrderField* pOrder) {
@@ -619,7 +620,7 @@ void cTraderSpi::OnRtnTrade(CThostFtdcTradeField* pTrade) {
 
 // the error notification caused by client request
 void cTraderSpi::OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) {
-    WLOG("OnRspError,error code:{},Msg:{},RequestId:{},isLast:{}.",
+    ELOG("OnRspError,error code:{},Msg:{},RequestId:{},isLast:{}.",
          pRspInfo->ErrorID,
          pRspInfo->ErrorMsg,
          nRequestID,
@@ -646,7 +647,7 @@ void cTraderSpi::ReqOrderAction(shared_ptr<cOrder> pOrder) {
     req.ActionFlag = THOST_FTDC_AF_Delete;
 
     int iResult = ctpTdApi_->ReqOrderAction(&req, ++request_id_);
-    //LOG(INFO) << "ReqOrderAction,result: " << iResult;
+
     ILOG("ReqOrderAction,result: {}.",iResult);
 
 }
@@ -654,7 +655,7 @@ void cTraderSpi::ReqOrderAction(shared_ptr<cOrder> pOrder) {
 bool cTraderSpi::IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo) {
     bool bResult = ((pRspInfo) && (pRspInfo->ErrorID != 0));
     if (bResult) {
-        WLOG("ErrorID:{},ErrorMsg:{}.", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+        ELOG("ErrorID:{},ErrorMsg:{}.", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
     }
     return bResult;
 }
@@ -809,7 +810,7 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
         // SPD 指令平仓需要注意
 
         if (this->m_positionCollection->getPosition(instId, DIRE::AUTO_LONG) < vol) {
-            WLOG("Long:close vol more than hold vol.,position:{},vol:{}.",
+            ELOG("Long:close vol more than hold vol.,position:{},vol:{}.",
                  this->m_positionCollection->getPosition(instId, DIRE::AUTO_LONG),
                  vol);
             return;
@@ -823,7 +824,7 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
                     } else if (strcmp(tag.c_str(), "T") == 0) {
                         strcpy(kpp, "3");
                     } else {
-                        WLOG("close error command.");
+                        ELOG("close error command.");
                         return;
                     }
 
@@ -856,7 +857,7 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
     // close short
     else {
         if (this->m_positionCollection->getPosition(instId, DIRE::AUTO_SHORT) < vol) {
-            WLOG("short:close vol more than hold vol,position:{},vol:{}.",
+            ELOG("short:close vol more than hold vol,position:{},vol:{}.",
                  this->m_positionCollection->getPosition(instId, DIRE::AUTO_SHORT),
                  vol);
             return;
@@ -999,7 +1000,7 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
     {
         auto tdapi = CThostFtdcTraderApi::CreateFtdcTraderApi(ctp_config.td_flow_path_);
         if (tdapi == nullptr) {
-            WLOG("CreateFtdcTraderApi instance failed");
+            ELOG("CreateFtdcTraderApi instance failed");
             return -1;
         }
         // unique_ptr->ctp's document release just call Release api, release 2018/07/11 JinnTao
@@ -1007,7 +1008,7 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
                          if (tdapi != nullptr) {
                              tdapi->Release();
                          }
-                         WLOG("Release tradeApi.");
+                         ELOG("Release tradeApi.");
                      }};
         ctpTdApi_->RegisterSpi(this);
         ILOG("Td create instance success!");
@@ -1053,12 +1054,12 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
         // Try login
         auto req_login_result = ctpTdApi_->ReqUserLogin(&req, ++request_id_);
         if (req_login_result != 0) {
-            WLOG("Td request login failed!");
+            ELOG("Td request login failed!");
             return -3;
         }
         auto wait_result = is_logined.wait_for(5s);
         if (wait_result != std::future_status::ready || is_logined.get() != true) {
-            WLOG("Td request login TimeOut!");
+            ELOG("Td request login TimeOut!");
             return -3;
         }
         ILOG("Td login success");
@@ -1070,7 +1071,7 @@ int32 cTraderSpi::init(const ctpConfig& ctp_config) {
         global::need_reconnect.store(false,
                                      std::memory_order_release);  // current write/read cannot set this store back;
         on_disconnected_fun_ = [](int32 reason) {
-            WLOG("Td disconnect,try reconnect! reason:{}", reason);
+            ELOG("Td disconnect,try reconnect! reason:{}", reason);
             global::need_reconnect.store(true, std::memory_order_release);
         };
     }
@@ -1092,10 +1093,10 @@ int32 cTraderSpi::start() {
     this->ReqQrySettlementInfoConfirm();
     auto wait_result = is_started.wait_for(20min);
     if (wait_result == std::future_status::timeout) {
-        WLOG("Td start timeout.");
+        ELOG("Td start timeout.");
         return -1;
     } else if (wait_result != std::future_status::ready || is_started.get() != true) {
-        WLOG("Td start failed,but not timeout with 20min");
+        ELOG("Td start failed,but not timeout with 20min");
         return -2;
     }
 

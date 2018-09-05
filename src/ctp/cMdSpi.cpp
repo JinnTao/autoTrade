@@ -154,7 +154,7 @@ void cMdSpi::OnRspUnSubForQuoteRsp(CThostFtdcSpecificInstrumentField* pSpecificI
 }
 
 void cMdSpi::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField* pDepthMarketData) {
-    // copy right Yiran Yang
+
     m_pMktDataCollection->OnRtnDepthMarketData(pDepthMarketData);
 
     position_collection_->update(pDepthMarketData);

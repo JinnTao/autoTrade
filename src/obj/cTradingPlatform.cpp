@@ -321,8 +321,7 @@ int32 cTradingPlatform::init() {
                 pStrategy->RegisterPositionCollectionPtr(position_collection_);
                 pStrategy->RegisterOrderCollectionPtr(order_collection_);
                 pStrategy->RegisterTradeCollectionPtr(trade_collection_);
-                pStrategy->RegisterTxtDir(string(strategyConfig_.tradeDayDir), string(strategyConfig_.dataBaseDir));
-                pStrategy->RegisterAutoSetting(&strategyConfig_);
+
 
                 this->readDay(string(strategyConfig_.tradeDayDir), trade_day_list_);
                 marketdate_collection_->setTradeDayList(&trade_day_list_);
@@ -376,17 +375,10 @@ int32 cTradingPlatform::start() {
                 pStrategy->RegisterPositionCollectionPtr(position_collection_);
                 pStrategy->RegisterOrderCollectionPtr(order_collection_);
                 pStrategy->RegisterTradeCollectionPtr(trade_collection_);
-                pStrategy->RegisterTxtDir(string(strategyConfig_.tradeDayDir), string(strategyConfig_.dataBaseDir));
-                pStrategy->RegisterAutoSetting(&strategyConfig_);
 
+                // why do this? I donot konw,matbe just filter carlenday
                 this->readDay(string(strategyConfig_.tradeDayDir), trade_day_list_);
                 marketdate_collection_->setTradeDayList(&trade_day_list_);
-
-                pStrategy->setInst(instList[i]);
-                pStrategy->setlots(lotsList[i]);
-                pStrategy->setTimeMode(timeModeList[i]);
-                pStrategy->setInitDate(strategyConfig_.startDate, strategyConfig_.endDate);
-                pStrategy->setCollectionName(collectionList[i]);
 
                 ctp_td_spi_->RegisterStrategy(pStrategy.get());  // onTrade onOrder
 

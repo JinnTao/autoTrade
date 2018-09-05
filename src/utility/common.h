@@ -11,6 +11,8 @@ using uint32 = uint32_t;
 using uint64 = uint64_t;
 using std::string;
 
+enum STRATEGY_MODE{REAL, DEMO};
+
 // Put this in the declarations for a class to be uncopyable.
 #define DISALLOW_COPY(TypeName) TypeName(const TypeName&) = delete
 // Put this in the declarations for a class to be unassignable.
