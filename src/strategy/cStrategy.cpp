@@ -33,22 +33,16 @@ void cStrategy::stop() {
 void cStrategy::autoTrader() {
     // init
     loadConf();
-    if (trade_inst_list_.size() != 0) {
-        this->md_spi_->SubscribeMarketData(std::make_shared<vector<string>>(trade_inst_list_));
-    } else {
-        ILOG("Please put trade instrument to trade_inst_list_");
-        return;
-    }
-
+   
     onInit();
+
     // do loop
     while (is_running_) {
 
         std::lock_guard<std::mutex> lock(global::run_mutex);
         if (isTradeTime()) {
             this->onLoop(context_ptr_);
-
-            // 处理停止单
+            // working stop order
             this->processStopOrder();
         }
 
@@ -276,6 +270,12 @@ void cStrategy::sellClose(std::string inst, double price, double volume, bool st
 void cStrategy::onInit() {
     // 防止多策略冲突
     std::lock_guard<std::mutex> lock(global::init_mutex);
+    if (trade_inst_list_.size() != 0) {
+        this->md_spi_->SubscribeMarketData(std::make_shared<vector<string>>(trade_inst_list_));
+    } else {
+        ILOG("Please put trade instrument to trade_inst_list_");
+        return;
+    }
 }
 void cStrategy::onStop() {}
 void cStrategy::onTick(CThostFtdcDepthMarketDataField) {}
@@ -312,14 +312,11 @@ void cStrategy::onTrade(CThostFtdcTradeField trade) {
 void cStrategy::onStopOrder(cStopOrder) {}
 void cStrategy::cancelOrder(std::string order_id) {}
 void cStrategy::cancelAllOrder() {}
-void cStrategy::loadConf() {}
 
-void cStrategy::setTradeMode(STRATEGY_MODE mode) {
-    mode_ = mode;
-}
 
-void cStrategy::subcribe(std::vector<std::string> commodity_list, int frequency, int data_length) {
-    trade_inst_list_ = commodity_list;
-    frequency_       = frequency;
+void cStrategy::subcribe(std::vector<std::string> commodity_list, int frequency, int data_length,STRATEGY_MODE trade_mode) {
+    mode_             = trade_mode;
+    trade_inst_list_  = commodity_list;
+    frequency_        = frequency;
     data_length_      = data_length;
 }

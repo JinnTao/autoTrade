@@ -2,8 +2,10 @@
 #define _COMMON_H_
 
 #include <cstdint>
-
+#include <vector>
 #include <string>
+#include <memory>
+#include <chrono>
 
 using int32  = int32_t;
 using int64  = int64_t;
@@ -11,7 +13,12 @@ using uint32 = uint32_t;
 using uint64 = uint64_t;
 using std::string;
 
-enum STRATEGY_MODE{REAL, DEMO};
+using vector_string_ptr = std::shared_ptr<std::vector<std::string>>;
+using vector_double_ptr = std::shared_ptr<std::vector<double>>;
+using vector_datetime_ptr = std::shared_ptr<std::vector<std::chrono::system_clock::time_point>>;
+using vector_int_ptr   = std::shared_ptr<std::vector<int>>;
+
+enum STRATEGY_MODE { REAL, BACK_TEST };
 
 // Put this in the declarations for a class to be uncopyable.
 #define DISALLOW_COPY(TypeName) TypeName(const TypeName&) = delete
@@ -27,6 +34,5 @@ enum STRATEGY_MODE{REAL, DEMO};
 #define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
     TypeName() = delete;                         \
     DISALLOW_COPY_AND_ASSIGN(TypeName)
-
 
 #endif  // _COMMON_H_

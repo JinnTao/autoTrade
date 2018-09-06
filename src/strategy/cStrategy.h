@@ -40,11 +40,8 @@ public:
     virtual void onBar(barData);
     virtual void onOrder(cOrderPtr);
     virtual void onTrade(CThostFtdcTradeField);
-    virtual void onStopOrder(cStopOrder);
     virtual void onLoop(contextPtr);
-    virtual void loadConf();
 
-    virtual bool isTradeTime(int time_mode);
 
     void buyOpen(std::string inst, double price, double volume, bool stop = false);
     void buyClose(std::string inst, double price, double volume, bool stop = false);
@@ -66,10 +63,8 @@ public:
     void RegisterTradeCollectionPtr(cTradeCollectionPtr p);
 
     bool GetStrategyStatus();
-    void setTradeMode(STRATEGY_MODE);
     void makeStopOrder(std::string inst ,double price, double vol,traderTag::DIRECTION,traderTag::OFFSETFLAG);
-    void subcribe(std::vector<std::string> commodity, int frequncy, int dataCount);
-    bool isTradeTime();
+    void subcribe(std::vector<std::string> commodity, int frequncy, int dataCount,STRATEGY_MODE trade_mode);
 
 protected:
     bool mode1(int hourMinTime);

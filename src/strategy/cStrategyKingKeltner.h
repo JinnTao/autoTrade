@@ -39,15 +39,9 @@ public:
     ~cStrategyKingKeltner(void);
     virtual void onInit();
     virtual void onStop();
-    virtual void onTick(CThostFtdcDepthMarketDataField);
-    virtual void onBar(barData);
     virtual void onOrder(cOrderPtr);
     virtual void onTrade(CThostFtdcTradeField);
-    virtual void onStopOrder(cStopOrder);
     virtual void onLoop();
-    virtual void loadConf();
-
-    virtual bool isTradeTime();
 
     
     bool keltner( int kkLength, double kkDev,double &kkUp,double &kkDown);

@@ -12,10 +12,6 @@ cStrategyKingKeltner::~cStrategyKingKeltner(void)
 
 }
 
-void cStrategyKingKeltner::loadConf() {
-
-    
-}
 
 void cStrategyKingKeltner::onInit(){
    
@@ -85,7 +81,7 @@ void cStrategyKingKeltner::sendOcoOrder(std::string inst,double  upPrice, double
     //    2. 包含两个方向相反的停止单
     //    3. 一个方向的停止单成交后会立即撤消另一个方向的
     this->buyOpen(inst, upPrice, fixedSize, true);
-    this->sellOpen(inst, upPrice, fixedSize, true);
+    this->sellOpen(inst, downPrice, fixedSize, true);
 }
 
 void cStrategyKingKeltner::on1MBar(){
@@ -144,33 +140,7 @@ void cStrategyKingKeltner::on1MBar(){
 
 
 
-bool cStrategyKingKeltner::keltner( int kkLength, double kkDev, double& kkUp,double &kkDown) {
-    try {
-        double mid = 0, atr = 0;
-        int outBegIdx_SMA[100] = {};
-        int outNBElement_SMA[100] = {};
-        double outReal_SMA[100] = {};
 
-        int outBegIdx_ATR[100] = {};
-        int outNBElement_ATR[100] = {};
-        double outReal_ATR[100] = {};
-        // 输出的值 在out_real中的最后一个数据中，前提要求输入数据从old到new
-        TA_SMA(int(m_close.size()) - kkLength, int(m_close.size()), &m_close[0], kkLength, outBegIdx_SMA, outNBElement_SMA, outReal_SMA);
-
-        TA_ATR(int(m_close.size()) - kkLength, int(m_close.size()), &m_high[0], &m_low[0], &m_close[0], kkLength, outBegIdx_ATR, outNBElement_ATR, outReal_ATR);
-        
-        kkUp = outReal_SMA[kkLength - 1] + outReal_ATR[kkLength - 1] * kkDev;
-
-        kkDown = outReal_SMA[kkLength - 1] - outReal_ATR[kkLength - 1] * kkDev;
-        return true;
-    }
-    catch (...) {
-        
-        return false;
-    
-    }
-
-}
 
 void cStrategyKingKeltner::onTrade(CThostFtdcTradeField pTrade) {
     cStrategy::onTrade(pTrade);

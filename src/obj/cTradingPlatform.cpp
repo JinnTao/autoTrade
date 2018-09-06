@@ -61,7 +61,6 @@ int32 cTradingPlatform::AutoTrading() {
         } else if (str == "order") {
             this->order_collection_->PrintPendingOrders();
         } else if (str == "trade") {
-            // 首先查询手续费 再查询成交
             this->ctp_td_spi_->ReqQryTrade();
         } else if (str == "help") {
             cerr << "OrderList: show | order| trade | stop | run |close |buy/sell open/close inst vol price -> ";
@@ -376,7 +375,7 @@ int32 cTradingPlatform::start() {
                 pStrategy->RegisterOrderCollectionPtr(order_collection_);
                 pStrategy->RegisterTradeCollectionPtr(trade_collection_);
 
-                // why do this? I donot konw,matbe just filter carlenday
+                // why do this? I donot konw,maybe just filter carlenday
                 this->readDay(string(strategyConfig_.tradeDayDir), trade_day_list_);
                 marketdate_collection_->setTradeDayList(&trade_day_list_);
 
