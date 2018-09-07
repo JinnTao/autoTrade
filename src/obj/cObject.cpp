@@ -22,7 +22,7 @@ void ArrayManager::update(barData bar) {
     high_.push_back(bar.high);
     low_.push_back(bar.low);
     close_.push_back(bar.close);
-    
+
     vol_.push_back(bar.volume);
     open_interest_.push_back(bar.openInterest);
     date_time_.push_back(bar.date_time);
@@ -34,9 +34,6 @@ void ArrayManager::update(barData bar) {
     vol_.erase(vol_.begin());
     open_interest_.erase(open_interest_.begin());
     date_time_.erase(date_time_.begin());
-
-
-
 }
 std::vector<double> ArrayManager::high() {
     return high_;
@@ -59,7 +56,9 @@ std::vector<int32> ArrayManager::open_interest() {
 std::vector<std::chrono::system_clock::time_point> ArrayManager::date_time() {
     return date_time_;
 }
-
+bool ArrayManager::is_tradable() {
+    return is_tradable_;
+}
 bool ArrayManager::keltner(int n, double dev, double& up, double& down) {
     try {
         double mid = 0, atr = 0;

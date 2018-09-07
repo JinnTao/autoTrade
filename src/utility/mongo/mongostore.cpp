@@ -4,6 +4,8 @@
 #include <iostream>
 #include "mongostore.h"
 #include "logger.h"
+#include "bsoncxx/types.hpp"
+#include "bsoncxx/stdx/string_view.hpp"
 mongocxx::instance MongoStore::instance_ = {};
 
 MongoStore::~MongoStore() {
@@ -40,11 +42,11 @@ int32 MongoStore::stop() {
 bool MongoStore::getData(string                                             collectionName,
                          std::chrono::time_point<std::chrono::system_clock> sTimePoint,
                          std::chrono::time_point<std::chrono::system_clock> eTimePoint,
-                         std::vector<double>&                                    close,
+                         std::vector<double>&                               close,
                          std::vector<double>&                               open,
                          std::vector<double>&                               high,
                          std::vector<double>&                               low,
-                         std::vector<int32_t>&                               volume,
+                         std::vector<int32_t>&                              volume,
                          std::vector<string>&                               dateTime) {
     try {
         using bsoncxx::builder::stream::close_array;
@@ -64,8 +66,8 @@ bool MongoStore::getData(string                                             coll
         eTimePoint            = eTimePoint + 8 * one_hour;
         std::time_t endTime   = std::chrono::system_clock::to_time_t(eTimePoint);
         std::time_t startTime = std::chrono::system_clock::to_time_t(sTimePoint);
-        
-        //std::cout << " s " << std::ctime(&startTime) << " e " << std::ctime(&endTime) << std::endl;
+
+        // std::cout << " s " << std::ctime(&startTime) << " e " << std::ctime(&endTime) << std::endl;
         filter_builder << "recordTime" << open_document << "$gte" << bsoncxx::types::b_date(sTimePoint) << "$lte"
                        << bsoncxx::types::b_date(eTimePoint) << close_document;
         bsoncxx::builder::stream::document sort_filter;
@@ -82,25 +84,81 @@ bool MongoStore::getData(string                                             coll
             open.push_back(doc["open"].get_double());
             volume.push_back(doc["marketVol"].get_int32());
             std::chrono::system_clock::time_point DateTime = doc["recordTime"].get_date();
-            std::time_t                           c = std::chrono::system_clock::to_time_t(DateTime - 8 * one_hour);
-            string timeS                                    = std::ctime(&c);
+            std::time_t                           c     = std::chrono::system_clock::to_time_t(DateTime - 8 * one_hour);
+            string                                timeS = std::ctime(&c);
             timeS.pop_back();
             dateTime.push_back(timeS);
 
             ILOG("collectionName:{},{},close:{},high:{},low:{},open:{}",
                  collectionName,
-                 dateTime.at(dateTime.size()-1),
+                 dateTime.at(dateTime.size() - 1),
                  doc["close"].get_double(),
                  doc["high"].get_double(),
                  doc["low"].get_double(),
-                 doc["open"].get_double()
-                );
+                 doc["open"].get_double());
         }
-        //LOG(INFO) << " finish import Data";
+        // LOG(INFO) << " finish import Data";
         return true;
 
     } catch (const std::exception e) {
-        //LOG(INFO) << "Mongo Query faild! " << e.what();
+        // LOG(INFO) << "Mongo Query faild! " << e.what();
+        return false;
+    }
+}
+
+bool MongoStore::getData(string collection_name, int data_length, std::vector<barData>& bar_data_vec) {
+    try {
+        using bsoncxx::builder::stream::close_array;
+        using bsoncxx::builder::stream::close_document;
+        using bsoncxx::builder::stream::document;
+        using bsoncxx::builder::stream::finalize;
+        using bsoncxx::builder::stream::open_array;
+        using bsoncxx::builder::stream::open_document;
+
+        using bsoncxx::builder::basic::kvp;
+
+        mongocxx::collection               coll = db_.collection(collection_name);
+        bsoncxx::builder::stream::document sort_filter;
+        sort_filter << "recordTime" << -1;
+        mongocxx::options::find out;
+        out.sort(sort_filter.view());
+        out.limit(data_length);
+        mongocxx::cursor                                cursor = coll.find(sort_filter.view(), out);
+        std::chrono::duration<int, std::ratio<60 * 60>> one_hour(1);
+
+        for (auto&& doc : cursor) {
+
+            std::chrono::system_clock::time_point DateTime = doc["recordTime"].get_date();
+            std::time_t                           c     = std::chrono::system_clock::to_time_t(DateTime - 8 * one_hour);
+            string                                timeS = std::ctime(&c);
+            timeS.pop_back();
+            barData bar_data_;
+            bar_data_.close          = doc["close"].get_double();
+            bar_data_.open           = doc["open"].get_double();
+            bar_data_.high           = doc["high"].get_double();
+            bar_data_.low            = doc["low"].get_double();
+            bar_data_.date_time      = DateTime - 8 * one_hour;
+            bar_data_.volume         = doc["marketVol"].get_int32();
+            bsoncxx::stdx::string_view view = doc["exchange"].get_utf8().value;
+            bar_data_.exchange              = view.to_string();
+            bar_data_.openInterest          = doc["OpenInterest"].get_double();
+            bar_data_.collection_symbol     = collection_name;
+            bar_data_.symbol                = doc["id"].get_utf8().value.to_string();
+                                       // dateTime.push_back(timeS);
+
+                                       ILOG("collectionName:{},{},close:{},high:{},low:{},open:{}",
+                                            collection_name,
+                                            timeS,
+                                            doc["close"].get_double(),
+                                            doc["high"].get_double(),
+                                            doc["low"].get_double(),
+                                            doc["open"].get_double());
+        }
+        // LOG(INFO) << " finish import Data";
+        return true;
+
+    } catch (const std::exception e) {
+        // LOG(INFO) << "Mongo Query faild! " << e.what();
         return false;
     }
 }

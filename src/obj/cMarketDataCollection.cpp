@@ -2,79 +2,72 @@
 #include <time.h>
 #include "cMarketDataCollection.h"
 
-cMarketDataCollection::cMarketDataCollection()
-{
+cMarketDataCollection::cMarketDataCollection() {}
 
-}
+cMarketDataCollection::~cMarketDataCollection() {}
 
-cMarketDataCollection::~cMarketDataCollection()
-{
-
-}
-
-
-cMarketData* cMarketDataCollection::GetMarketDataHandle( const string& name )
-{
-    cMarketDataPtr p = GetMarketDataHandleSharedPtr( name );
-    if( p )
+cMarketData* cMarketDataCollection::GetMarketDataHandle(const string& name) {
+    cMarketDataPtr p = GetMarketDataHandleSharedPtr(name);
+    if (p)
         return p.get();
     else
         return NULL;
 }
 
-cMarketDataPtr cMarketDataCollection::GetMarketDataHandleSharedPtr( const string& name )
-{
-    marketdataHandle::iterator it = _m_mkt_handle.find( name );
-    if( it != _m_mkt_handle.end() )
+cMarketDataPtr cMarketDataCollection::GetMarketDataHandleSharedPtr(const string& name) {
+    marketdataHandle::iterator it = _m_mkt_handle.find(name);
+    if (it != _m_mkt_handle.end())
         return (*it).second;
     else
         return cMarketDataPtr();
 }
 
+void cMarketDataCollection::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField* pDepthMarketData) {
+    string       id(pDepthMarketData->InstrumentID);
+    cMarketData* md = GetMarketDataHandle(id);
 
-
-
-void cMarketDataCollection::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField* pDepthMarketData )
-{
-    string id( pDepthMarketData->InstrumentID );
-    cMarketData* md = GetMarketDataHandle( id );
-
-    if( !md ){
+    if (!md) {
         // create new CmarketData
-        shared_ptr< cMarketData > ptr = make_shared< cMarketData >( id);
+        shared_ptr<cMarketData> ptr = make_shared<cMarketData>(id);
         ptr->OnRtnDepthMarketData(pDepthMarketData);
-        _m_mkt_handle.insert(map< string, cMarketDataPtr >::value_type(id,ptr));
-    }else{
-        md->OnRtnDepthMarketData( pDepthMarketData );
+        _m_mkt_handle.insert(map<string, cMarketDataPtr>::value_type(id, ptr));
+    } else {
+        md->OnRtnDepthMarketData(pDepthMarketData);
     }
 }
 // 读取历史数据
-void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,string endDate,vector<double>& open,vector<double> &high,vector<double> &low,vector<double> &close,vector<double> &volume){
-    try{
-        
+void cMarketDataCollection::loadSeriesHistory(string          inst,
+                                              string          startDate,
+                                              string          endDate,
+                                              vector<double>& open,
+                                              vector<double>& high,
+                                              vector<double>& low,
+                                              vector<double>& close,
+                                              vector<double>& volume) {
+    try {
+
         auto iter = this->m_pTradeDayList->find(startDate);
-        
+
         vector<string> fileNameList;
-        while(iter != this->m_pTradeDayList->end()){
+        while (iter != this->m_pTradeDayList->end()) {
             fileNameList.push_back(iter->first);
-            if(iter != this->m_pTradeDayList->find(endDate)){
+            if (iter != this->m_pTradeDayList->find(endDate)) {
                 iter++;
-            }else{
+            } else {
                 break;
             }
-
         }
 
-        for(auto i = fileNameList.begin();i!= fileNameList.end();i++){
+        for (auto i = fileNameList.begin(); i != fileNameList.end(); i++) {
             fstream dataFile;
-            string date,time;
-            double dOpen,dHigh,dLow,dClose,dVolume;
-            dataFile.open( inst +"/" + *i + "_1m.txt", ios::_Nocreate | ios::in) ;
-            if(dataFile)
-            {
-                while(!dataFile.eof()){
-                    dataFile >> date >> time>> dOpen >> dHigh>> dLow>>dClose>>dVolume;
-                    cerr << date<< " " << time<< " " << dOpen<< " "  << dHigh << " "<< dLow << " "<< dClose<< " " << dVolume <<endl;
+            string  date, time;
+            double  dOpen, dHigh, dLow, dClose, dVolume;
+            dataFile.open(inst + "/" + *i + "_1m.txt", ios::_Nocreate | ios::in);
+            if (dataFile) {
+                while (!dataFile.eof()) {
+                    dataFile >> date >> time >> dOpen >> dHigh >> dLow >> dClose >> dVolume;
+                    cerr << date << " " << time << " " << dOpen << " " << dHigh << " " << dLow << " " << dClose << " "
+                         << dVolume << endl;
                     open.push_back(dOpen);
                     high.push_back(dHigh);
                     low.push_back(dLow);
@@ -87,26 +80,21 @@ void cMarketDataCollection::loadSeriesHistory(string inst,string startDate,strin
                 low.pop_back();
                 close.pop_back();
                 volume.pop_back();
-                dataFile.close();    
+                dataFile.close();
             }
-
         }
 
-
+    } catch (...) {
     }
-    catch(...){
-    
-    }
-
 }
 
-void cMarketDataCollection::loadHistoryFromMongo(string          collection,
-                                                 string          sDateTime,
-                                                 string          eDateTime,
-                                                 vector<double>& open,
-                                                 vector<double>& high,
-                                                 vector<double>& low,
-                                                 vector<double>& close,
+void cMarketDataCollection::loadHistoryFromMongo(string           collection,
+                                                 string           sDateTime,
+                                                 string           eDateTime,
+                                                 vector<double>&  open,
+                                                 vector<double>&  high,
+                                                 vector<double>&  low,
+                                                 vector<double>&  close,
                                                  vector<int32_t>& volume,
                                                  vector<string>&  dateTime) {
 
@@ -114,9 +102,13 @@ void cMarketDataCollection::loadHistoryFromMongo(string          collection,
     int sH, sM, sS, eH, eM, eS;
     sscanf_s(sDateTime.c_str(), "%4d%2d%2d-%2d:%2d:%2d", &sYear, &sMon, &sDay, &sH, &sM, &sS);
     sscanf_s(eDateTime.c_str(), "%4d%2d%2d-%2d:%2d:%2d", &eYear, &eMon, &eDay, &eH, &eM, &eS);
-    std::tm sTimeTm{sS,sM,sH,sDay,sMon-1,sYear-1900};
-    std::tm eTimeTm{eS,eM,eH,eDay,eMon-1,eYear-1900};
+    std::tm sTimeTm{sS, sM, sH, sDay, sMon - 1, sYear - 1900};
+    std::tm eTimeTm{eS, eM, eH, eDay, eMon - 1, eYear - 1900};
     this->m_sDateTimePoint = std::chrono::system_clock::from_time_t(mktime(&sTimeTm));
     this->m_eDateTimePoint = std::chrono::system_clock::from_time_t(mktime(&eTimeTm));
     m_mongoStore.getData(collection, m_sDateTimePoint, m_eDateTimePoint, close, open, high, low, volume, dateTime);
+}
+
+void loadHistoryFromMongo(string collection, int data_length, std::vector<barData> barDataList) {
+
 }

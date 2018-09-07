@@ -38,6 +38,7 @@ private:
     int                                                count_;  //缓存计数
     int                                                size_;   //缓存大小
     bool                                               inited_;
+    bool                                               is_tradable_;
 
 public:
     ArrayManager(int size = 100);
@@ -49,6 +50,7 @@ public:
     std::vector<int32>                                 vol();
     std::vector<int32>                                 open_interest();
     std::vector<std::chrono::system_clock::time_point> date_time();
+    bool                                               is_tradable();
     // 技术指标
     bool keltner(int n, double dev, double& up, double& down);
 

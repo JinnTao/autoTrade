@@ -22,6 +22,7 @@
 
 #include "common.h"
 #include "global.h"
+#include "cObject.h"
 
 using bsoncxx::builder::stream::close_array;
 using bsoncxx::builder::stream::close_document;
@@ -47,6 +48,7 @@ using bsoncxx::builder::stream::open_document;
                     std::vector<double>&                               low,
                     std::vector<int32_t>&                              volume,
                     std::vector<string>&                               dateTime);
+    bool    getData(string collection_name,int data_length,std::vector<barData> &bar_data_vec);
  private:
     //void loop();
     //void process();

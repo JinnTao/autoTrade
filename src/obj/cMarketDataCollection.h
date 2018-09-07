@@ -9,6 +9,7 @@
 #include "cMarketData.h"
 #include "global.h"
 #include "mongo/mongostore.h"
+#include "cObject.h"
 
 using marketdataHandle = std::map<string, cMarketDataPtr>;
 
@@ -45,6 +46,7 @@ public:
                               std::vector<double>& close,
                               std::vector<int32_t>& volume,
                               std::vector<string>& dateTime);
+    void loadHistoryFromMongo(string collection, int data_length, std::vector<barData> barDataList);
 
 
     void setTradeDayList(std::map<string,int> *p){m_pTradeDayList = p;}

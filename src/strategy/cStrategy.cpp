@@ -3,6 +3,7 @@
 cStrategy::cStrategy() {
     time_span_ms_ = 500;
     name_         = "undefine_name";
+    context_ptr_  = std::make_shared<contextPtr>();
 }
 
 cStrategy::cStrategy(const string& strategyID) {
@@ -31,16 +32,14 @@ void cStrategy::stop() {
 }
 
 void cStrategy::autoTrader() {
-    // init
-    loadConf();
-   
+
     onInit();
 
     // do loop
     while (is_running_) {
 
         std::lock_guard<std::mutex> lock(global::run_mutex);
-        if (isTradeTime()) {
+        if (update_context()) {
             this->onLoop(context_ptr_);
             // working stop order
             this->processStopOrder();
@@ -309,14 +308,22 @@ void cStrategy::onTrade(CThostFtdcTradeField trade) {
     //    }
     //}
 }
-void cStrategy::onStopOrder(cStopOrder) {}
 void cStrategy::cancelOrder(std::string order_id) {}
 void cStrategy::cancelAllOrder() {}
 
+void cStrategy::subcribe(std::vector<std::string> commodity_list,
+                         int                      frequency,
+                         int                      data_length,
+                         STRATEGY_MODE            trade_mode) {
+    mode_            = trade_mode;
+    trade_inst_list_ = commodity_list;
+    frequency_       = frequency;
+    data_length_     = data_length;
+    for (auto iter = trade_inst_list_.begin(); iter != trade_inst_list_.end(); iter++)
+    {
+        ArrayManager am;
+        context_ptr_->insert()
 
-void cStrategy::subcribe(std::vector<std::string> commodity_list, int frequency, int data_length,STRATEGY_MODE trade_mode) {
-    mode_             = trade_mode;
-    trade_inst_list_  = commodity_list;
-    frequency_        = frequency;
-    data_length_      = data_length;
+
+    }
 }

@@ -65,7 +65,7 @@ public:
     bool GetStrategyStatus();
     void makeStopOrder(std::string inst ,double price, double vol,traderTag::DIRECTION,traderTag::OFFSETFLAG);
     void subcribe(std::vector<std::string> commodity, int frequncy, int dataCount,STRATEGY_MODE trade_mode);
-
+    bool update_context();
 protected:
     bool mode1(int hourMinTime);
     bool mode2(int hourMinTime);
