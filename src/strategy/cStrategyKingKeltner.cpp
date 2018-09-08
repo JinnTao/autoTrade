@@ -43,6 +43,10 @@ void cStrategyKingKeltner::run(){
         CThostFtdcDepthMarketDataField lastData = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
         tm*                            localNow = this->getLocalNowTm();
         int                            tickMinute = localNow->tm_min;
+        if (lastData.Volume == 0) {
+            ILOG("lastData vol:{} eixt.", lastData.Volume);
+            return;
+        }
         // new Candle
         if (tickMinute != m_candleMinute) {
             if (m_candleMinute != -1) {

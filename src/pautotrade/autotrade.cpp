@@ -63,6 +63,7 @@ int main(int32 argc, char** argv) {
         result = trader->stop();
         logger::releaseLogger();
         ILOG("Trader stop, exited! Result:{}.", result);
+        system("pause");
         return result;
     } catch (exception e) {
         WLOG("Error:{}.", e.what());

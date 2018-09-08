@@ -336,6 +336,7 @@ int32 cTradingPlatform::init() {
 
         init_result = ctp_md_spi_->start();
         ctp_md_spi_->SubscribeMarketData(this->subscribe_inst_v_);
+        ctp_md_spi_->SubscribeMarketData(string("ni1810"));
         if (init_result != 0) {
             WLOG("Md start failed! Result:{}", init_result);
             return -4;
