@@ -1,115 +1,119 @@
 #include "cStrategy.h"
 
 cStrategy::cStrategy() {
-    m_timeSpan = 500;
+    time_span_ms_ = 500;
+    name_         = "undefine_name";
+    context_ptr_  = std::make_shared<contextPtr>();
 }
 
 cStrategy::cStrategy(const string& strategyID) {
-    m_timeSpan           = 500;
-    this->m_strategyName = strategyID;
+    time_span_ms_ = 500;
+    name_         = strategyID;
 }
 
 cStrategy::~cStrategy() {}
 
 void cStrategy::start() {
-    if (!this->m_isRuning.load()) {
-        this->m_isRuning.store(true, std::memory_order_release);
-        m_thread = std::thread(&cStrategy::AutoTrading, this);
-        ILOG("Strategy Inst:{},timeMode:{},Lots{},Start.", m_inst, m_timeMode, m_lots);
-
+    if (!is_running_) {
+        is_running_   = true;
+        inner_thread_ = std::thread(&cStrategy::autoTrader, this);
+        ILOG("Strategy name:{} start up.", name_);
     } else {
-        ILOG("Strategy status: {}.", this->m_isRuning.load());
+        ILOG("Strategy status: {}.", is_running_);
     }
 }
 
 void cStrategy::stop() {
-    m_isRuning.store(false, std::memory_order_release);
-    if (m_thread.joinable()) {
-        m_thread.join();
+    is_running_ = false;
+    if (inner_thread_.joinable()) {
+        inner_thread_.join();
     }
-    ILOG("Strategy Inst:{},timeMode:{},Lots{},Stop.", m_inst, m_timeMode, m_lots);
+    ILOG("Strategy name:{} stop.", name_);
 }
 
-int cStrategy::AutoTrading() {
-    init();
-    while (this->m_isRuning.load(std::memory_order_relaxed)) {
-        this->run();
+void cStrategy::autoTrader() {
+
+    onInit();
+
+    // do loop
+    while (is_running_) {
+
+        std::lock_guard<std::mutex> lock(global::run_mutex);
+        if (update_context()) {
+            this->onLoop(context_ptr_);
+            // working stop order
+            this->processStopOrder();
+        }
+
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(500ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(time_span_ms_));
     }
-    unInit();
-    return 0;
-}
-void cStrategy::init() {
-    cerr << this->m_strategyName << " init" << endl;
-};
-
-void cStrategy::unInit() {
-    cerr << this->m_strategyName << " unInit" << endl;
-};
-
-void cStrategy::sendStopOrder(string                inst,
-                              traderTag::DIRECTION  inDirection,
-                              traderTag::OFFSETFLAG inOffset,
-                              double                price,
-                              int                   volume,
-                              string                strategy,
-                              int                   slipNum) {
-    cStopOrder order;
-    order.instrument   = inst;
-    order.direction    = inDirection;
-    order.offset       = inOffset;
-    order.price        = price;
-    order.volume       = volume;
-    order.strategyName = strategy;
-    order.orderType    = "";
-    order.status       = true;
-    order.slipTickNum  = slipNum;
-    order.orderTime    = std::chrono::system_clock::now();
-    // add order to working list
-    m_workingStopOrderList.push_back(order);
+    onStop();
+    return;
 }
 
-void cStrategy::processStopOrder(string inst, double lastPrice) {
-    for (auto var = m_workingStopOrderList.begin(); var != m_workingStopOrderList.end(); var++) {
-        if (inst == var->instrument && var->status) {
-            bool longTriggered  = var->direction == traderTag::DIRECTION::buy && lastPrice >= var->price;
-            bool shortTriggered = var->direction == traderTag::DIRECTION::sell && lastPrice <= var->price;
+void cStrategy::processStopOrder() {
+    double lastPrice     = 0;
+    bool   longTriggered = false, shortTriggered = false;
+    for (int i = 0; i < stop_order_list_.size(); i++) {
+        if (stop_order_list_[i].status) {
+            lastPrice = this->marketdata_collection_->GetMarketDataHandle(stop_order_list_[i].instrument)
+                            ->getLastMarketData()
+                            .LastPrice;
+            longTriggered =
+                stop_order_list_[i].direction == traderTag::DIRECTION::buy && lastPrice >= stop_order_list_[i].price;
+            shortTriggered =
+                stop_order_list_[i].direction == traderTag::DIRECTION::sell && lastPrice <= stop_order_list_[i].price;
 
             if (longTriggered || shortTriggered) {
-                // this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, var->price,
-                // var->slipTickNum);
-                this->m_pTradeSpi->insertOrder(inst, var->direction, var->offset, var->volume, 0);
-                var->status = false;
+                if (mode_ == STRATEGY_MODE::REAL) {
+                    this->trader_spi_->insertOrder(stop_order_list_[i].instrument,
+                                                   stop_order_list_[i].direction,
+                                                   stop_order_list_[i].offset,
+                                                   stop_order_list_[i].volume,
+                                                   0);
+                }
+                stop_order_list_[i].status = false;
+                stop_order_list_.erase(stop_order_list_.begin() + i);
+                i--;  // becasuse after erase,already point to next element;
             }
         }
     }
 }
 bool cStrategy::isTradeTime() {
+    auto       local_now    = std::chrono::system_clock::now();
+    time_t     local_now_tm = std::chrono::system_clock::to_time_t(local_now);
+    struct tm* timeInfo     = localtime(&local_now_tm);
 
-    struct tm*     timeInfo = getLocalNowTm();
-    DateTimeFormat nowTime  = timeInfo->tm_hour * 100 + timeInfo->tm_min;
-    if (m_timeMode == 1) {
+    int         nowTime            = timeInfo->tm_hour * 100 + timeInfo->tm_min;
+    std::string mode_inst_list_1[] = {"rb", "ni", "cu"};
+    std::string mode_inst_list_2[] = {"rb", "ni", "cu"};
+    std::string mode_inst_list_3[] = {"rb", "ni", "cu"};
+    std::string mode_inst_list_4[] = {"rb", "ni", "cu"};
+    std::string mode_inst_list_5[] = {"rb", "ni", "cu"};
+    std::string mode_inst_list_7[] = {"rb", "ni", "cu"};
+
+    if (time_mode == 1) {
         return mode1(nowTime);
     }
-    if (m_timeMode == 2) {
+    if (time_mode == 2) {
         return mode2(nowTime);
     }
-    if (m_timeMode == 3) {
+    if (time_mode == 3) {
         return mode3(nowTime);
     }
-    if (m_timeMode == 4) {
+    if (time_mode == 4) {
         return mode4(nowTime);
     }
-    if (m_timeMode == 5) {
+    if (time_mode == 5) {
         return mode5(nowTime);
     }
     return false;
 }
-bool cStrategy::mode1(DateTimeFormat nowTime) {
+bool cStrategy::mode1(int nowTime) {
 
-    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500;
-    bool           newState;
+    int  s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500;
+    bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
         (nowTime >= s1330 && nowTime < s1500)) {
 
@@ -121,9 +125,8 @@ bool cStrategy::mode1(DateTimeFormat nowTime) {
     return newState;
     return true;
 }
-bool cStrategy::mode2(DateTimeFormat nowTime) {
-    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
-                   s2300 = 2300;
+bool cStrategy::mode2(int nowTime) {
+    int  s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2300 = 2300;
     bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
         (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2300)) {
@@ -135,9 +138,8 @@ bool cStrategy::mode2(DateTimeFormat nowTime) {
     }
     return newState;
 }
-bool cStrategy::mode3(DateTimeFormat nowTime) {
-    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
-                   s2330 = 2330;
+bool cStrategy::mode3(int nowTime) {
+    int  s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2330 = 2330;
     bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
         (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2330)) {
@@ -149,9 +151,9 @@ bool cStrategy::mode3(DateTimeFormat nowTime) {
     }
     return newState;
 }
-bool cStrategy::mode4(DateTimeFormat nowTime) {
-    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
-                   s2359 = 2359, s0000 = 0, s0100 = 100;
+bool cStrategy::mode4(int nowTime) {
+    int s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2359 = 2359,
+        s0000 = 0, s0100 = 100;
     bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
         (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2359) ||
@@ -164,9 +166,9 @@ bool cStrategy::mode4(DateTimeFormat nowTime) {
     }
     return newState;
 }
-bool cStrategy::mode5(DateTimeFormat nowTime) {
-    DateTimeFormat s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100,
-                   s2359 = 2359, s0000 = 0, s0200 = 200;
+bool cStrategy::mode5(int nowTime) {
+    int s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2359 = 2359,
+        s0000 = 0, s0200 = 200;
     bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
         (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2359) ||
@@ -180,9 +182,148 @@ bool cStrategy::mode5(DateTimeFormat nowTime) {
     return newState;
 }
 
-tm* cStrategy::getLocalNowTm() {
-    auto       local_now    = std::chrono::system_clock::now();
-    time_t     local_now_tm = std::chrono::system_clock::to_time_t(local_now);
-    struct tm* timeInfo     = localtime(&local_now_tm);
-    return timeInfo;
+void cStrategy::RegisterMarketDataCollection(cMarketDataCollectionPtr p) {
+    marketdata_collection_ = p;
+}
+void cStrategy::RegisterTradeSpi(std::shared_ptr<cTraderSpi> p) {
+    trader_spi_ = p;
+}
+void cStrategy::RegisterMdSpi(std::shared_ptr<cMdSpi> p) {
+    md_spi_ = p;
+}
+void cStrategy::RegisterPositionCollectionPtr(cPositionCollectionPtr p) {
+    position_collection_ = p;
+};
+void cStrategy::RegisterOrderCollectionPtr(cOrderCollectionPtr p) {
+    order_collection_ = p;
+}
+void cStrategy::RegisterTradeCollectionPtr(cTradeCollectionPtr p) {
+    trade_collection_ = p;
+}
+
+bool cStrategy::GetStrategyStatus() {
+    return is_running_;
+}
+
+void cStrategy::onLoop(contextPtr) {
+    ILOG("Strategy name:{} onLoop.", name_);
+}
+void cStrategy::makeStopOrder(std::string           inst,
+                              double                price,
+                              double                vol,
+                              traderTag::DIRECTION  dire,
+                              traderTag::OFFSETFLAG offset) {
+    cStopOrder order;
+    order.instrument   = inst;
+    order.direction    = dire;
+    order.offset       = offset;
+    order.price        = price;
+    order.volume       = vol;
+    order.strategyName = name_;
+    order.orderType    = "";
+    order.status       = true;
+    order.slipTickNum  = 1;
+    order.orderTime    = std::chrono::system_clock::now();
+    order.order_id_    = sto_order_id_seq_;
+    // add order to working list
+    stop_order_list_.push_back(order);
+    sto_order_id_seq_++;
+}
+void cStrategy::buyOpen(std::string inst, double price, double volume, bool stop = false) {
+    if (stop == true) {
+        makeStopOrder(inst, price, volume, traderTag::DIRECTION::buy, traderTag::OFFSETFLAG::open);
+    } else {
+        if (mode_ = STRATEGY_MODE::REAL) {
+            this->trader_spi_->insertOrder(inst, traderTag::buy, traderTag::open, volume, price);
+        }
+    }
+}
+void cStrategy::buyClose(std::string inst, double price, double volume, bool stop = false) {
+    if (stop == true) {
+        makeStopOrder(inst, price, volume, traderTag::DIRECTION::buy, traderTag::OFFSETFLAG::close);
+    } else {
+        if (mode_ = STRATEGY_MODE::REAL) {
+            this->trader_spi_->insertOrder(inst, traderTag::buy, traderTag::close, volume, price);
+        }
+    }
+}
+void cStrategy::sellOpen(std::string inst, double price, double volume, bool stop = false) {
+    if (stop == true) {
+        makeStopOrder(inst, price, volume, traderTag::DIRECTION::sell, traderTag::OFFSETFLAG::open);
+    } else {
+        if (mode_ = STRATEGY_MODE::REAL) {
+            this->trader_spi_->insertOrder(inst, traderTag::sell, traderTag::open, volume, price);
+        }
+    }
+}
+void cStrategy::sellClose(std::string inst, double price, double volume, bool stop = false) {
+    if (stop == true) {
+        makeStopOrder(inst, price, volume, traderTag::DIRECTION::sell, traderTag::OFFSETFLAG::close);
+    } else {
+        if (mode_ = STRATEGY_MODE::REAL) {
+            this->trader_spi_->insertOrder(inst, traderTag::sell, traderTag::close, volume, price);
+        }
+    }
+}
+
+void cStrategy::onInit() {
+    // ·ÀÖ¹¶à²ßÂÔ³åÍ»
+    std::lock_guard<std::mutex> lock(global::init_mutex);
+    if (trade_inst_list_.size() != 0) {
+        this->md_spi_->SubscribeMarketData(std::make_shared<vector<string>>(trade_inst_list_));
+    } else {
+        ILOG("Please put trade instrument to trade_inst_list_");
+        return;
+    }
+}
+void cStrategy::onStop() {}
+void cStrategy::onTick(CThostFtdcDepthMarketDataField) {}
+void cStrategy::onBar(barData) {}
+void cStrategy::onOrder(cOrderPtr) {}
+void cStrategy::onTrade(CThostFtdcTradeField trade) {
+    // if (strcmp(trade.InstrumentID, m_inst.c_str()) != 0) {
+    //    // LOG(INFO) << "Not " << m_inst << " on trade";
+    //} else {
+    //    ILOG("OnTrade:{}.", this->m_strategyName);
+    //    if (m_netPos != 0) {
+    //        if (m_netPos > 0) {
+    //            for (auto i = m_workingStopOrderList.begin(); i != m_workingStopOrderList.end(); i++) {
+
+    //                if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::sell) {
+    //                    i->status = false;
+    //                    ILOG("Cancel sell {} stop order.",
+    //                         ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open "));
+    //                }
+    //            }
+    //        }
+    //        if (m_netPos < 0) {
+    //            for (auto i = m_workingStopOrderList.begin(); i != m_workingStopOrderList.end(); i++) {
+    //                if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::buy) {
+    //                    i->status = false;
+    //                    ILOG("Cancel buy {} stop order.",
+    //                         ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open "));
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
+}
+void cStrategy::cancelOrder(std::string order_id) {}
+void cStrategy::cancelAllOrder() {}
+
+void cStrategy::subcribe(std::vector<std::string> commodity_list,
+                         int                      frequency,
+                         int                      data_length,
+                         STRATEGY_MODE            trade_mode) {
+    mode_            = trade_mode;
+    trade_inst_list_ = commodity_list;
+    frequency_       = frequency;
+    data_length_     = data_length;
+    for (auto iter = trade_inst_list_.begin(); iter != trade_inst_list_.end(); iter++)
+    {
+        ArrayManager am;
+        context_ptr_->insert()
+
+
+    }
 }

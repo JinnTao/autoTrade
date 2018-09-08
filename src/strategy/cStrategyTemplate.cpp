@@ -27,9 +27,9 @@ cStrategyTemplate::~cStrategyTemplate(){
 void cStrategyTemplate::init(){
     if(m_close.size() == 0){
         // Start Time 
-        this->m_marketData->loadSeriesHistory(m_oneMinuteDataDir,m_startDate,m_endDate,m_open,m_high,m_low,m_close,m_volume);
+        //this->marketdata_collection_->loadSeriesHistory(m_oneMinuteDataDir,m_startDate,m_endDate,m_open,m_high,m_low,m_close,m_volume);
     }
-    this->m_pMdSpi->SubscribeMarketData(m_inst);// trade 1801
+    //this->md_->SubscribeMarketData(m_inst);// trade 1801
 }
 
 void cStrategyTemplate::onOrder(cOrderPtr p){

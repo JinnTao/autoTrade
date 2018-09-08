@@ -2,16 +2,8 @@
 
 cStrategyKingKeltner::cStrategyKingKeltner(void)
 {
-    m_candleMinute = -1;
-    m_lastOpen = -1;
-    m_lastHigh = -1;
-    m_lastLow = -1;
-    m_lastClose = -1;
-    m_lastVolume = -1;
-    m_strategyName = "KingKeltner";
     cStrategy::cStrategy();
-    m_netPos = 0;
-    m_oldState = false;
+    name_ = "KingKeltner";
 }
 
 
@@ -20,25 +12,16 @@ cStrategyKingKeltner::~cStrategyKingKeltner(void)
 
 }
 
-void cStrategyKingKeltner::init(){
-    std::lock_guard<std::mutex> lock(global::init_mutex);
-    if (m_close.size() == 0) {
-        // Start Time 
-        //this->m_marketData->loadSeriesHistory(m_oneMinuteDataDir, m_startDate, m_endDate, m_open, m_high, m_low, m_close, m_volume);
-        this->m_marketData->loadHistoryFromMongo(m_collectionName,m_pAutoSetting->startDateTime,m_pAutoSetting->endDateTime, m_open, m_high, m_low, m_close, m_volume,m_dateTime);
-    }
-    this->m_pMdSpi->SubscribeMarketData(m_inst);// trade 1801
+
+void cStrategyKingKeltner::onInit(){
+   
+    
 
 }
 
-void cStrategyKingKeltner::unInit(){
 
-
-
-}
-
-void cStrategyKingKeltner::run(){
-    std::lock_guard<std::mutex> lock(global::run_mutex);
+void cStrategyKingKeltner::onLoop(){
+    
     if (this->m_marketData->GetMarketDataHandle(m_inst) && isTradeTime()) {
         CThostFtdcDepthMarketDataField lastData = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
         tm*                            localNow = this->getLocalNowTm();
@@ -89,19 +72,10 @@ void cStrategyKingKeltner::run(){
             m_lastVolume += lastData.Volume;
 
         }
-        // 处理停止单
-        this->processStopOrder(m_inst, m_lastClose);
-    }/*else{
-        auto tick = this->m_marketData->GetMarketDataHandle(m_inst)->getLastMarketData();
-        ILOG("cStrategyKingKeltner,Inst:{},Lots:{},LastPrice:{},UpdateTime:{}.",
-             m_inst,
-             m_lots,
-             tick.LastPrice,
-             tick.UpdateTime);
-    }*/
+    }
 }
 
-void cStrategyKingKeltner::sendOcoOrder(double upPrice, double downPrice, int fixedSize) {
+void cStrategyKingKeltner::sendOcoOrder(std::string inst,double  upPrice, double downPrice, int fixedSize) {
     
     //
     //    发送OCO委托
@@ -110,12 +84,8 @@ void cStrategyKingKeltner::sendOcoOrder(double upPrice, double downPrice, int fi
     //    1. 主要用于实现区间突破入场
     //    2. 包含两个方向相反的停止单
     //    3. 一个方向的停止单成交后会立即撤消另一个方向的
-    //
-    this->sendStopOrder(
-        m_inst, traderTag::DIRECTION::buy, traderTag::OFFSETFLAG::open, upPrice, fixedSize, this->m_strategyName);
-    this->sendStopOrder(
-        m_inst, traderTag::DIRECTION::sell, traderTag::OFFSETFLAG::open, downPrice, fixedSize, this->m_strategyName);
-
+    this->buyOpen(inst, upPrice, fixedSize, true);
+    this->sellOpen(inst, downPrice, fixedSize, true);
 }
 
 void cStrategyKingKeltner::on1MBar(){
@@ -174,68 +144,15 @@ void cStrategyKingKeltner::on1MBar(){
 
 
 
-bool cStrategyKingKeltner::keltner( int kkLength, double kkDev, double& kkUp,double &kkDown) {
-    try {
-        double mid = 0, atr = 0;
-        int outBegIdx_SMA[100] = {};
-        int outNBElement_SMA[100] = {};
-        double outReal_SMA[100] = {};
 
-        int outBegIdx_ATR[100] = {};
-        int outNBElement_ATR[100] = {};
-        double outReal_ATR[100] = {};
-        // 输出的值 在out_real中的最后一个数据中，前提要求输入数据从old到new
-        TA_SMA(int(m_close.size()) - kkLength, int(m_close.size()), &m_close[0], kkLength, outBegIdx_SMA, outNBElement_SMA, outReal_SMA);
-
-        TA_ATR(int(m_close.size()) - kkLength, int(m_close.size()), &m_high[0], &m_low[0], &m_close[0], kkLength, outBegIdx_ATR, outNBElement_ATR, outReal_ATR);
-        
-        kkUp = outReal_SMA[kkLength - 1] + outReal_ATR[kkLength - 1] * kkDev;
-
-        kkDown = outReal_SMA[kkLength - 1] - outReal_ATR[kkLength - 1] * kkDev;
-        return true;
-    }
-    catch (...) {
-        
-        return false;
-    
-    }
-
-}
 
 void cStrategyKingKeltner::onTrade(CThostFtdcTradeField pTrade) {
-    
-    if (strcmp(pTrade.InstrumentID, m_inst.c_str()) != 0) {
-        //LOG(INFO) << "Not " << m_inst << " on trade";
-    }
-    else{
-        ILOG("OnTrade:{}.", this->m_strategyName);
-        if (m_netPos != 0) {
-            if (m_netPos > 0) {
-                for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
-
-                    if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::sell) {
-                        i->status = false;
-                        ILOG("Cancel sell {} stop order.",
-                             ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open "));
-                    }
-                }
-            }
-            if (m_netPos < 0) {
-                for (auto i = m_workingStopOrderList.begin();i != m_workingStopOrderList.end();i++) {
-                    if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::buy) {
-                        i->status = false;
-                        ILOG("Cancel buy {} stop order.",
-                             ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open "));
-                    }
-                }
-            }
-        }
-    }
+    cStrategy::onTrade(pTrade);
 
 }
 
 void cStrategyKingKeltner::printStatus() {
-    for each (auto var in m_workingStopOrderList)
+    for each (auto var in stop_order_list_)
     {
         if(var.status){
             time_t orderTimeT = std::chrono::system_clock::to_time_t(var.orderTime);
@@ -259,10 +176,6 @@ void cStrategyKingKeltner::printStatus() {
         }
 
     }
-}
-
-void cStrategyKingKeltner::setInst(string inst) {
-    this->m_inst = inst;
 }
 
 

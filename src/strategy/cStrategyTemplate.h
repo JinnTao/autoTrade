@@ -18,7 +18,7 @@ public:
 
     virtual void onTrade(CThostFtdcTradeField);
 
-    bool isTradeTime();
+    
 
     virtual void setInst(string inst){ this->m_inst = inst; }
     virtual void setInitDate(string startDate, string endDate){ this->m_startDate = startDate; this->m_endDate = endDate; }
