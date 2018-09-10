@@ -168,12 +168,11 @@ bool cStrategy::mode4(int nowTime) {
 }
 bool cStrategy::mode5(int nowTime) {
     int s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2359 = 2359,
-        s0000 = 0, s0200 = 200;
+        s0000 = 0, s0230 = 230;
     bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
         (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2359) ||
-        (nowTime >= s0000 && nowTime < s0200)) {
-
+        (nowTime >= s0000 && nowTime < s0230)) {
         newState = true;
     } else {
 
@@ -322,6 +321,7 @@ void cStrategy::subcribe(std::vector<std::string> commodity_list,
     for (auto iter = trade_inst_list_.begin(); iter != trade_inst_list_.end(); iter++)
     {
         ArrayManager am;
+        marketdata_collection_->loadHistoryFromMongo(*iter, da;)
         context_ptr_->insert()
 
 
