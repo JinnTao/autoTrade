@@ -46,13 +46,12 @@ public:
                               std::vector<double>& close,
                               std::vector<int32_t>& volume,
                               std::vector<string>& dateTime);
-    void loadHistoryFromMongo(string collection, int data_length, std::vector<barData> barDataList);
+    void loadHistoryFromMongo(string collection, int data_length, std::vector<barData>& barDataList);
 
 
     void setTradeDayList(std::map<string,int> *p){m_pTradeDayList = p;}
-    void registerMongoSetting(mongoConfig *p) {
-        m_mongoStore.init(*p); 
-    }
+    void registerMongoSetting(mongoConfig* p) { mongo_store_.init(*p); }
+
 protected:
    
     marketdataHandle _m_mkt_handle;
@@ -62,7 +61,7 @@ protected:
     // trade date List
     std::map<string,int> *m_pTradeDayList;
 private:
-   MongoStore m_mongoStore;
+   MongoStore mongo_store_;
     
 };
 

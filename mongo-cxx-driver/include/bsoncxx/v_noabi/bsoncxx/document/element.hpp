@@ -129,7 +129,7 @@ class BSONCXX_API element {
     ///
     /// @return the element's value.
     ///
-    types::b_double get_utf8() const;
+    types::b_double get_double() const;
 
     ///
     /// Getter for elements of the b_utf8 type.

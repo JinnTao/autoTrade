@@ -102,7 +102,7 @@ bool MongoStore::getData(string                                             coll
 
     } catch (const std::exception e) {
         // LOG(INFO) << "Mongo Query faild! " << e.what();
-        return false;
+        return false; 
     }
 }
 
@@ -125,7 +125,6 @@ bool MongoStore::getData(string collection_name, int data_length, std::vector<ba
         out.limit(data_length);
         mongocxx::cursor                                cursor = coll.find(sort_filter.view(), out);
         std::chrono::duration<int, std::ratio<60 * 60>> one_hour(1);
-
         for (auto&& doc : cursor) {
 
             std::chrono::system_clock::time_point DateTime = doc["recordTime"].get_date();
@@ -137,28 +136,26 @@ bool MongoStore::getData(string collection_name, int data_length, std::vector<ba
             bar_data_.open           = doc["open"].get_double();
             bar_data_.high           = doc["high"].get_double();
             bar_data_.low            = doc["low"].get_double();
-            bar_data_.date_time      = DateTime - 8 * one_hour;
+            bar_data_.date_time      = DateTime - 8 * one_hour;// convert to utf8
             bar_data_.volume         = doc["marketVol"].get_int32();
             bsoncxx::stdx::string_view view = doc["exchange"].get_utf8().value;
             bar_data_.exchange              = view.to_string();
             bar_data_.openInterest          = doc["OpenInterest"].get_double();
             bar_data_.collection_symbol     = collection_name;
             bar_data_.symbol                = doc["id"].get_utf8().value.to_string();
-                                       // dateTime.push_back(timeS);
-
-                                       ILOG("collectionName:{},{},close:{},high:{},low:{},open:{}",
-                                            collection_name,
-                                            timeS,
-                                            doc["close"].get_double(),
-                                            doc["high"].get_double(),
-                                            doc["low"].get_double(),
-                                            doc["open"].get_double());
+            bar_data_vec.push_back(bar_data_);
         }
-        // LOG(INFO) << " finish import Data";
-        return true;
+        auto start_date = bar_data_vec.end()->date_time;
+        auto start_date_tm  = std::chrono::system_clock::to_time_t(start_date);
+        string start_date_str = std::ctime(&start_date_tm);
 
+        auto   end_date     = bar_data_vec.begin()->date_time;
+        auto   end_date_tm  = std::chrono::system_clock::to_time_t(end_date);
+        string end_date_str = std::ctime(&end_date_tm);
+        ILOG("Load {} history data Datetime from {} to {}",collection_name,start_date_str,end_date_str);
+        return true;
     } catch (const std::exception e) {
-        // LOG(INFO) << "Mongo Query faild! " << e.what();
+        ILOG("Mongo Query failed:{}", e.what());
         return false;
     }
 }

@@ -35,7 +35,7 @@ void cMarketDataCollection::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField*
         md->OnRtnDepthMarketData(pDepthMarketData);
     }
 }
-// 读取历史数据
+// load history data from txt file
 void cMarketDataCollection::loadSeriesHistory(string          inst,
                                               string          startDate,
                                               string          endDate,
@@ -106,9 +106,9 @@ void cMarketDataCollection::loadHistoryFromMongo(string           collection,
     std::tm eTimeTm{eS, eM, eH, eDay, eMon - 1, eYear - 1900};
     this->m_sDateTimePoint = std::chrono::system_clock::from_time_t(mktime(&sTimeTm));
     this->m_eDateTimePoint = std::chrono::system_clock::from_time_t(mktime(&eTimeTm));
-    m_mongoStore.getData(collection, m_sDateTimePoint, m_eDateTimePoint, close, open, high, low, volume, dateTime);
+    mongo_store_.getData(collection, m_sDateTimePoint, m_eDateTimePoint, close, open, high, low, volume, dateTime);
 }
 
-void loadHistoryFromMongo(string collection, int data_length, std::vector<barData> barDataList) {
-
+void cMarketDataCollection::loadHistoryFromMongo(string collection, int data_length, std::vector<barData>& barDataList) {
+    mongo_store_.getData(collection, data_length, barDataList);
 }

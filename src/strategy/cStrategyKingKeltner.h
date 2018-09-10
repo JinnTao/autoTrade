@@ -31,23 +31,16 @@ private:
     double m_orderBuySize;
     double m_orderSellPrice;
     double m_orderSellSize;
-
     double m_ocoOrderStaus;
 
 public:
     cStrategyKingKeltner(void);
     ~cStrategyKingKeltner(void);
     virtual void onInit();
-    virtual void onStop();
     virtual void onOrder(cOrderPtr);
     virtual void onTrade(CThostFtdcTradeField);
-    virtual void onLoop();
-
-    
-    bool keltner( int kkLength, double kkDev,double &kkUp,double &kkDown);
+    virtual void onLoop(contextPtr);
     void sendOcoOrder(std::string inst,double upPrice, double downPrice, int fixedSize);
     void printStatus();
-
-
 };
 

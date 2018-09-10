@@ -17,6 +17,13 @@ void ArrayManager::update(barData bar) {
     count_++;
     if (!inited_ && count_ >= size_) {
         inited_ = true;
+        open_.erase(open_.begin());
+        high_.erase(high_.begin());
+        low_.erase(low_.begin());
+        close_.erase(close_.begin());
+        vol_.erase(vol_.begin());
+        open_interest_.erase(open_interest_.begin());
+        date_time_.erase(date_time_.begin());
     }
     open_.push_back(bar.open);
     high_.push_back(bar.high);
@@ -27,13 +34,7 @@ void ArrayManager::update(barData bar) {
     open_interest_.push_back(bar.openInterest);
     date_time_.push_back(bar.date_time);
 
-    open_.erase(open_.begin());
-    high_.erase(high_.begin());
-    low_.erase(low_.begin());
-    close_.erase(close_.begin());
-    vol_.erase(vol_.begin());
-    open_interest_.erase(open_interest_.begin());
-    date_time_.erase(date_time_.begin());
+
 }
 std::vector<double> ArrayManager::high() {
     return high_;
