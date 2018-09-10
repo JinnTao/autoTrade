@@ -28,6 +28,7 @@ class ArrayManager {
     // 1. K线时间序列的维护
     // 2. 常用技术指标的计算
 private:
+    // 时间从旧到老，例如begin 2018,则end表示2019
     std::vector<double> high_;   // 最高价序列
     std::vector<double> low_;    // 最低价序列
     std::vector<double> close_;  // 收盘价序列
@@ -43,6 +44,7 @@ private:
 public:
     ArrayManager(int size = 100);
     void                                               update(barData bar);
+    void                                               fresh(barData bar);
     std::vector<double>                                high();
     std::vector<double>                                low();
     std::vector<double>                                close();
@@ -51,6 +53,8 @@ public:
     std::vector<int32>                                 open_interest();
     std::vector<std::chrono::system_clock::time_point> date_time();
     bool                                               is_tradable();
+    barData                                            lastBarData();
+    void                                               setTradable(bool);
     // 技术指标
     bool keltner(int n, double dev, double& up, double& down);
 

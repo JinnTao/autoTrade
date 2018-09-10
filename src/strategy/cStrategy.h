@@ -66,13 +66,15 @@ public:
     void makeStopOrder(std::string inst ,double price, double vol,traderTag::DIRECTION,traderTag::OFFSETFLAG);
     void subcribe(std::vector<std::string> commodity, int frequncy, int dataCount,STRATEGY_MODE trade_mode);
     bool update_context();
+    bool isTradeTime(std::string);
 protected:
     bool mode1(int hourMinTime);
     bool mode2(int hourMinTime);
     bool mode3(int hourMinTime);
     bool mode4(int hourMinTime);
     bool mode5(int hourMinTime);
-
+    bool mode6(int hourMinTime);
+    bool mode7(int hourMinTime);
     // base collection
     cMarketDataCollectionPtr marketdata_collection_;
 

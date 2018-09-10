@@ -3,8 +3,6 @@
 cStrategyKingKeltner::cStrategyKingKeltner(void) : cStrategy() {
     name_ = "KingKeltner";
 }
-cStrategyKingKeltner::~cStrategyKingKeltner(void){}
-
 void cStrategyKingKeltner::onInit(){
     std::vector<std::string> inst_list;
     inst_list.push_back("rb1901");
@@ -13,12 +11,13 @@ void cStrategyKingKeltner::onInit(){
 void cStrategyKingKeltner::onLoop(contextPtr context_ptr){
     // =================================================================  指标计算
     double up, down;
-    if (!keltner(int(this->m_pAutoSetting->kkLength), this->m_pAutoSetting->kkDev, up, down)) {
-        return;
-    }
+    int    n = 11;
+    double dev = 1.6;
+    std::string trade_inst = "rb1901";
+    context_ptr->at("rb1901").keltner(n, dev, up, down);
     //=============================================================取消前面所有未成交单
-    this->m_pTradeSpi->cancleMyPendingOrder();
-    this->m_workingStopOrderList.clear();
+    cancelAllOrder();
+
     // ===========================================================下单逻辑============================================================
 
     int longPos  = this->m_pPositionC.get()->getPosition(m_inst, DIRE::AUTO_LONG);
@@ -95,5 +94,4 @@ void cStrategyKingKeltner::printStatus() {
     }
 }
 
-
-
+cStrategyKingKeltner::~cStrategyKingKeltner(void) {}

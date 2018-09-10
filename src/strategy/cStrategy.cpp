@@ -80,7 +80,6 @@ void cStrategy::processStopOrder() {
         }
     }
 }
-
 void cStrategy::RegisterMarketDataCollection(cMarketDataCollectionPtr p) {
     marketdata_collection_ = p;
 }
@@ -229,7 +228,6 @@ void cStrategy::subcribe(std::vector<std::string> commodity_list,
     }
 }
 
-
 bool cStrategy::update_context() {
     if (context_ptr_->size() == 0) {
         ILOG("Please SubScribe Inst && Initail inst trade list");
@@ -239,10 +237,11 @@ bool cStrategy::update_context() {
         for (auto& context : *context_ptr_) {
             std::string inst_name = context.first;
             if (marketdata_collection_->GetMarketDataHandle(inst_name) && isTradeTime(inst_name)) {
+                context.second.setTradable(true);
                 CThostFtdcDepthMarketDataField lastData =
                     marketdata_collection_->GetMarketDataHandle(inst_name)->getLastMarketData();
-                auto local_now  = std::chrono::system_clock::now();
-                auto the_previous = *(context.second.date_time().begin());
+                auto local_now    = std::chrono::system_clock::now();
+                auto the_previous = *(context.second.date_time().end());
                 if (lastData.Volume == 0) {
                     ILOG("lastData vol:{} eixt.", lastData.Volume);
                     return;
@@ -250,63 +249,46 @@ bool cStrategy::update_context() {
                 // new Candle
                 auto duration_time = local_now - the_previous;
                 if (duration_time.count() % frequency_ == 0) {
-                    if (m_candleMinute != -1) {
-                        // add
-                        m_open.push_back(m_lastOpen);
-                        m_high.push_back(m_lastHigh);
-                        m_low.push_back(m_lastLow);
-                        m_close.push_back(m_lastClose);
-                        m_volume.push_back(m_lastVolume);
-                        // erase
-                        m_open.erase(m_open.begin());
-                        m_high.erase(m_high.begin());
-                        m_low.erase(m_low.begin());
-                        m_close.erase(m_close.begin());
-                        m_volume.erase(m_volume.begin());
-                    }
-                    m_lastOpen   = *(m_open.end() - 1);
-                    m_lastHigh   = *(m_high.end() - 1);
-                    m_lastLow    = *(m_low.end() - 1);
-                    m_lastClose  = *(m_close.end() - 1);
-                    m_lastVolume = *(m_volume.end() - 1);
-                    on1MBar();
-                    // latest bar data
-                    m_lastOpen     = lastData.LastPrice;
-                    m_lastHigh     = lastData.LastPrice;
-                    m_lastLow      = lastData.LastPrice;
-                    m_lastClose    = lastData.LastPrice;
-                    m_lastVolume   = lastData.Volume;
-                    m_candleMinute = tickMinute;  // update current candle Minute
-
+                    barData bar_data;
+                    bar_data.high = lastData.LastPrice;
+                    bar_data.low = lastData.LastPrice;
+                    bar_data.close = lastData.LastPrice;
+                    bar_data.open = lastData.LastPrice;
+                    bar_data.volume = lastData.Volume;
+                    bar_data.collection_symbol = inst_name;
+                    bar_data.exchange          = lastData.ExchangeID;
+                    bar_data.openInterest      = lastData.OpenInterest;
+                    context.second.update(bar_data);
                 } else {
                     // update bar data
-                    m_lastHigh = max(m_lastHigh, lastData.LastPrice);
-
-                    m_lastLow = min(m_lastLow, lastData.LastPrice);
-
-                    m_lastClose = lastData.LastPrice;
-
-                    m_lastVolume += lastData.Volume;
+                    barData previous_bar = context.second.lastBarData();
+                    barData bar_data;
+                    bar_data.high              = max(lastData.LastPrice,previous_bar.high);
+                    bar_data.low               = min(lastData.LastPrice,previous_bar.low);
+                    bar_data.open              = previous_bar.open;
+                    bar_data.volume             = previous_bar.volume - lastData.Volume;
+                    bar_data.close            = lastData.LastPrice;
+                    bar_data.exchange           = previous_bar.exchange;
+                    bar_data.openInterest      = lastData.OpenInterest;
+                    bar_data.date_time          = std::chrono::system_clock::now();
+                    context.second.fresh(bar_data);
                 }
+            } else {
+                context.second.setTradable(false);
             }
         }
+    } else {
+        return false;
     }
 }
 
-
-bool cStrategy::isTradeTime() {
+bool cStrategy::isTradeTime(std::string inst) {
     auto       local_now    = std::chrono::system_clock::now();
     time_t     local_now_tm = std::chrono::system_clock::to_time_t(local_now);
     struct tm* timeInfo     = localtime(&local_now_tm);
 
     int         nowTime            = timeInfo->tm_hour * 100 + timeInfo->tm_min;
-    std::string mode_inst_list_1[] = {"rb", "ni", "cu"};
-    std::string mode_inst_list_2[] = {"rb", "ni", "cu"};
-    std::string mode_inst_list_3[] = {"rb", "ni", "cu"};
-    std::string mode_inst_list_4[] = {"rb", "ni", "cu"};
-    std::string mode_inst_list_5[] = {"rb", "ni", "cu"};
-    std::string mode_inst_list_7[] = {"rb", "ni", "cu"};
-
+    int time_mode   = 1;
     if (time_mode == 1) {
         return mode1(nowTime);
     }
@@ -320,6 +302,12 @@ bool cStrategy::isTradeTime() {
         return mode4(nowTime);
     }
     if (time_mode == 5) {
+        return mode5(nowTime);
+    }
+    if (time_mode == 6) {
+        return mode5(nowTime);
+    }
+    if (time_mode == 7) {
         return mode5(nowTime);
     }
     return false;
@@ -382,6 +370,21 @@ bool cStrategy::mode4(int nowTime) {
 }
 bool cStrategy::mode5(int nowTime) {
     int s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2359 = 2359,
+        s0000 = 0, s0230 = 230;
+    bool newState;
+    if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
+        (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2359) ||
+        (nowTime >= s0000 && nowTime < s0230)) {
+
+        newState = true;
+    } else {
+
+        newState = false;
+    }
+    return newState;
+}
+bool cStrategy::mode6(int nowTime) {
+    int s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2359 = 2359,
         s0000 = 0, s0200 = 200;
     bool newState;
     if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
@@ -395,3 +398,19 @@ bool cStrategy::mode5(int nowTime) {
     }
     return newState;
 }
+bool cStrategy::mode7(int nowTime) {
+    int s0900 = 900, s1015 = 1015, s1030 = 1030, s1130 = 1130, s1330 = 1330, s1500 = 1500, s2100 = 2100, s2359 = 2359,
+        s0000 = 0, s0200 = 200;
+    bool newState;
+    if ((nowTime >= s0900 && nowTime < s1015) || (nowTime >= s1030 && nowTime < s1130) ||
+        (nowTime >= s1330 && nowTime < s1500) || (nowTime >= s2100 && nowTime < s2359) ||
+        (nowTime >= s0000 && nowTime < s0200)) {
+
+        newState = true;
+    } else {
+
+        newState = false;
+    }
+    return newState;
+}
+

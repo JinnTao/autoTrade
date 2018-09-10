@@ -3,6 +3,7 @@
 // barData
 barData::barData() {
     // do something
+    date_time = std::chrono::system_clock::now();
 }
 barData::~barData() {
     // do something
@@ -33,8 +34,15 @@ void ArrayManager::update(barData bar) {
     vol_.push_back(bar.volume);
     open_interest_.push_back(bar.openInterest);
     date_time_.push_back(bar.date_time);
-
-
+}
+void ArrayManager::fresh(barData bar) {
+    open_[count_ - 1]          = bar.open;
+    high_[count_ - 1]          = bar.high;
+    low_[count_ - 1]           = bar.low;
+    close_[count_ - 1]         = bar.close;
+    date_time_[count_ - 1]     = bar.date_time;
+    vol_[count_ - 1]           = bar.volume;
+    open_interest_[count_ - 1] = bar.openInterest;
 }
 std::vector<double> ArrayManager::high() {
     return high_;
@@ -60,6 +68,24 @@ std::vector<std::chrono::system_clock::time_point> ArrayManager::date_time() {
 bool ArrayManager::is_tradable() {
     return is_tradable_;
 }
+void ArrayManager::setTradable(bool tradable) {
+    is_tradable_ = tradable;
+}
+barData ArrayManager::lastBarData() {
+    barData last_bar;
+    if (count_ > 0) {
+
+        last_bar.close        = *(close_.end());
+        last_bar.open         = *(open_.end());
+        last_bar.high         = *(high_.end());
+        last_bar.low          = *(low_.end());
+        last_bar.volume       = *(vol_.end());
+        last_bar.date_time    = *(date_time_.end());
+        last_bar.openInterest = *(open_interest_.end());
+    }
+    return last_bar;
+}
+
 bool ArrayManager::keltner(int n, double dev, double& up, double& down) {
     try {
         double mid = 0, atr = 0;
