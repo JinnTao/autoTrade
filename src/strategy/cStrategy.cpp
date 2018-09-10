@@ -81,7 +81,6 @@ void cStrategy::processStopOrder() {
     }
 }
 
-
 void cStrategy::RegisterMarketDataCollection(cMarketDataCollectionPtr p) {
     marketdata_collection_ = p;
 }
@@ -229,6 +228,7 @@ void cStrategy::subcribe(std::vector<std::string> commodity_list,
         context_ptr_->insert(std::make_pair(*inst, am));
     }
 }
+
 
 bool cStrategy::update_context() {
     if (context_ptr_->size() == 0) {
