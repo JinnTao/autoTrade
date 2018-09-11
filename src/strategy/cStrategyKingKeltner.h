@@ -6,12 +6,8 @@ class cStrategyKingKeltner :
 {
 private:
     string collection_name_;
-
-
     double intra_high_;
     double intra_low_;
-
-    int m_netPos;
 
 public:
     cStrategyKingKeltner(void);
@@ -21,6 +17,5 @@ public:
     virtual void onTrade(CThostFtdcTradeField);
     virtual void onLoop(contextPtr);
     void sendOcoOrder(std::string inst,double upPrice, double downPrice, int fixedSize);
-    void printStatus();
 };
 

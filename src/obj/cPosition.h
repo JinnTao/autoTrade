@@ -8,8 +8,8 @@
 using namespace std;
 
 enum DIRE { AUTO_LONG, AUTO_SHORT, AUTO_UNDEFINE };
-enum PNL { CLOSE_PNL, POSI_PNL, FLOAT_PNL };
-enum PRC {OPEN_COST,POSI_COST};
+enum PNL_TAG { CLOSE_PNL, POSI_PNL, FLOAT_PNL };
+enum PRC_TAG {OPEN_COST,POSI_COST};
 using cInstrumentFieldMapPtr = shared_ptr<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentField>>>;
 class cPositionDetail {
 public:

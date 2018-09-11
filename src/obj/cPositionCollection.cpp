@@ -5,6 +5,7 @@ cPositionCollection::cPositionCollection() {
     if (position_map_.size() != 0) {
         position_map_.clear();
     }
+    memset(&Trade_account_info(), 0, sizeof sTradingAccountInfo);
 }
 
 cPositionCollection::~cPositionCollection() {}
@@ -176,4 +177,60 @@ std::list<std::string> cPositionCollection::getTradeButNotPositionInstList() {
     // unique list
     instList.unique();
     return instList;
+}
+
+// hold position pnl
+double cPositionCollection::getPositionPnl(string inst, PNL_TAG pnl_tag, DIRE dire) {
+    std::multimap<string, cPositionDetailPtr>::iterator pos;
+    double                                              pnls          = 0;
+    auto calculate_pnl = [&pnl_tag,&pnls](std::multimap<string, cPositionDetailPtr>::iterator pos) -> double {
+        if (pnl_tag == PNL_TAG::CLOSE_PNL) {
+            pnls += pos->second->CloseProfit;
+        }
+        if (pnl_tag == PNL_TAG::FLOAT_PNL) {
+            pnls += pos->second->FloatProfit;
+        }
+        if (pnl_tag == PNL_TAG::POSI_PNL) {
+            pnls += pos->second->PositionProfit;
+        }
+        return pnls;
+    };
+    for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
+        if (dire == DIRE::AUTO_UNDEFINE) {
+            pnls = calculate_pnl(pos);
+        } else {
+            if (dire == pos->second->getPosiDire()) {
+                pnls = calculate_pnl(pos);
+            }
+        }
+    }
+    return pnls;
+}
+// hold position price
+double cPositionCollection::getPositionPrc(string inst, PRC_TAG pnl_tag,DIRE dire) {
+    std::multimap<string, cPositionDetailPtr>::iterator pos;
+    double                                              pnls = 0;
+    auto calculate_pnl = [&pnl_tag, &pnls](std::multimap<string, cPositionDetailPtr>::iterator pos) -> double {
+        if (pnl_tag == PNL_TAG::CLOSE_PNL) {
+            pnls += pos->second->CloseProfit;
+        }
+        if (pnl_tag == PNL_TAG::FLOAT_PNL) {
+            pnls += pos->second->FloatProfit;
+        }
+        if (pnl_tag == PNL_TAG::POSI_PNL) {
+            pnls += pos->second->PositionProfit;
+        }
+        return pnls;
+    };
+    for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
+        if (dire == DIRE::AUTO_UNDEFINE) {
+            pnls = calculate_pnl(pos);
+        } else {
+            if (dire == pos->second->getPosiDire()) {
+                pnls = calculate_pnl(pos);
+            }
+        }
+    }
+    return pnls;
+
 }
