@@ -1,97 +1,46 @@
 #include "cStrategyKingKeltner.h"
-
 cStrategyKingKeltner::cStrategyKingKeltner(void) : cStrategy() {
     name_ = "KingKeltner";
 }
 void cStrategyKingKeltner::onInit(){
     std::vector<std::string> inst_list;
     inst_list.push_back("rb1901");
-    subcribe(inst_list, 60, 100, STRATEGY_MODE::REAL);
+    subscribe(inst_list, 60, 100, STRATEGY_MODE::REAL);// 60秒数据频率 数据长度100个 模式：实盘
 }
 void cStrategyKingKeltner::onLoop(contextPtr context_ptr){
-    // =================================================================  指标计算
-    double up, down;
-    int    n = 11;
-    double dev = 1.6;
+    std::lock_guard<std::mutex> lock(global::run_mutex);
+    double      up, down, dev = 1.6, trailingPrcnt = 0.8;
+    int         n = 11, lots = 1;
     std::string trade_inst = "rb1901";
-    context_ptr->at("rb1901").keltner(n, dev, up, down);
-    //=============================================================取消前面所有未成交单
-    cancelAllOrder();
-
-    // ===========================================================下单逻辑============================================================
-
-    int longPos  = this->m_pPositionC.get()->getPosition(m_inst, DIRE::AUTO_LONG);
-    int shortPos = this->m_pPositionC.get()->getPosition(m_inst, DIRE::AUTO_SHORT);
-
-    this->m_netPos = longPos - shortPos;
-
-    if (m_netPos == 0) {
-        this->m_intraTradeHigh = m_lastHigh;
-        this->m_intraTradeLow  = m_lastLow;
-        // according strategy config set trading lots
-        this->sendOcoOrder(up, down, int(m_lots));
-
-    } else if (m_netPos > 0) {
-        m_intraTradeHigh = max(m_lastHigh, m_intraTradeHigh);
-        m_intraTradeLow  = m_lastLow;
-        this->sendStopOrder(m_inst,
-                            traderTag::DIRECTION::sell,
-                            traderTag::OFFSETFLAG::close,
-                            m_intraTradeHigh * (1 - m_pAutoSetting->trailingPrcnt / 100.0),
-                            UINT(std::abs(m_netPos)),
-                            this->m_strategyName);
-
-    } else if (m_netPos < 0) {
-        m_intraTradeHigh = m_lastHigh;
-        m_intraTradeLow  = min(m_lastLow, m_intraTradeLow);
-        this->sendStopOrder(m_inst,
-                            traderTag::DIRECTION::buy,
-                            traderTag::OFFSETFLAG::close,
-                            m_intraTradeLow * (1 + m_pAutoSetting->trailingPrcnt / 100.0),
-                            UINT(std::abs(m_netPos)),
-                            this->m_strategyName);
+    context_ptr->at(trade_inst).keltner(n, dev, up, down);
+    int     count    = context_ptr->at(trade_inst).count();
+    barData last_bar = context_ptr->at(trade_inst).lastBarData(--count);
+    
+    cancelAllOrder();// 取消前面所有未成交单
+    
+    int netPos  = position_collection_->getPosition(trade_inst);
+    if (netPos == 0) {
+        intra_high_ = last_bar.high;
+        intra_low_  = last_bar.low;
+        sendOcoOrder(trade_inst, up, down, lots);
+    } else if (netPos > 0) {
+        intra_high_     = max(last_bar.high, intra_high_);
+        intra_low_  = last_bar.low;
+        sellClose(trade_inst, intra_high_ * (1 - trailingPrcnt / 100.0), lots, true);
+    } else if (netPos < 0) {
+        intra_high_     = last_bar.high;
+        intra_low_  = min(last_bar.low, intra_low_);
+        buyClose(trade_inst, intra_low_ * (1 + trailingPrcnt / 100.0), lots, true);
     }
-    // ==============================================================日志输出========================================================
-    // double rsiValue = outReal[0];
-    ILOG("NetPos:{},Up:{},Down:{},LastClosePrice:{}.", m_netPos, up, down, m_lastClose);
-    printStatus();
+    // 日志输出
+    ILOG("NetPos:{},Up:{},Down:{},LastClosePrice:{}.", lots, up, down, last_bar.close);
+    showStopOrders();
 }
-
+//   实现区间突破入场
 void cStrategyKingKeltner::sendOcoOrder(std::string inst,double  upPrice, double downPrice, int fixedSize) {
-    //
-    //    发送OCO委托
-    //    OCO(One Cancel Other)委托：
-    //    1. 主要用于实现区间突破入场
-    //    2. 包含两个方向相反的停止单
-    //    3. 一个方向的停止单成交后会立即撤消另一个方向的
     this->buyOpen(inst, upPrice, fixedSize, true);
     this->sellOpen(inst, downPrice, fixedSize, true);
 }
-
-void cStrategyKingKeltner::printStatus() {
-    for each (auto var in stop_order_list_)
-    {
-        if(var.status){
-            time_t orderTimeT = std::chrono::system_clock::to_time_t(var.orderTime);
-
-            struct tm* ptm = localtime(&orderTimeT);
-            char date[60] = { 0 };
-            sprintf(date, "%d-%02d-%02d %02d:%02d:%02d",
-                (int)ptm->tm_year + 1900, (int)ptm->tm_mon + 1, (int)ptm->tm_mday,
-                (int)ptm->tm_hour, (int)ptm->tm_min, (int)ptm->tm_sec);
-            string orderDateTime = string(date);
-            ILOG("{} {} stop order {} {} {} {} {} {}.",
-                 orderDateTime,
-                 var.instrument,
-                 ((var.direction == traderTag::DIRECTION::buy) ? "buy" : "sell"),
-                 ((var.offset == traderTag::OFFSETFLAG::close) ? "close " : "open "),
-                 var.price,
-                 var.volume,
-                 var.slipTickNum,
-                 var.strategyName);
-
-        }
-    }
-}
-
+void cStrategyKingKeltner::onOrder(cOrderPtr) {}
+void cStrategyKingKeltner::onTrade(CThostFtdcTradeField) {}
 cStrategyKingKeltner::~cStrategyKingKeltner(void) {}

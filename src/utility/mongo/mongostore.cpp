@@ -6,6 +6,7 @@
 #include "logger.h"
 #include "bsoncxx/types.hpp"
 #include "bsoncxx/stdx/string_view.hpp"
+#include "bsoncxx/builder/basic/document.hpp"
 mongocxx::instance MongoStore::instance_ = {};
 
 MongoStore::~MongoStore() {
@@ -102,7 +103,7 @@ bool MongoStore::getData(string                                             coll
 
     } catch (const std::exception e) {
         // LOG(INFO) << "Mongo Query faild! " << e.what();
-        return false; 
+        return false;
     }
 }
 
@@ -119,11 +120,13 @@ bool MongoStore::getData(string collection_name, int data_length, std::vector<ba
 
         mongocxx::collection               coll = db_.collection(collection_name);
         bsoncxx::builder::stream::document sort_filter;
-        sort_filter << "recordTime" << -1;
+        auto                               sort = bsoncxx::builder::basic::make_document(kvp("recordTime", -1));
+        auto                               test = bsoncxx::builder::basic::make_document();
+        sort_filter << "recordTime"  << -1 ;
         mongocxx::options::find out;
         out.sort(sort_filter.view());
         out.limit(data_length);
-        mongocxx::cursor                                cursor = coll.find(sort_filter.view(), out);
+        mongocxx::cursor                                cursor = coll.find(test.view(), out);
         std::chrono::duration<int, std::ratio<60 * 60>> one_hour(1);
         for (auto&& doc : cursor) {
 
@@ -132,12 +135,12 @@ bool MongoStore::getData(string collection_name, int data_length, std::vector<ba
             string                                timeS = std::ctime(&c);
             timeS.pop_back();
             barData bar_data_;
-            bar_data_.close          = doc["close"].get_double();
-            bar_data_.open           = doc["open"].get_double();
-            bar_data_.high           = doc["high"].get_double();
-            bar_data_.low            = doc["low"].get_double();
-            bar_data_.date_time      = DateTime - 8 * one_hour;// convert to utf8
-            bar_data_.volume         = doc["marketVol"].get_int32();
+            bar_data_.close                 = doc["close"].get_double();
+            bar_data_.open                  = doc["open"].get_double();
+            bar_data_.high                  = doc["high"].get_double();
+            bar_data_.low                   = doc["low"].get_double();
+            bar_data_.date_time             = DateTime - 8 * one_hour;  // convert to utf8
+            bar_data_.volume                = doc["marketVol"].get_int32();
             bsoncxx::stdx::string_view view = doc["exchange"].get_utf8().value;
             bar_data_.exchange              = view.to_string();
             bar_data_.openInterest          = doc["OpenInterest"].get_double();
@@ -145,14 +148,27 @@ bool MongoStore::getData(string collection_name, int data_length, std::vector<ba
             bar_data_.symbol                = doc["id"].get_utf8().value.to_string();
             bar_data_vec.push_back(bar_data_);
         }
-        auto start_date = bar_data_vec.end()->date_time;
-        auto start_date_tm  = std::chrono::system_clock::to_time_t(start_date);
-        string start_date_str = std::ctime(&start_date_tm);
+        std::reverse(bar_data_vec.begin(), bar_data_vec.end());
+        if (bar_data_vec.size() != 0) {
+            auto   start_date    = bar_data_vec.begin()->date_time;
+            auto   start_date_tm  = std::chrono::system_clock::to_time_t(start_date);
+            char   start_buffer[50];
+            std::strftime(start_buffer, 50, "%Y-%m-%d %H:%M:%S", localtime(&start_date_tm));
 
-        auto   end_date     = bar_data_vec.begin()->date_time;
-        auto   end_date_tm  = std::chrono::system_clock::to_time_t(end_date);
-        string end_date_str = std::ctime(&end_date_tm);
-        ILOG("Load {} history data Datetime from {} to {}",collection_name,start_date_str,end_date_str);
+
+            auto end_date = bar_data_vec[bar_data_vec.size() - 1].date_time;
+            auto   end_date_tm  = std::chrono::system_clock::to_time_t(end_date);
+            char   end_buffer[50];
+            std::strftime(end_buffer, 50, "%Y-%m-%d %H:%M:%S", localtime(&end_date_tm));
+            ILOG("Load {} history data Datetime from {} to {},total tick:{} ",
+                 collection_name,
+                 start_buffer,
+                 end_buffer,
+                 bar_data_vec.size());
+        } else {
+            ILOG("not exits {} history data ", collection_name);
+        }
+
         return true;
     } catch (const std::exception e) {
         ILOG("Mongo Query failed:{}", e.what());

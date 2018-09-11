@@ -121,7 +121,7 @@ public:
     std::string  strategyName;
     bool         status;
     size_t       slipTickNum;
-    int32        order_id_;
+    int        order_id_;
 
     std::chrono::system_clock::time_point orderTime;
 

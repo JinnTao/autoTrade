@@ -76,7 +76,7 @@ void cPositionCollection::update(CThostFtdcTradeField* pTrade, shared_ptr<cTrade
     }
     pos->second->registerInstField(inst_field_map_->at(inst));
     // update position
-    pos->second->update(pTrade,pcTrade);
+    pos->second->update(pTrade, pcTrade);
 }
 void cPositionCollection::update(CThostFtdcDepthMarketDataField* pDepthMarket) {
     bool is_find_position = false;
@@ -87,31 +87,34 @@ void cPositionCollection::update(CThostFtdcDepthMarketDataField* pDepthMarket) {
         pos->second->update(pDepthMarket);
     }
 }
-
+// 依据交易方向获取持仓
 int cPositionCollection::getPosition(string inst, DIRE dire) {
     bool                                                is_find_position = false;
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
-        // LOG(INFO) << inst << " " << pos->second->getPosition();
         if (pos->second->getPosiDire() == dire) {
             is_find_position = true;
             break;
         }
     }
-    // LOG(INFO) << is_find_position;
     if (is_find_position) {
         return pos->second->getPosition();
     } else {
         return 0;
     }
 }
-
+// 获取净持仓 定义为多单为正 空单为负
 int cPositionCollection::getPosition(string inst) {
     bool                                                is_find_position = false;
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     int                                                 position = 0;
     for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
-        position += pos->second->getPosition();
+        if (pos->second->getPosiDire() == DIRE::AUTO_LONG) {
+            position += pos->second->getPosition();
+        }
+        if (pos->second->getPosiDire() == DIRE::AUTO_SHORT) {
+            position -= pos->second->getPosition();
+        }
     }
     return position;
 }
@@ -161,7 +164,7 @@ bool cPositionCollection::posDireEqual(DIRE dire, TThostFtdcPosiDirectionType ft
 void cPositionCollection::registerInstFiledMap(cInstrumentFieldMapPtr p) {
     inst_field_map_ = p;
 };
-
+// 获取成交过但是并没有在当前持仓列表中的合约
 std::list<std::string> cPositionCollection::getTradeButNotPositionInstList() {
     std::list<std::string>                              instList = {};
     std::multimap<string, cPositionDetailPtr>::iterator pos;

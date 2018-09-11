@@ -149,6 +149,8 @@ public:
 
     void cancleMyPendingOrder();
 
+    void cancelOrderById(int order_id);
+
     void RegisterMarketDataCollection(cMarketDataCollectionPtr p) { this->m_pMarketDataEngine = p; }
 
     void RegisterCtpMdSpi(cMdSpi*p) { ctp_md_spi_ = p; }

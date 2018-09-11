@@ -48,7 +48,7 @@ public:
     void sellOpen(std::string inst, double price, double volume, bool stop = false);
     void sellClose(std::string inst, double price, double volume, bool stop = false);
 
-    void cancelOrder(std::string order_id);
+    void cancelOrder(int order_id);
     void cancelAllOrder();
 
     void start();
@@ -64,9 +64,10 @@ public:
 
     bool GetStrategyStatus();
     void makeStopOrder(std::string inst ,double price, double vol,traderTag::DIRECTION,traderTag::OFFSETFLAG);
-    void subcribe(std::vector<std::string> commodity, int frequncy, int dataCount,STRATEGY_MODE trade_mode);
+    void subscribe(std::vector<std::string> commodity, long long frequncy, int dataCount, STRATEGY_MODE trade_mode);
     bool update_context();
     bool isTradeTime(std::string);
+    void showStopOrders();
 protected:
     bool mode1(int hourMinTime);
     bool mode2(int hourMinTime);
@@ -90,7 +91,7 @@ protected:
     string                        name_;
     int                           sto_order_id_seq_ = 1;
     contextPtr                    context_ptr_;
-
+    std::chrono::system_clock::time_point the_previous_;
 private:
     void              autoTrader();
     std::thread       inner_thread_;

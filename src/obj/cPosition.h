@@ -8,6 +8,8 @@
 using namespace std;
 
 enum DIRE { AUTO_LONG, AUTO_SHORT, AUTO_UNDEFINE };
+enum PNL { CLOSE_PNL, POSI_PNL, FLOAT_PNL };
+enum PRC {OPEN_COST,POSI_COST};
 using cInstrumentFieldMapPtr = shared_ptr<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentField>>>;
 class cPositionDetail {
 public:
@@ -44,13 +46,13 @@ private:
     double                                     settle_price_   = 0;              // 结算价
     double                                     last_price_     = 0;              // 市场价格
     double                                     margin_rate_    = 0;              // 保证金率
-    double                                     open_cost_      = 0;              // 保证金率
-    double                                     position_cost_  = 0;              // 保证金率
+    double                                     open_cost_      = 0;              // 开仓金额
+    double                                     position_cost_  = 0;              // 持仓金额
     DIRE                                       posi_direction_ = AUTO_UNDEFINE;  //
     string                                     trade_date_;
     string                                     position_date_;
     string                                     update_time_;
-    std::shared_ptr<CThostFtdcInstrumentField> inst_field_;
+    std::shared_ptr<CThostFtdcInstrumentField> inst_field_;  // 合约信息
 };
 
 typedef shared_ptr<cPositionDetail> cPositionDetailPtr;

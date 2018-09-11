@@ -295,7 +295,7 @@ void cTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField* pTradingA
         printf("   Commission:%.2f\n", m_accountInfo->Commission);
         printf("   Available:%.2f\n", m_accountInfo->Available);
         printf("   CurrMargin:%.2f\n", m_accountInfo->CurrMargin);
-
+        memcpy_s(&(global::account_info), sizeof(sTradingAccountInfo), m_accountInfo, sizeof(sTradingAccountInfo));
         if (m_firs_inquiry_TradingAccount){
             ILOG("OnRspQryTradingAccount,isLast:{},nRequestID:{}.", bIsLast,nRequestID);
             ReqQryInvestorPosition_all();
@@ -993,6 +993,16 @@ void cTraderSpi::cancleMyPendingOrder() {
         }
     }
 }
+void cTraderSpi::cancelOrderById(int order_id) {
+    vector<cOrderPtr> vOrder = this->m_orderCollection->GetAllOrder();
+    for (auto it = vOrder.begin(); it != vOrder.end(); it++) {
+        if (it->get()->GetOrderID() == order_id) {
+            this->ReqOrderAction(*it);
+            return;
+        }
+    }
+}
+
 
 int32 cTraderSpi::init(const ctpConfig& ctp_config) {
     using namespace std::chrono_literals;

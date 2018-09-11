@@ -1,15 +1,15 @@
 #include "cStrategy.h"
 
 cStrategy::cStrategy() {
-    time_span_ms_ = 500;
+    time_span_ms_ = 1000;
     name_         = "undefine_name";
-    context_ptr_  = std::make_shared<contextPtr>();
+    context_ptr_  = std::make_shared<std::map<std::string, ArrayManager>>();
 }
 
 cStrategy::cStrategy(const string& strategyID) {
-    time_span_ms_ = 500;
+    time_span_ms_ = 1000;
     name_         = strategyID;
-    context_ptr_  = std::make_shared<contextPtr>();
+    context_ptr_  = std::make_shared<std::map<std::string, ArrayManager>>();
 }
 
 cStrategy::~cStrategy() {}
@@ -73,9 +73,11 @@ void cStrategy::processStopOrder() {
                                                    stop_order_list_[i].volume,
                                                    0);
                 }
+                // 默认认为insertOrder一定成交 删除订单
                 stop_order_list_[i].status = false;
                 stop_order_list_.erase(stop_order_list_.begin() + i);
                 i--;  // becasuse after erase,already point to next element;
+
             }
         }
     }
@@ -127,7 +129,7 @@ void cStrategy::makeStopOrder(std::string           inst,
     stop_order_list_.push_back(order);
     sto_order_id_seq_++;
 }
-void cStrategy::buyOpen(std::string inst, double price, double volume, bool stop = false) {
+void cStrategy::buyOpen(std::string inst, double price, double volume, bool stop) {
     if (stop == true) {
         makeStopOrder(inst, price, volume, traderTag::DIRECTION::buy, traderTag::OFFSETFLAG::open);
     } else {
@@ -136,7 +138,7 @@ void cStrategy::buyOpen(std::string inst, double price, double volume, bool stop
         }
     }
 }
-void cStrategy::buyClose(std::string inst, double price, double volume, bool stop = false) {
+void cStrategy::buyClose(std::string inst, double price, double volume, bool stop) {
     if (stop == true) {
         makeStopOrder(inst, price, volume, traderTag::DIRECTION::buy, traderTag::OFFSETFLAG::close);
     } else {
@@ -145,7 +147,7 @@ void cStrategy::buyClose(std::string inst, double price, double volume, bool sto
         }
     }
 }
-void cStrategy::sellOpen(std::string inst, double price, double volume, bool stop = false) {
+void cStrategy::sellOpen(std::string inst, double price, double volume, bool stop) {
     if (stop == true) {
         makeStopOrder(inst, price, volume, traderTag::DIRECTION::sell, traderTag::OFFSETFLAG::open);
     } else {
@@ -154,7 +156,7 @@ void cStrategy::sellOpen(std::string inst, double price, double volume, bool sto
         }
     }
 }
-void cStrategy::sellClose(std::string inst, double price, double volume, bool stop = false) {
+void cStrategy::sellClose(std::string inst, double price, double volume, bool stop) {
     if (stop == true) {
         makeStopOrder(inst, price, volume, traderTag::DIRECTION::sell, traderTag::OFFSETFLAG::close);
     } else {
@@ -164,59 +166,44 @@ void cStrategy::sellClose(std::string inst, double price, double volume, bool st
     }
 }
 
-void cStrategy::onInit() {
+void cStrategy::onInit() {}
+void cStrategy::onStop() {}
+void cStrategy::onTick(CThostFtdcDepthMarketDataField) {}
+void cStrategy::onBar(barData) {}
+void cStrategy::onOrder(cOrderPtr) {}
+void cStrategy::onTrade(CThostFtdcTradeField trade) {
+}
+void cStrategy::cancelOrder(int order_id) {
+    trader_spi_->cancelOrderById(order_id);
+}
+void cStrategy::cancelAllOrder() {
+
+    stop_order_list_.clear();
+
+    trader_spi_->cancleMyPendingOrder();
+}
+
+void cStrategy::subscribe(std::vector<std::string> commodity_list,
+                         long long                frequency,
+                         int                      data_length,
+                         STRATEGY_MODE            trade_mode) {
     // 防止多策略冲突
     std::lock_guard<std::mutex> lock(global::init_mutex);
+
+    mode_            = trade_mode;
+    trade_inst_list_ = commodity_list;
+    frequency_       = frequency;
+    data_length_     = data_length;
+    the_previous_    = std::chrono::time_point_cast<std::chrono::minutes>(std::chrono::system_clock::now());
+
+
+
     if (trade_inst_list_.size() != 0) {
         this->md_spi_->SubscribeMarketData(std::make_shared<vector<string>>(trade_inst_list_));
     } else {
         ILOG("Please put trade instrument to trade_inst_list_");
         return;
     }
-}
-void cStrategy::onStop() {}
-void cStrategy::onTick(CThostFtdcDepthMarketDataField) {}
-void cStrategy::onBar(barData) {}
-void cStrategy::onOrder(cOrderPtr) {}
-void cStrategy::onTrade(CThostFtdcTradeField trade) {
-    // if (strcmp(trade.InstrumentID, m_inst.c_str()) != 0) {
-    //    // LOG(INFO) << "Not " << m_inst << " on trade";
-    //} else {
-    //    ILOG("OnTrade:{}.", this->m_strategyName);
-    //    if (m_netPos != 0) {
-    //        if (m_netPos > 0) {
-    //            for (auto i = m_workingStopOrderList.begin(); i != m_workingStopOrderList.end(); i++) {
-
-    //                if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::sell) {
-    //                    i->status = false;
-    //                    ILOG("Cancel sell {} stop order.",
-    //                         ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open "));
-    //                }
-    //            }
-    //        }
-    //        if (m_netPos < 0) {
-    //            for (auto i = m_workingStopOrderList.begin(); i != m_workingStopOrderList.end(); i++) {
-    //                if (i->instrument == m_inst && i->direction == traderTag::DIRECTION::buy) {
-    //                    i->status = false;
-    //                    ILOG("Cancel buy {} stop order.",
-    //                         ((i->offset == traderTag::OFFSETFLAG::close) ? " close  " : " open "));
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
-}
-void cStrategy::cancelOrder(std::string order_id) {}
-void cStrategy::cancelAllOrder() {}
-
-void cStrategy::subcribe(std::vector<std::string> commodity_list,
-                         int                      frequency,
-                         int                      data_length,
-                         STRATEGY_MODE            trade_mode) {
-    mode_            = trade_mode;
-    trade_inst_list_ = commodity_list;
-    frequency_       = frequency;
-    data_length_     = data_length;
     for (auto inst = trade_inst_list_.begin(); inst != trade_inst_list_.end(); inst++) {
         ArrayManager         am(data_length_);
         std::vector<barData> bar_data_vec;
@@ -232,54 +219,63 @@ bool cStrategy::update_context() {
     if (context_ptr_->size() == 0) {
         ILOG("Please SubScribe Inst && Initail inst trade list");
     }
-
+    
     if (mode_ == STRATEGY_MODE::REAL) {
-        for (auto& context : *context_ptr_) {
-            std::string inst_name = context.first;
-            if (marketdata_collection_->GetMarketDataHandle(inst_name) && isTradeTime(inst_name)) {
-                context.second.setTradable(true);
-                CThostFtdcDepthMarketDataField lastData =
-                    marketdata_collection_->GetMarketDataHandle(inst_name)->getLastMarketData();
-                auto local_now    = std::chrono::system_clock::now();
-                auto the_previous = *(context.second.date_time().end());
-                if (lastData.Volume == 0) {
-                    ILOG("lastData vol:{} eixt.", lastData.Volume);
-                    return;
-                }
-                // new Candle
-                auto duration_time = local_now - the_previous;
-                if (duration_time.count() % frequency_ == 0) {
+        auto local_now     = std::chrono::system_clock::now();
+        auto duration_time = std::chrono::duration_cast<std::chrono::seconds>(local_now - the_previous_);
+        bool mark          = false;
+        if (duration_time.count() % frequency_ == 0) {
+            for (auto& context : *context_ptr_) {
+                std::string inst_name = context.first;
+                if (marketdata_collection_->GetMarketDataHandle(inst_name) && isTradeTime(inst_name)) {
+                    mark = true;
+                    the_previous_ = local_now;
+                    context.second.setTradable(true);
+                    CThostFtdcDepthMarketDataField lastData =
+                        marketdata_collection_->GetMarketDataHandle(inst_name)->getLastMarketData();
                     barData bar_data;
-                    bar_data.high = lastData.LastPrice;
-                    bar_data.low = lastData.LastPrice;
-                    bar_data.close = lastData.LastPrice;
-                    bar_data.open = lastData.LastPrice;
-                    bar_data.volume = lastData.Volume;
+                    bar_data.high              = lastData.LastPrice;
+                    bar_data.low               = lastData.LastPrice;
+                    bar_data.close             = lastData.LastPrice;
+                    bar_data.open              = lastData.LastPrice;
+                    bar_data.volume            = lastData.Volume;
                     bar_data.collection_symbol = inst_name;
                     bar_data.exchange          = lastData.ExchangeID;
                     bar_data.openInterest      = lastData.OpenInterest;
                     context.second.update(bar_data);
+                    
                 } else {
-                    // update bar data
+                    context.second.setTradable(false);
+                }
+            }
+        } else {
+            for (auto& context : *context_ptr_) {
+                std::string inst_name = context.first;
+                if (marketdata_collection_->GetMarketDataHandle(inst_name) && isTradeTime(inst_name)) {
+                    context.second.setTradable(true);
+                    CThostFtdcDepthMarketDataField lastData =
+                        marketdata_collection_->GetMarketDataHandle(inst_name)->getLastMarketData();
                     barData previous_bar = context.second.lastBarData();
                     barData bar_data;
-                    bar_data.high              = max(lastData.LastPrice,previous_bar.high);
-                    bar_data.low               = min(lastData.LastPrice,previous_bar.low);
-                    bar_data.open              = previous_bar.open;
-                    bar_data.volume             = previous_bar.volume - lastData.Volume;
-                    bar_data.close            = lastData.LastPrice;
-                    bar_data.exchange           = previous_bar.exchange;
-                    bar_data.openInterest      = lastData.OpenInterest;
-                    bar_data.date_time          = std::chrono::system_clock::now();
+                    bar_data.high         = max(lastData.LastPrice, previous_bar.high);
+                    bar_data.low          = min(lastData.LastPrice, previous_bar.low);
+                    bar_data.open         = previous_bar.open;
+                    bar_data.volume       = lastData.Volume - previous_bar.volume;
+                    bar_data.close        = lastData.LastPrice;
+                    bar_data.exchange     = previous_bar.exchange;
+                    bar_data.openInterest = lastData.OpenInterest;
+                    bar_data.date_time    = std::chrono::system_clock::now();
                     context.second.fresh(bar_data);
+                } else {
+                    context.second.setTradable(false);
                 }
-            } else {
-                context.second.setTradable(false);
             }
         }
+        return mark;
     } else {
         return false;
     }
+  
 }
 
 bool cStrategy::isTradeTime(std::string inst) {
@@ -287,8 +283,8 @@ bool cStrategy::isTradeTime(std::string inst) {
     time_t     local_now_tm = std::chrono::system_clock::to_time_t(local_now);
     struct tm* timeInfo     = localtime(&local_now_tm);
 
-    int         nowTime            = timeInfo->tm_hour * 100 + timeInfo->tm_min;
-    int time_mode   = 1;
+    int nowTime   = timeInfo->tm_hour * 100 + timeInfo->tm_min;
+    int time_mode = 1;
     if (time_mode == 1) {
         return mode1(nowTime);
     }
@@ -414,3 +410,28 @@ bool cStrategy::mode7(int nowTime) {
     return newState;
 }
 
+void cStrategy::showStopOrders() {
+    for each (auto var in stop_order_list_)
+    {
+        if(var.status){
+            time_t orderTimeT = std::chrono::system_clock::to_time_t(var.orderTime);
+
+            struct tm* ptm = localtime(&orderTimeT);
+            char date[60] = { 0 };
+            sprintf(date, "%d-%02d-%02d %02d:%02d:%02d",
+                (int)ptm->tm_year + 1900, (int)ptm->tm_mon + 1, (int)ptm->tm_mday,
+                (int)ptm->tm_hour, (int)ptm->tm_min, (int)ptm->tm_sec);
+            string orderDateTime = string(date);
+            ILOG("{} {} stop order {} {} {} {} {} {}.",
+                 orderDateTime,
+                 var.instrument,
+                 ((var.direction == traderTag::DIRECTION::buy) ? "buy" : "sell"),
+                 ((var.offset == traderTag::OFFSETFLAG::close) ? "close " : "open "),
+                 var.price,
+                 var.volume,
+                 var.slipTickNum,
+                 var.strategyName);
+
+        }
+    }
+}
