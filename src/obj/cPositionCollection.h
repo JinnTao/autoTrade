@@ -23,21 +23,17 @@ public:
     int getYdPosition(string instID, DIRE dire);
     int getTdPosition(string instID, DIRE dire);
     // hold position pnl
-    double getPositionPnl(string instId, PNL_TAG,DIRE);
+    double getPositionPnl(string instId, PNL_TAG pnl_tag,DIRE dire = DIRE::AUTO_UNDEFINE);
     // hold position price
-    double getPositionPrc(string instId, PRC_TAG,DIRE);
+    double getPositionPrc(string instId, PRC_TAG prc_tag,DIRE dire);
 
         bool               posDireEqual(DIRE, TThostFtdcPosiDirectionType);
     void                   registerInstFiledMap(cInstrumentFieldMapPtr p);
     std::list<std::string> getTradeButNotPositionInstList();
 
-	sTradingAccountInfo Trade_account_info() const { return trade_account_info_; }
-    void                Trade_account_info(sTradingAccountInfo val) { trade_account_info_ = val; }
-
 protected:
     std::multimap<string, cPositionDetailPtr> position_map_;
     cInstrumentFieldMapPtr                    inst_field_map_;  // record instument field
-    sTradingAccountInfo                       trade_account_info_;
 };
 
 typedef shared_ptr<cPositionCollection> cPositionCollectionPtr;

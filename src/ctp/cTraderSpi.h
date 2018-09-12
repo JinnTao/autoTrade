@@ -104,7 +104,7 @@ public:
 
     void ReqQryInstrument_all();
 
-    void ReqQryTradingAccount();
+    void ReqQryTradingAccount(bool isShow,std::function<void(sTradingAccountInfo)> obtain_account = {});
 
     void ReqQryInvestorPosition_all();
 
@@ -231,11 +231,13 @@ private:
     std::function<void(int32)>                                                on_disconnected_fun_;
     std::function<void()>                                                     on_started_fun_;
     std::function<void()>                                                     on_obtain_commssion_fun_;
+    std::function<void(sTradingAccountInfo)>                                  on_obtain_account_;
     std::mutex                                                                mut_;
     ctpConfig                                                                 ctp_config_;
     cMdSpi*                                                                   ctp_md_spi_;
-    std::list<std::string>                                                    trade_not_in_position_list_ = {}
-    ;
+    std::list<std::string>                                                    trade_not_in_position_list_ = {};
+    bool                                                                      is_show_account_info_;
+
 
 };
 

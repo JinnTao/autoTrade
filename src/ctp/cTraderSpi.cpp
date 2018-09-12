@@ -240,17 +240,19 @@ void cTraderSpi::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetail
     if (bIsLast) {
         m_firs_inquiry_Detail = false;
         ILOG("OnRspQryInvestorPositionDetail,bIsLast:{}.nRequestID:{}.", bIsLast,nRequestID);
-        ReqQryTradingAccount();
+        ReqQryTradingAccount(true);
     }
 }
 
-void cTraderSpi::ReqQryTradingAccount() {
+void cTraderSpi::ReqQryTradingAccount(bool isShow, std::function<void(sTradingAccountInfo)> obtain_func) {
     std::lock_guard<std::mutex>      guard(mut_);
     CThostFtdcQryTradingAccountField req;
     memset(&req, 0, sizeof(req));
     strcpy_s(req.BrokerID, sizeof TThostFtdcBrokerIDType, ctp_config_.brokerId);
     strcpy_s(req.InvestorID, sizeof TThostFtdcInvestorIDType, ctp_config_.userId);
     strcpy_s(req.AccountID, sizeof TThostFtdcAccountIDType, ctp_config_.userId);
+    on_obtain_account_ = obtain_func;
+    is_show_account_info_ = isShow;
     while (true) {
         int iResult = ctpTdApi_->ReqQryTradingAccount(&req, ++request_id_);
         ILOG("ReqQryTradingAccount, result:{}.request_id:{}.", iResult, request_id_);
@@ -283,19 +285,24 @@ void cTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField* pTradingA
         m_accountInfo->FrozenMargin   = pTradingAccount->FrozenMargin;
     }
     if (bIsLast){
-
-        printf("Account Summary:\n");
-        printf("   AccountID:%s\n", m_accountInfo->AccountID);
-        printf("   PreBalance:%.2f\n", m_accountInfo->PreBalance);
-        printf("   Balance:%.2f\n", m_accountInfo->Balance);
-        printf("   WithdrawQuota:%f\n", m_accountInfo->WithdrawQuota);
-        printf("   totalPnl:%.2f\n", m_accountInfo->CloseProfit + m_accountInfo->PositionProfit);
-        printf("   CloseProfit:%.2f\n", m_accountInfo->CloseProfit);
-        printf("   PositionProfit:%.2f\n", m_accountInfo->PositionProfit);
-        printf("   Commission:%.2f\n", m_accountInfo->Commission);
-        printf("   Available:%.2f\n", m_accountInfo->Available);
-        printf("   CurrMargin:%.2f\n", m_accountInfo->CurrMargin);
-        memcpy_s(&(global::account_info), sizeof(sTradingAccountInfo), m_accountInfo, sizeof(sTradingAccountInfo));
+        if (is_show_account_info_){
+            printf("Account Summary:\n");
+            printf("   AccountID:%s\n", m_accountInfo->AccountID);
+            printf("   PreBalance:%.2f\n", m_accountInfo->PreBalance);
+            printf("   Balance:%.2f\n", m_accountInfo->Balance);
+            printf("   WithdrawQuota:%f\n", m_accountInfo->WithdrawQuota);
+            printf("   totalPnl:%.2f\n", m_accountInfo->CloseProfit + m_accountInfo->PositionProfit);
+            printf("   CloseProfit:%.2f\n", m_accountInfo->CloseProfit);
+            printf("   PositionProfit:%.2f\n", m_accountInfo->PositionProfit);
+            printf("   Commission:%.2f\n", m_accountInfo->Commission);
+            printf("   Available:%.2f\n", m_accountInfo->Available);
+            printf("   CurrMargin:%.2f\n", m_accountInfo->CurrMargin);
+        }
+        if (on_obtain_account_){
+            on_obtain_account_(*m_accountInfo);
+            // clear
+            on_obtain_account_ = {};
+        }
         if (m_firs_inquiry_TradingAccount){
             ILOG("OnRspQryTradingAccount,isLast:{},nRequestID:{}.", bIsLast,nRequestID);
             ReqQryInvestorPosition_all();
@@ -834,7 +841,7 @@ void cTraderSpi::StraitClose(TThostFtdcInstrumentIDType instId,
                     // close y than close t
                     int Yd_long = this->m_positionCollection->getYdPosition(instId, DIRE::AUTO_LONG);
                     int Td_long = this->m_positionCollection->getTdPosition(instId, DIRE::AUTO_LONG);
-                    if (Yd_long > vol) {
+                    if (Yd_long >= vol) {
                         strcpy(kpp, "1");  // close yP
                         ReqOrderInsert(instId, dir, kpp, price, vol);
 

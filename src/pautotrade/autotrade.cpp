@@ -4,7 +4,6 @@
 
 #include "cTradingPlatform.h"
 
-#define TRADE_CONFIG_FILE "setting.ini"
 
 extern "C" void signal_handler(int signal) {
     ILOG("Dectect signal:{}", signal);
@@ -12,7 +11,7 @@ extern "C" void signal_handler(int signal) {
 }
 
 int main(int32 argc, char** argv) {
-     try {
+    try {
         global::is_running = true;
 
         logger::initLogger();
@@ -38,7 +37,7 @@ int main(int32 argc, char** argv) {
         ILOG("Trader create path success!");
         result = trader->init();
         if (result != 0) {
-            WLOG("Trader init failed! Result: {}.",result);
+            WLOG("Trader init failed! Result: {}.", result);
             return -3;
         }
         ILOG("Trader init success!");

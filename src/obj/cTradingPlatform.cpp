@@ -21,14 +21,13 @@ cTradingPlatform::~cTradingPlatform() {
     if (inter_thread_.joinable()) {
         inter_thread_.join();
     }
-
 }
 
 int32 cTradingPlatform::AutoTrading() {
     std::this_thread::sleep_for(std::chrono::microseconds(1000));
     string str;
     char   dire[50], offset[50], inst[50], price[50], order[50];
-    int    vol, mark = 0, orderNo;
+    int    vol, mark = 0, orderNo, strategyNo;
     char   tag[10];
     ILOG("--------------------Human-computer interaction function Start--------------------------------");
     ILOG(
@@ -38,11 +37,12 @@ int32 cTradingPlatform::AutoTrading() {
         memset(price, 0, 50);
         memset(order, 0, 50);
         memset(tag, 0, 10);
-        vol     = 0;
-        orderNo = 0;
+        vol        = 0;
+        orderNo    = 0;
+        strategyNo = 0;
         getline(std::cin, str);
 
-        if (str == "show") {
+        if (str == "pos") {
             ctp_td_spi_->showPositionDetail();
         }
 
@@ -50,13 +50,47 @@ int32 cTradingPlatform::AutoTrading() {
             cerr << "close Position:" << endl;
             // g_pUserSpi_tradeAll->ForceClose();
         } else if (str == "run") {
-
+            cerr << "Please input strategy no: " << endl;
+            getline(std::cin, str);
+            sscanf(str.c_str(), "%d", &strategyNo);
+            int i = 1;
+            if (strategyNo == 0) {
+                for (auto iter : strategy_list_) {
+                    iter->start();
+                }
+            } else {
+                for (auto iter : strategy_list_) {
+                    if (strategyNo == i) {
+                        iter->start();
+                        break;
+                    }
+                    i++;
+                }
+            }
+        } else if (str == "show") {
+            int i = 1;
+            std::cout << "Strategy no:0 all" << endl;
             for (auto iter : strategy_list_) {
-                iter->start();
+                std::cout << "Strategy no:" << i << " " << iter->getName() << std::endl;
+                i++;
             }
         } else if (str == "stop") {
-            for (auto iter : strategy_list_) {
-                iter->stop();
+            cerr << "Please input strategy no: " << endl;
+            getline(std::cin, str);
+            sscanf(str.c_str(), "%d", &strategyNo);
+            int i = 1;
+            if (strategyNo == 0) {
+                for (auto iter : strategy_list_) {
+                    iter->stop();
+                }
+            } else {
+                for (auto iter : strategy_list_) {
+                    if (strategyNo == i) {
+                        iter->stop();
+                        break;
+                    }
+                    i++;
+                }
             }
         } else if (str == "order") {
             this->order_collection_->PrintPendingOrders();
@@ -65,7 +99,7 @@ int32 cTradingPlatform::AutoTrading() {
         } else if (str == "help") {
             cerr << "OrderList: show | order| trade | stop | run |close |buy/sell open/close inst vol price -> ";
         } else if (str == "account") {
-            this->ctp_td_spi_->ReqQryTradingAccount();
+            this->ctp_td_spi_->ReqQryTradingAccount(true);
         } else if (str == "SP") {
             cerr << "Sp Order command: " << endl;
             getline(std::cin, str);
@@ -159,31 +193,7 @@ int32 cTradingPlatform::loadConfig(const string& config_file) {
         mongoConfig_.mongoPort    = ini.ReadInt("dbMongo", "mongoPort", 1);
         mongoConfig_.mongoLogging = ini.ReadInt("dbMongo", "mongoLogging", 1);
 
-        ini.ReadString("dataBase", "dataBaseDir", "1")
-            .copy(strategyConfig_.dataBaseDir, sizeof strategyConfig_.dataBaseDir);
-        ini.ReadString("dataBase", "tradeDayDir", "1")
-            .copy(strategyConfig_.tradeDayDir, sizeof strategyConfig_.tradeDayDir);
-        ini.ReadString("dataBase", "startDate", "1").copy(strategyConfig_.startDate, sizeof strategyConfig_.startDate);
-        ini.ReadString("dataBase", "endDate", "1").copy(strategyConfig_.endDate, sizeof strategyConfig_.endDate);
 
-        ini.ReadString("strategy", "inst", "1").copy(strategyConfig_.inst, sizeof strategyConfig_.inst);
-        ini.ReadString("strategy", "lots", "1").copy(strategyConfig_.lots, sizeof strategyConfig_.lots);
-        ini.ReadString("strategy", "timeModes", "1").copy(strategyConfig_.timeMode, sizeof strategyConfig_.timeMode);
-        ini.ReadString("strategy", "collectionList", "1")
-            .copy(strategyConfig_.collectionList, sizeof strategyConfig_.collectionList);
-        // KingKeltner
-        ini.ReadString("KingKeltner", "collectionName", "1")
-            .copy(strategyConfig_.collectionName, sizeof strategyConfig_.collectionName);
-        ini.ReadString("KingKeltner", "startDateTime", "1")
-            .copy(strategyConfig_.startDateTime, sizeof strategyConfig_.startDateTime);
-        ini.ReadString("KingKeltner", "endDateTime", "1")
-            .copy(strategyConfig_.endDateTime, sizeof strategyConfig_.endDateTime);
-
-        strategyConfig_.kkLength      = ini.ReadDouble("KingKeltner", "kkLength", 1);
-        strategyConfig_.kkDev         = ini.ReadDouble("KingKeltner", "kkDev", 1);
-        strategyConfig_.trailingPrcnt = ini.ReadDouble("KingKeltner", "trailingPrcnt", 1);
-        strategyConfig_.fixedSize     = ini.ReadDouble("KingKeltner", "fixedSize", 1);
-        strategyConfig_.initDays      = ini.ReadDouble("KingKeltner", "initDays", 1);
         return 0;
     } catch (std::exception& e) {
         WLOG("Error:{}", e.what());
@@ -256,10 +266,10 @@ int32 cTradingPlatform::init() {
 
         // init Position、Orders、Trades、MarketDataEngine
         {
-            if (marketdate_collection_) {
-                marketdate_collection_.reset();
+            if (marketdata_collection_) {
+                marketdata_collection_.reset();
             }
-            marketdate_collection_ = std::make_shared<cMarketDataCollection>();
+            marketdata_collection_ = std::make_shared<cMarketDataCollection>();
             ILOG("Market data collection create success!");
 
             if (position_collection_) {
@@ -299,10 +309,10 @@ int32 cTradingPlatform::init() {
         {
             position_collection_->registerInstFiledMap(inst_field_map_);
 
-            ctp_md_spi_->RegisterMarketDataCollection(marketdate_collection_.get());
+            ctp_md_spi_->RegisterMarketDataCollection(marketdata_collection_.get());
             ctp_md_spi_->RegisterPositionCollection(position_collection_);
 
-            ctp_td_spi_->RegisterMarketDataCollection(marketdate_collection_);
+            ctp_td_spi_->RegisterMarketDataCollection(marketdata_collection_);
             ctp_td_spi_->RegisterPositionCollection(position_collection_);
             ctp_td_spi_->RegisterOrderCollection(order_collection_);
             ctp_td_spi_->RegisterTradeCollection(trade_collection_);
@@ -311,20 +321,21 @@ int32 cTradingPlatform::init() {
             ctp_td_spi_->RegisterSubscribeInstList(subscribe_inst_v_);
             ctp_td_spi_->RegisterCtpMdSpi(ctp_md_spi_.get());
 
-            marketdate_collection_->registerMongoSetting(&mongoConfig_);
-            // fresh strategy
+            marketdata_collection_->registerMongoSetting(&mongoConfig_);
+            // fresh strategy 主要用于重启
             for (auto pStrategy : strategy_list_) {
-                pStrategy->RegisterMarketDataCollection(marketdate_collection_);
+                pStrategy->RegisterMarketDataCollection(marketdata_collection_);
                 pStrategy->RegisterTradeSpi(ctp_td_spi_);
                 pStrategy->RegisterMdSpi(ctp_md_spi_);
                 pStrategy->RegisterPositionCollectionPtr(position_collection_);
                 pStrategy->RegisterOrderCollectionPtr(order_collection_);
                 pStrategy->RegisterTradeCollectionPtr(trade_collection_);
-
-
-                this->readDay(string(strategyConfig_.tradeDayDir), trade_day_list_);
-                marketdate_collection_->setTradeDayList(&trade_day_list_);
+                pStrategy->RegistreInstrumentInfo(INST_CONFIG_FILE);
             }
+
+            //
+            this->readDay(string(""), trade_day_list_);
+            marketdata_collection_->setTradeDayList(&trade_day_list_);
         }
         init_result = ctp_td_spi_->start();
         if (init_result != 0) {
@@ -352,44 +363,22 @@ int32 cTradingPlatform::start() {
     try {
         // strategy create & init & start
         {
-            std::vector<std::string> instList     = this->splitToStr(std::string(strategyConfig_.inst), ",");
-            std::vector<int32>       lotsList     = this->splitToInt(std::string(strategyConfig_.lots), ",");
-            std::vector<int32>       timeModeList = this->splitToInt(std::string(strategyConfig_.timeMode), ",");
-            std::vector<std::string> collectionList =
-                this->splitToStr(std::string(strategyConfig_.collectionList), ",");
+            // 每新建一个策略 需要在这里注册一遍
+            std::shared_ptr<cStrategyKingKeltner> pStrategy = std::make_shared<cStrategyKingKeltner>();
+            pStrategy->RegisterMarketDataCollection(marketdata_collection_);
+            pStrategy->RegisterTradeSpi(ctp_td_spi_);
+            pStrategy->RegisterMdSpi(ctp_md_spi_);
+            pStrategy->RegisterPositionCollectionPtr(position_collection_);
+            pStrategy->RegisterOrderCollectionPtr(order_collection_);
+            pStrategy->RegisterTradeCollectionPtr(trade_collection_);
+            pStrategy->RegistreInstrumentInfo(INST_CONFIG_FILE);
+            ctp_td_spi_->RegisterStrategy(pStrategy.get());  // onTrade onOrder
+            strategy_list_.push_back(pStrategy);
 
-            if (instList.size() != lotsList.size() || timeModeList.size() != lotsList.size() ||
-                collectionList.size() != lotsList.size()) {
-                ILOG(" InitStrategy  inst lot timeMode Error,InitListSize:{},timeModeListSize:{},collectionListSize:{}",
-                     lotsList.size(),
-                     timeModeList.size(),
-                     collectionList.size());
-                return -3;
-            }
-            for (int i = 0; i < instList.size(); i++) {
-                std::shared_ptr<cStrategyKingKeltner> pStrategy = std::make_shared<cStrategyKingKeltner>();
 
-                pStrategy->RegisterMarketDataCollection(marketdate_collection_);
-                pStrategy->RegisterTradeSpi(ctp_td_spi_);
-                pStrategy->RegisterMdSpi(ctp_md_spi_);
-                pStrategy->RegisterPositionCollectionPtr(position_collection_);
-                pStrategy->RegisterOrderCollectionPtr(order_collection_);
-                pStrategy->RegisterTradeCollectionPtr(trade_collection_);
-
-                // why do this? I donot konw,maybe just filter carlenday
-                this->readDay(string(strategyConfig_.tradeDayDir), trade_day_list_);
-                marketdate_collection_->setTradeDayList(&trade_day_list_);
-
-                ctp_td_spi_->RegisterStrategy(pStrategy.get());  // onTrade onOrder
-
-                subscribe_inst_v_->push_back(instList[i]);
-                strategy_list_.push_back(pStrategy);
-                ILOG("Init strategy inst:{},Lost:{},timeMode:{},Collection:{}",
-                     instList[i],
-                     lotsList[i],
-                     timeModeList[i],
-                     collectionList[i]);
-            }
+            // why do this? I donot konw,maybe just filter carlenday
+            this->readDay(string(""), trade_day_list_);
+            marketdata_collection_->setTradeDayList(&trade_day_list_);
         }
 
         // TradingPlatform start

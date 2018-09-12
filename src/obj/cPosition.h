@@ -9,7 +9,7 @@ using namespace std;
 
 enum DIRE { AUTO_LONG, AUTO_SHORT, AUTO_UNDEFINE };
 enum PNL_TAG { CLOSE_PNL, POSI_PNL, FLOAT_PNL };
-enum PRC_TAG {OPEN_COST,POSI_COST};
+enum PRC_TAG { OPEN_COST, POSI_COST };
 using cInstrumentFieldMapPtr = shared_ptr<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentField>>>;
 class cPositionDetail {
 public:
@@ -33,6 +33,9 @@ public:
     double PositionProfit = 0;  //持仓盈亏
     double FloatProfit    = 0;  // 浮动盈亏 （累计盈亏）
     double Margin         = 0;  //持仓占用保证金
+    double getPositionPrice() { return position_price_; }
+    double getOpenPrice() { return open_price_; }
+
 private:
     int                                        m_tradeID = 0;
     string                                     instrument_id_;       //合约代码

@@ -40,7 +40,7 @@ public:
     int32 reConnect();
 
 private:
-    using cStrategyListPtr       = std::list<std::shared_ptr<cStrategyKingKeltner>>;
+    using cStrategyListPtr       = std::list<std::shared_ptr<cStrategy>>;
     using cInstrumentFieldMapPtr = shared_ptr<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentField>>>;
     using cInstrumentCommissionRateFieldMapPtr =
         shared_ptr<std::map<std::string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>>;
@@ -48,13 +48,13 @@ private:
     using cMdSpiPtr     = std::shared_ptr<cMdSpi>;
 
     ctpConfig      ctpConfig_;
-    strategyConfig strategyConfig_;
+    //strategyConfig strategyConfig_;
     mongoConfig    mongoConfig_;
 
     cTraderSpiPtr ctp_td_spi_;
     cMdSpiPtr     ctp_md_spi_;
 
-    cMarketDataCollectionPtr             marketdate_collection_;
+    cMarketDataCollectionPtr             marketdata_collection_;
     cPositionCollectionPtr               position_collection_;
     cTradeCollectionPtr                  trade_collection_;
     cOrderCollectionPtr                  order_collection_;

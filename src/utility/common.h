@@ -35,4 +35,7 @@ enum STRATEGY_MODE { REAL, BACK_TEST };
     TypeName() = delete;                         \
     DISALLOW_COPY_AND_ASSIGN(TypeName)
 
+
+#define TRADE_CONFIG_FILE "setting.ini"
+#define INST_CONFIG_FILE "InstrumentInfo.ini"
 #endif  // _COMMON_H_

@@ -5,7 +5,6 @@ cPositionCollection::cPositionCollection() {
     if (position_map_.size() != 0) {
         position_map_.clear();
     }
-    memset(&Trade_account_info(), 0, sizeof sTradingAccountInfo);
 }
 
 cPositionCollection::~cPositionCollection() {}
@@ -183,54 +182,48 @@ std::list<std::string> cPositionCollection::getTradeButNotPositionInstList() {
 double cPositionCollection::getPositionPnl(string inst, PNL_TAG pnl_tag, DIRE dire) {
     std::multimap<string, cPositionDetailPtr>::iterator pos;
     double                                              pnls          = 0;
-    auto calculate_pnl = [&pnl_tag,&pnls](std::multimap<string, cPositionDetailPtr>::iterator pos) -> double {
+    auto calculate_pnl = [&pnl_tag](std::multimap<string, cPositionDetailPtr>::iterator pos) -> double {
+        double pnls;
         if (pnl_tag == PNL_TAG::CLOSE_PNL) {
-            pnls += pos->second->CloseProfit;
+            pnls = pos->second->CloseProfit;
         }
         if (pnl_tag == PNL_TAG::FLOAT_PNL) {
-            pnls += pos->second->FloatProfit;
+            pnls = pos->second->FloatProfit;
         }
         if (pnl_tag == PNL_TAG::POSI_PNL) {
-            pnls += pos->second->PositionProfit;
+            pnls = pos->second->PositionProfit;
         }
         return pnls;
     };
     for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
         if (dire == DIRE::AUTO_UNDEFINE) {
-            pnls = calculate_pnl(pos);
+            pnls += calculate_pnl(pos);
         } else {
             if (dire == pos->second->getPosiDire()) {
-                pnls = calculate_pnl(pos);
+                pnls += calculate_pnl(pos);
             }
         }
     }
     return pnls;
 }
-// hold position price
-double cPositionCollection::getPositionPrc(string inst, PRC_TAG pnl_tag,DIRE dire) {
+// hold position price 必须指明多单还是空单 否则无法获取持仓价格
+double cPositionCollection::getPositionPrc(string inst, PRC_TAG prc_tag,DIRE dire) {
     std::multimap<string, cPositionDetailPtr>::iterator pos;
-    double                                              pnls = 0;
-    auto calculate_pnl = [&pnl_tag, &pnls](std::multimap<string, cPositionDetailPtr>::iterator pos) -> double {
-        if (pnl_tag == PNL_TAG::CLOSE_PNL) {
-            pnls += pos->second->CloseProfit;
+    double                                              price = 0;
+    auto obtain_price = [&prc_tag](std::multimap<string, cPositionDetailPtr>::iterator pos) -> double {
+        double price;
+        if (prc_tag == PRC_TAG::OPEN_COST) {
+            price = pos->second->getPositionPrice();
         }
-        if (pnl_tag == PNL_TAG::FLOAT_PNL) {
-            pnls += pos->second->FloatProfit;
+        if (prc_tag == PRC_TAG::POSI_COST) {
+            price = pos->second->getOpenPrice();
         }
-        if (pnl_tag == PNL_TAG::POSI_PNL) {
-            pnls += pos->second->PositionProfit;
-        }
-        return pnls;
+        return price;
     };
-    for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) {
-        if (dire == DIRE::AUTO_UNDEFINE) {
-            pnls = calculate_pnl(pos);
-        } else {
-            if (dire == pos->second->getPosiDire()) {
-                pnls = calculate_pnl(pos);
-            }
+    for (pos = position_map_.lower_bound(inst); pos != position_map_.upper_bound(inst); ++pos) { 
+        if (dire == pos->second->getPosiDire()) {
+            price = obtain_price(pos);
         }
     }
-    return pnls;
-
+    return price;
 }

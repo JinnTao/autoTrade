@@ -42,7 +42,6 @@ public:
     virtual void onTrade(CThostFtdcTradeField);
     virtual void onLoop(contextPtr);
 
-
     void buyOpen(std::string inst, double price, double volume, bool stop = false);
     void buyClose(std::string inst, double price, double volume, bool stop = false);
     void sellOpen(std::string inst, double price, double volume, bool stop = false);
@@ -61,13 +60,17 @@ public:
     void RegisterPositionCollectionPtr(cPositionCollectionPtr p);
     void RegisterOrderCollectionPtr(cOrderCollectionPtr p);
     void RegisterTradeCollectionPtr(cTradeCollectionPtr p);
+    void RegistreInstrumentInfo(std::string);
 
     bool GetStrategyStatus();
-    void makeStopOrder(std::string inst ,double price, double vol,traderTag::DIRECTION,traderTag::OFFSETFLAG);
+    void makeStopOrder(std::string inst, double price, double vol, traderTag::DIRECTION, traderTag::OFFSETFLAG);
     void subscribe(std::vector<std::string> commodity, long long frequncy, int dataCount, STRATEGY_MODE trade_mode);
     bool update_context();
     bool isTradeTime(std::string);
-    void showStopOrders();
+    std::string getName() { return name_; }
+    sTradingAccountInfo getAccount();
+    void                showStopOrders();
+
 protected:
     bool mode1(int hourMinTime);
     bool mode2(int hourMinTime);
@@ -84,19 +87,20 @@ protected:
     cTradeCollectionPtr    trade_collection_;
 
     // stop Order List
-    std::vector<cStopOrder>       stop_order_list_;
-    std::vector<std::string>      trade_inst_list_;
-    int                           frequency_;
-    int                           data_length_;
-    string                        name_;
-    int                           sto_order_id_seq_ = 1;
-    contextPtr                    context_ptr_;
+    std::vector<cStopOrder>               stop_order_list_;
+    std::vector<std::string>              trade_inst_list_;
+    std::map<std::string, std::string>    instrument_info_;
+    int                                   frequency_;
+    int                                   data_length_;
+    std::string                                name_;
+    int                                   sto_order_id_seq_ = 1;
+    contextPtr                            context_ptr_;
     std::chrono::system_clock::time_point the_previous_;
-private:
-    void              autoTrader();
-    std::thread       inner_thread_;
-    std::atomic<bool> is_running_ = false;
 
+private:
+    void                   autoTrader();
+    std::thread            inner_thread_;
+    std::atomic<bool>      is_running_ = false;
     shared_ptr<cTraderSpi> trader_spi_;
     shared_ptr<cMdSpi>     md_spi_;
 
