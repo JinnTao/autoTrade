@@ -3,88 +3,108 @@
 
 #include <ThostFtdcMdApi.h>
 #include <ThostFtdcTraderApi.h>
-#include <cString.h>
+
 #include <memory>
-using std::shared_ptr;
+#include <functional>
+#include <mutex>
+#include "cPositionCollection.h"
+#include "cMarketDataCollection.h"
+#include "common.h"
+#include "global.h"
 
-class cMarketDataCollection;
-extern int iRequestID;
 
-class cMdSpi : public CThostFtdcMdSpi
-{
+class cMdSpi : public CThostFtdcMdSpi {
 public:
-	cMdSpi( CThostFtdcMdApi* pUserMdApi,  TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog = false );
+    cMdSpi(){};
+    ///错误应答
+    virtual void OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast);
 
-	///错误应答
-	virtual void OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast );
+    ///当客户端与交易后台通信连接断开时，该方法被调用。当发生这个情况后，API会自动重新连接，客户端可不做处理。
+    ///@param nReason 错误原因
+    ///        0x1001 网络读失败
+    ///        0x1002 网络写失败
+    ///        0x2001 接收心跳超时
+    ///        0x2002 发送心跳失败
+    ///        0x2003 收到错误报文
+    virtual void OnFrontDisconnected(int nReason);
 
-	///当客户端与交易后台通信连接断开时，该方法被调用。当发生这个情况后，API会自动重新连接，客户端可不做处理。
-	///@param nReason 错误原因
-	///        0x1001 网络读失败
-	///        0x1002 网络写失败
-	///        0x2001 接收心跳超时
-	///        0x2002 发送心跳失败
-	///        0x2003 收到错误报文
-	virtual void OnFrontDisconnected( int nReason );
-		
-	///心跳超时警告。当长时间未收到报文时，该方法被调用。
-	///@param nTimeLapse 距离上次接收报文的时间
-	virtual void OnHeartBeatWarning( int nTimeLapse );
+    ///心跳超时警告。当长时间未收到报文时，该方法被调用。
+    ///@param nTimeLapse 距离上次接收报文的时间
+    virtual void OnHeartBeatWarning(int nTimeLapse);
 
-	///当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。
-	virtual void OnFrontConnected();
-	
-	///登录请求响应
-	virtual void OnRspUserLogin( CThostFtdcRspUserLoginField* pRspUserLogin, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
+    ///当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。
+    virtual void OnFrontConnected();
 
-	///订阅行情应答
-	virtual void OnRspSubMarketData( CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
+    ///登录请求响应
+    virtual void OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin,
+                                CThostFtdcRspInfoField*      pRspInfo,
+                                int                          nRequestID,
+                                bool                         bIsLast);
 
-	///订阅询价应答
-	virtual void OnRspSubForQuoteRsp( CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
+    ///订阅行情应答
+    virtual void OnRspSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument,
+                                    CThostFtdcRspInfoField*            pRspInfo,
+                                    int                                nRequestID,
+                                    bool                               bIsLast);
 
-	///取消订阅行情应答
-	virtual void OnRspUnSubMarketData( CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
+    ///订阅询价应答
+    virtual void OnRspSubForQuoteRsp(CThostFtdcSpecificInstrumentField* pSpecificInstrument,
+                                     CThostFtdcRspInfoField*            pRspInfo,
+                                     int                                nRequestID,
+                                     bool                               bIsLast);
 
-	///取消订阅询价应答
-	virtual void OnRspUnSubForQuoteRsp( CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
+    ///取消订阅行情应答
+    virtual void OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument,
+                                      CThostFtdcRspInfoField*            pRspInfo,
+                                      int                                nRequestID,
+                                      bool                               bIsLast);
 
-	///深度行情通知
-	virtual void OnRtnDepthMarketData( CThostFtdcDepthMarketDataField* pDepthMarketData );
+    ///取消订阅询价应答
+    virtual void OnRspUnSubForQuoteRsp(CThostFtdcSpecificInstrumentField* pSpecificInstrument,
+                                       CThostFtdcRspInfoField*            pRspInfo,
+                                       int                                nRequestID,
+                                       bool                               bIsLast);
 
-	///询价通知
-	virtual void OnRtnForQuoteRsp( CThostFtdcForQuoteRspField* pForQuoteRsp );
+    ///深度行情通知
+    virtual void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField* pDepthMarketData);
 
-	void RegisterMarketDataCollection( cMarketDataCollection* pMktDataCollection );
+    ///询价通知
+    virtual void OnRtnForQuoteRsp(CThostFtdcForQuoteRspField* pForQuoteRsp);
 
-	bool getSatus(){return this->m_status;}
+    void RegisterMarketDataCollection(cMarketDataCollection* pMktDataCollection);
+    void RegisterPositionCollection(cPositionCollectionPtr pMktDataCollection);
 
-	void SubscribeMarketData(char *instIdList);
-	void SubscribeMarketData(shared_ptr<vector<string>> instList);
-	void SubscribeMarketData(string inst);
-private:
-	void ReqUserLogin();
+    void SubscribeMarketData(char* instIdList);
+    void SubscribeMarketData(shared_ptr<vector<string>> instList);
+    void SubscribeMarketData(string inst);
 
-	void SubscribeForQuoteRsp();
-	bool IsErrorRspInfo( CThostFtdcRspInfoField* pRspInfo );
 
-	TThostFtdcBrokerIDType	m_brokerID;
-	TThostFtdcInvestorIDType m_investorID;
-	char	m_password[252];
+    int32 init(const ctpConfig& ctp_config);
+    int32 stop();
+    int32 reConnect(const ctpConfig& ctp_config);
+    int32 start();
 
-	CThostFtdcMdApi* m_pUserMdApi;
+    void clearCallBack();
+    void clear();
 
-	cMarketDataCollection* m_pMktDataCollection;
-	
-	bool m_genLog;
-	
-	int m_requestID;
-	cString m_outputDirectory;
-	cString m_logFileFolder;
-	cString m_logFile;
+    using CtpMdApiPtr = std::unique_ptr<CThostFtdcMdApi, std::function<void(CThostFtdcMdApi*)>>;
 
-	bool m_status;
+    void SubscribeForQuoteRsp();
+    bool IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo);
 
+    cMarketDataCollection* m_pMktDataCollection;
+
+    bool m_status;
+
+    std::function<void()>                                                      on_connected_fun_;
+    std::function<void(CThostFtdcRspUserLoginField*, CThostFtdcRspInfoField*)> on_login_fun_;
+    std::mutex                                                                 mut_;
+    CtpMdApiPtr                                                                ctpmdapi_;
+    int32                                                                      request_id_ = 0;
+    std::function<void(int32)>                                                 on_disconnected_fun_;
+    ctpConfig                                                                  ctp_config_;
+    cPositionCollectionPtr                                                     position_collection_;
+    
 };
-typedef int (*ccbf_secureApi_LoginMd)(CThostFtdcMdApi* ctp_futures_pMdApi, TThostFtdcBrokerIDType brokeId, TThostFtdcUserIDType userId, char* pChar_passwd, int& ctp_futures_requestId);
+
 #endif

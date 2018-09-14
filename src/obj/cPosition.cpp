@@ -1,188 +1,191 @@
 #include <cPosition.h>
 #include <cTrade.h>
+#include "logger.h"
+cPositionDetail::cPositionDetail(string inst) {
+    memset(this, 0, sizeof(this));
 
-cPositionDetail::cPositionDetail(string inst)
-{
-	memset(this,0,sizeof(this));
-
-	m_lastPrice = 0;//最新价，时刻保存合约的最新价，平仓用
-	m_PreSettlementPrice = 0;//上次结算价，对隔夜仓有时候要用，快期有用
-	m_holding_long = 0;//多单持仓量
-	m_holding_short = 0;//空单持仓量
-
-	m_TodayPosition_long = 0;//多单今日持仓
-	m_YdPosition_long = 0;//多单上日持仓
-
-	m_TodayPosition_short = 0;//空单今日持仓
-	m_YdPosition_short = 0;//空单上日持仓
-
-	closeProfit_long = 0;//多单平仓盈亏
-	OpenProfit_long = 0;//多单浮动盈亏
-
-	closeProfit_short = 0;//空单平仓盈亏
-	OpenProfit_short = 0;//空单浮动盈亏
-
-	margin = 0;// 持仓占用保证金
-	this->m_instrumentID = inst;
-
+    instrument_id_ = inst;
+    position_price_      = 0;  //持仓成本
+    open_price_          = 0;  //开仓成本
+    position_            = 0;  //总持仓量
+    today_pos_           = 0;  //今日持仓量
+    yd_pos_              = 0;  //多单上日持仓
+    commission_          = 0;
+    settle_price_        = 0;  // 结算价
+    last_price_          = 0;  // 市场价格
+    margin_rate_         = 0;  // 保证金率
+    CloseProfit          = 0;  //平仓盈亏
+    PositionProfit       = 0;  //持仓盈亏
+    FloatProfit          = 0;  // 浮动盈亏 （累计盈亏）
+    Margin               = 0;  //持仓占用保证金
 }
 
+void cPositionDetail::update(CThostFtdcInvestorPositionField* pInvestorPosition) {
+    double lamda = 1;
+    if (strcmp(pInvestorPosition->InstrumentID, instrument_id_.c_str()) == 0) {
 
+        Margin += pInvestorPosition->UseMargin;
+        CloseProfit += pInvestorPosition->CloseProfit;
+        PositionProfit += pInvestorPosition->PositionProfit;
+        commission_ += pInvestorPosition->Commission;
 
-void cPositionDetail::update( CThostFtdcInvestorPositionField* pInvestorPosition )
-{
+        // long postion
+        if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long) {
+            posi_direction_ = DIRE::AUTO_LONG;
+            lamda           = 1;
+        }
+        // short postion
+        else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short) {
+            posi_direction_ = DIRE::AUTO_SHORT;
+            lamda           = -1;
+        } else {
+            ILOG("cPostionDetail PosiDirection error.");
+        }
+        if (pInvestorPosition->Position > 0) {
+            position_ += pInvestorPosition->Position;
+            today_pos_ += pInvestorPosition->TodayPosition;
+            yd_pos_ += pInvestorPosition->YdPosition;
+            open_cost_ += pInvestorPosition->OpenCost;
+            position_cost_ += pInvestorPosition->PositionCost;
+            settle_price_  = pInvestorPosition->SettlementPrice;
+            margin_rate_   = pInvestorPosition->ExchangeMargin;
+            position_date_ = pInvestorPosition->PositionDate;
+            trade_date_    = pInvestorPosition->TradingDay;
 
-	if(strcmp(pInvestorPosition->InstrumentID,this->m_instrumentID.c_str()) == 0){
-		if(pInvestorPosition->PosiDirection == '2')//多单
-		{
-			//多单持仓量
-			this->m_holding_long += pInvestorPosition->Position;
+            open_price_     = open_cost_ / double(inst_field_->VolumeMultiple) / double(position_);
+            position_price_ = position_cost_ / double(inst_field_->VolumeMultiple) / double(position_);
+            last_price_ =
+                position_price_ + lamda * PositionProfit / double(position_ * double(inst_field_->VolumeMultiple));
+            FloatProfit = lamda * (last_price_ - open_price_) * position_ * double(inst_field_->VolumeMultiple);
 
-			//多单今仓
-			this->m_TodayPosition_long = pInvestorPosition->TodayPosition;
-
-			//多单昨仓 = 多单持仓量 - 多单今仓
-			this->m_YdPosition_long = this->m_holding_long - this->m_TodayPosition_long;//也可以
-			//m_trade_message_map[pInvestorPosition->InstrumentID]->YdPosition_long = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-
-			//多单平仓盈亏
-			this->closeProfit_long =  pInvestorPosition->CloseProfit;
-
-			//多单浮动盈亏(其实是持仓盈亏，按昨结算的)
-			this->OpenProfit_long = pInvestorPosition->PositionProfit;
-
-			this->margin = pInvestorPosition->UseMargin;
-
-		}
-		else if(pInvestorPosition->PosiDirection == '3')//空单
-		{
-			//空单持仓量
-			this->m_holding_short += pInvestorPosition->Position;
-
-			//空单今仓
-			this->m_TodayPosition_short = pInvestorPosition->TodayPosition;
-
-			//空单昨仓 = 空单持仓量 - 空单今仓
-			this->m_YdPosition_short = this->m_holding_short - this->m_TodayPosition_short;
-
-			//空单平仓盈亏
-			this->closeProfit_short = pInvestorPosition->CloseProfit;
-
-			//空单持仓盈亏
-			this->OpenProfit_short = pInvestorPosition->PositionProfit;
-
-			this->margin = pInvestorPosition->UseMargin;
-		}
-	}else{
-		yr_error("cPositionDetail update error");
-	}
+            if (position_ != (today_pos_ + yd_pos_)){
+                ILOG(
+                    "Inst:{},position:{},ydPos:{},tdPos{},margin:{},CloseProfit:{},PositionProfit:{},PositionDate:{},"
+                    "comssition:{},settlePrice:{},Marginrate:{},OpenVolume:{},CloseVol{}.",
+                     pInvestorPosition->InstrumentID,
+                     pInvestorPosition->Position,
+                     pInvestorPosition->YdPosition,
+                     pInvestorPosition->TodayPosition,
+                     pInvestorPosition->UseMargin,
+                     pInvestorPosition->CloseProfit,
+                     pInvestorPosition->PositionProfit,
+                     pInvestorPosition->PositionDate,
+                     pInvestorPosition->Commission,
+                     pInvestorPosition->SettlementPrice,
+                     pInvestorPosition->ExchangeMargin,
+                     pInvestorPosition->OpenVolume,
+                     pInvestorPosition->CloseVolume);
+            }
+        }
+    } else {
+        WLOG("cPostionDetail update error.");
+    }
 }
 
-void cPositionDetail::update( CThostFtdcTradeField* pTrade )
-{
+void cPositionDetail::update(CThostFtdcDepthMarketDataField* pDepthMarketData) {
+    if (strcmp(pDepthMarketData->InstrumentID, instrument_id_.c_str()) == 0) {
+        last_price_  = pDepthMarketData->LastPrice;
+        exchange_id_ = pDepthMarketData->ExchangeID;
+        update_time_ = string(pDepthMarketData->TradingDay + string(" ") + pDepthMarketData->UpdateTime);
+        if (position_ > 0) {
+            if (posi_direction_ == DIRE::AUTO_LONG) {
+                PositionProfit = (last_price_ - position_price_) * position_ * double(inst_field_->VolumeMultiple);
+                FloatProfit    = (last_price_ - open_price_) * position_ * double(inst_field_->VolumeMultiple);
+            }
+            if (posi_direction_ == DIRE::AUTO_SHORT) {
+                PositionProfit = (position_price_ - last_price_) * position_ * double(inst_field_->VolumeMultiple);
+                FloatProfit    = (open_price_ - last_price_) * position_ * double(inst_field_->VolumeMultiple);
+            }
+        }
+    } else {
+        WLOG("cPositionDetail update marketData inst not match.");
+    }
+}
+//  identification long & short at outer func..
+void cPositionDetail::update(CThostFtdcTradeField* pTrade, shared_ptr<cTrade> pcTrade) {
 
-	if(strcmp(pTrade->InstrumentID,this->m_instrumentID.c_str()) == 0)
-	{
-		if (pTrade->OffsetFlag == THOST_FTDC_OF_Open)//开仓
-		{
-			if (pTrade->Direction == THOST_FTDC_D_Buy)//多单
-			{
+    if (strcmp(pTrade->InstrumentID, instrument_id_.c_str()) == 0) {
 
-				//多单持仓量
-				this->m_holding_long = this->m_holding_long + pTrade->Volume;
-				//多单今日持仓
-				this->m_TodayPosition_long = this->m_TodayPosition_long + pTrade->Volume;
-			}
-			else if (pTrade->Direction == THOST_FTDC_D_Sell)//空单
-			{									
+        int old_pos = position_;
+        // open
+        if (pTrade->OffsetFlag == THOST_FTDC_OF_Open) {
+            position_ += pTrade->Volume;
+            today_pos_ += pTrade->Volume;
+            // LOG(INFO) << pTrade->Price << "  " << pTrade->Volume << "  " << open_price_ << "  " << old_pos << "  "
+            //         << position_;
+            open_price_     = (pTrade->Price * pTrade->Volume + open_price_ * old_pos) / double(position_);
+            position_price_ = (pTrade->Price * pTrade->Volume + position_price_ * old_pos) / double(position_);
+            // long
+            if (pTrade->Direction == THOST_FTDC_D_Buy) {
+                posi_direction_ = DIRE::AUTO_LONG;
+            }
+            // short
+            if (pTrade->Direction == THOST_FTDC_D_Sell) {
+                posi_direction_ = DIRE::AUTO_SHORT;
+            }
+        }
+        // close
+        else {
+            position_ -= pTrade->Volume;
+            //今仓量和昨仓量，只对上期所有效
+            if (pTrade->OffsetFlag == THOST_FTDC_OF_Close || pTrade->OffsetFlag == THOST_FTDC_OF_CloseYesterday ||
+                pTrade->OffsetFlag == THOST_FTDC_OF_ForceClose)
+                yd_pos_ -= pTrade->Volume;  //昨仓
+            else if (pTrade->OffsetFlag == THOST_FTDC_OF_CloseToday)
+                today_pos_ -= pTrade->Volume;  //今仓
 
-				//空单持仓量
-				this->m_holding_short =this ->m_holding_short + pTrade->Volume;
-				//空单今日持仓
-				this->m_TodayPosition_short = this->m_TodayPosition_short + pTrade->Volume;
-			}
-		}
-		else 
-		{
-			if (pTrade->Direction == THOST_FTDC_D_Sell)//卖，表示平多,有昨仓和今仓时，按时间顺序，先平昨仓
-			{
+            //假设今仓5手，昨仓1，平仓都是发'1'，假设平仓2手，导致昨仓是-1，今仓还是5手，实际应该是今仓5-1，昨仓0
+            // 3手昨仓，5手今仓，，'1'平仓了4手,导致昨仓是-1，今仓还是5手，实际应该是今仓5-1，昨仓0
+            if (this->yd_pos_ < 0) {
+                this->today_pos_ += this->yd_pos_;
+                this->yd_pos_ = 0;
+            }
+            // buy close => sell open
+            if (pTrade->Direction == THOST_FTDC_D_Buy) {
+                CloseProfit += (position_price_ - pTrade->Price) * pTrade->Volume * double(inst_field_->VolumeMultiple);
+            }
+            // sell close => buy open
+            if (pTrade->Direction == THOST_FTDC_D_Sell) {
+                CloseProfit += (pTrade->Price - position_price_) * pTrade->Volume * double(inst_field_->VolumeMultiple);
+            }
+            if (position_ > 0) {
+                // open_price_     = (open_price_ * old_pos - pTrade->Price * pTrade->Volume) / double(position_);
+                // position_price_ = (position_price_ * old_pos - pTrade->Price * pTrade->Volume) / double(position_);
 
+            } else {
+                open_price_     = 0;
+                position_price_ = 0;
+                PositionProfit  = 0;
+                FloatProfit     = 0;
+            }
 
-				//多单持仓量
-				this->m_holding_long =this->m_holding_long - pTrade->Volume;
-				//今仓持仓量和昨仓量，要分上期所和非上期所
+            if (position_ != (yd_pos_ + today_pos_)) {
+                WLOG("Position error: pos:{},ydPos:{},tdPos:{},offset:{},vol:{}.",
+                     position_,
+                     yd_pos_,
+                     today_pos_,
+                     pTrade->OffsetFlag,
+                     pTrade->Volume);
+            }
+        }
 
+        position_date_ = pTrade->TradingDay;
+        trade_date_    = pTrade->TradingDay;
+        exchange_id_   = pTrade->ExchangeID;
+        commission_ += pcTrade->GetCommission();
+        // LOG(INFO) << "price :" << pTrade->Price << " pos: " << position_ << "tradding day" << trade_date_;
 
-				//今仓量和昨仓量，只对上期所有效
-				if (pTrade->OffsetFlag == THOST_FTDC_OF_Close || pTrade->OffsetFlag == THOST_FTDC_OF_CloseYesterday || pTrade->OffsetFlag == THOST_FTDC_OF_ForceClose)
-					this->m_YdPosition_long =this->m_YdPosition_long - pTrade->Volume;//昨仓
-				else if (pTrade->OffsetFlag == THOST_FTDC_OF_CloseToday)
-					this->m_TodayPosition_long =this->m_TodayPosition_long - pTrade->Volume;//今仓
-
-
-				//假设今仓5手，昨仓1，平仓都是发'1'，假设平仓2手，导致昨仓是-1，今仓还是5手，实际应该是今仓5-1，昨仓0
-				//3手昨仓，5手今仓，，'1'平仓了4手,导致昨仓是-1，今仓还是5手，实际应该是今仓5-1，昨仓0
-
-				if(this->m_YdPosition_long < 0)
-				{
-					this->m_TodayPosition_long =this->m_TodayPosition_long + this->m_YdPosition_long;
-					this->m_YdPosition_long = 0;
-
-				}
-			}
-			else if (pTrade->Direction == THOST_FTDC_D_Buy)//平空
-			{
-
-				//空单持仓量
-				this->m_holding_short = this->m_holding_short - pTrade->Volume;
-
-				//空单今日持仓
-				//this->TodayPosition_short = this->TodayPosition_short - pTrade->Volume;
-
-				//今仓量和昨仓量，只对上期所有效
-				if (pTrade->OffsetFlag == THOST_FTDC_OF_Close || pTrade->OffsetFlag == THOST_FTDC_OF_ForceClose || pTrade->OffsetFlag == THOST_FTDC_OF_CloseYesterday)
-					this->m_YdPosition_short = this->m_YdPosition_short - pTrade->Volume;//昨仓
-				else if (pTrade->OffsetFlag == THOST_FTDC_OF_CloseToday)
-					this->m_TodayPosition_short = this->m_TodayPosition_short - pTrade->Volume;//今仓
-
-				if(this->m_YdPosition_short < 0)
-				{
-					this->m_TodayPosition_short = this->m_TodayPosition_short + this->m_YdPosition_short;
-					this->m_YdPosition_short = 0;
-
-				}
-			}
-
-		}
-	}
-	else{
-		yr_error("cPositionDetail update error");
-	}
+    } else {
+        //LOG(INFO) << "cPostionDetail update error";
+        WLOG("cPostionDetail update error!");
+    }
 }
 
-
-void cPositionDetail::Print()
-{
-	/*printf( " Instrument:%s", m_instrumentID.c_str() );
-	printf( " B/S:%s", m_direction == '0' ? "B" : "S" );
-	printf( " Volume:%d", m_volume );
-	printf( " OpenPrice:%5.3f", m_price );
-	printf( " OpenDate:%s", m_openDate.DateToString().c_str() );
-	printf( " Type:%s", m_isToday ? "PT" : "PY" );
-	printf( " TradeID:%d", m_tradeID );
-	printf( "\n" );
-*/
-	cerr<<this->m_instrumentID
-	<<"\t L:"<<this->m_holding_long
-	<<"\t S:"<<this->m_holding_short
-	<<"\t tL:"<<this->m_TodayPosition_long
-	<<"\t yL:"<<this->m_YdPosition_long
-	<<"\t tS:"<<this->m_TodayPosition_short
-	<<"\t yS:"<<this->m_YdPosition_short
-	<<"\t L Close Profit:"<<this->closeProfit_long
-	<<"\t L Hold  Profit:"<<this->OpenProfit_long
-	<<"\t S Close Profit:"<<this->closeProfit_short
-	<<"\t S Hold  Profit:"<<this->OpenProfit_short
-	<<"\t margin:"<<this->margin
-	<<endl;
+void cPositionDetail::Print() {
+    string posi_dire[] = {"Long", "Short", "error"};
+    cerr << instrument_id_ << "\t Pos:" << position_ << "\t Dire: " << posi_dire[posi_direction_]
+         << "\t Td:" << today_pos_ << "\t Yd:" << yd_pos_ << "\t PositionP&L:" << PositionProfit
+         << "\t Float P&L:" << FloatProfit  //<< "\t CloseP&L:" << CloseProfit
+         << "\t openPrice:" << open_price_ << "\t posiPrice: " << position_price_ << "\t lastPrice: " << last_price_
+         << "\t updateTime:" << update_time_ << endl;
 }

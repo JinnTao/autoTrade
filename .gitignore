@@ -1,43 +1,5 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Vs2017
-/.vs
-strategy/cStrategyTemplate.cpp
-.vs
-
-# config
-account.txt
 
 #build file
 build
-
+#rar files
+*.rar

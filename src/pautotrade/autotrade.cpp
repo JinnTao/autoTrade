@@ -1,93 +1,73 @@
-#include <autotrade.h>
-#include <autotrade_config.h>
-#include "easylogging++.h"
+#include <future>
+#include <chrono>
+#include <thread>
 
-// initial easylogging
-INITIALIZE_EASYLOGGINGPP
-
-HANDLE g_hEvent;//事件句柄
-
-int iRequestID = 0;//订单编号
-
-#define  ROHON  0
+#include "cTradingPlatform.h"
 
 
-int main()
-{
-
-	autotrade_trade();
-
-	return 0;
-	
+extern "C" void signal_handler(int signal) {
+    ILOG("Dectect signal:{}", signal);
+    global::is_running = false;
 }
 
-void autotrade_trade()
-{
-	try
-	{
-		printf( "\n" );
-		printf( "running process to automatically trade with self-defined strategies...\n" );
-		//-------------------------------------easyLogging-----------------------------------------
-		el::Configurations conf("..\\..\\src\\utility\\easylogging\\easyLog.conf");
-		el::Loggers::reconfigureAllLoggers(conf);
+int main(int32 argc, char** argv) {
+    try {
+        global::is_running = true;
 
+        logger::initLogger();
 
-		//-------------------------------------读取基本配置---------------------------------------
-		AccountParam ctpAccount;
-		mongoSetting mongoDbSetting;
-		autoSetting autoTradeSetting;
-		ParseSettingJson(ctpAccount,mongoDbSetting,autoTradeSetting);
-		
+        std::signal(SIGTERM, signal_handler);  // program termination
+        std::signal(SIGINT, signal_handler);   // interrupt by user
 
-		//-------------------------------------行情前置接口--------------------------------------
-		/* MDApi & MDSpi */
-		CThostFtdcMdApi* pMdUserApi = CThostFtdcMdApi::CreateFtdcMdApi(".\\MDflow\\");// 流控文件 防止阻塞
-		cMdSpi* pMdUserSpi = new cMdSpi( pMdUserApi, ctpAccount.brokerId, ctpAccount.userId, ctpAccount.passwd );
-		pMdUserApi->RegisterSpi( pMdUserSpi );
-		pMdUserApi->RegisterFront( ctpAccount.mdAddress );
+        auto  trader = std::make_unique<cTradingPlatform>();
+        int32 result = 0;
 
-		//------------------------------------- 创建数据收集器 --------------------------------------------
-		/* cMarketDataCollection */
-		cMarketDataCollectionPtr pMdEngine = make_shared< cMarketDataCollection >();
-		dynamic_cast< cMdSpi* >( pMdUserSpi )->RegisterMarketDataCollection( pMdEngine.get() );
+        result = trader->loadConfig(TRADE_CONFIG_FILE);
+        if (result != 0) {
+            WLOG("Trader load config failed! Result:{}", result);
+            return -1;
+        }
+        ILOG("Trader load config success!");
 
-		//
-		/* TraderApi && TraderSpi */
-		CThostFtdcTraderApi* pTraderUserApi = CThostFtdcTraderApi::CreateFtdcTraderApi(".\\TDflow\\");
-		cTraderSpi* pTraderUserSpi = new cTraderSpi( pTraderUserApi,pMdUserSpi,pMdUserApi, ctpAccount.brokerId, ctpAccount.userId, ctpAccount.passwd );
-		pTraderUserApi->RegisterSpi((CThostFtdcTraderSpi*) pTraderUserSpi );
-		pTraderUserApi->SubscribePublicTopic( THOST_TERT_RESTART );	// subscribe public topic
-		pTraderUserApi->SubscribePrivateTopic( THOST_TERT_QUICK );	// subscribe private topic
-		pTraderUserApi->RegisterFront( ctpAccount.tdAddress ); 
-		
-		//-----------------------------------------人机交互线程---------------------------------------------------------------------------------
-		cTradingPlatformPtr pTradingPlatform = make_shared< cTradingPlatform >();
-		pTradingPlatform->RegisterMarketDataEngine( pMdEngine );
-		pTradingPlatform->RegisterTraderSpi(  pTraderUserSpi);
-		pTradingPlatform->RegisterMdSpi(pMdUserSpi);
-		pTradingPlatform->RegisterParameters(&autoTradeSetting,&mongoDbSetting);
+        result = trader->createPath();
+        if (result != 0) {
+            WLOG("Trader create path failed! Result:{}", result);
+            return -2;
+        }
+        ILOG("Trader create path success!");
+        result = trader->init();
+        if (result != 0) {
+            WLOG("Trader init failed! Result: {}.", result);
+            return -3;
+        }
+        ILOG("Trader init success!");
+        result = trader->start();
+        if (result != 0) {
+            WLOG("Trader start failed! Result:{}.", result);
+            return -4;
+        }
+        // LOG(INFO) << "Trader start success!";
 
-		cThread< cTradingPlatform >* pTradingThread = new cThread< cTradingPlatform >( pTradingPlatform.get(), &cTradingPlatform::AutoTrading );
-
-
-
-		pTraderUserApi->Init(); //应首先初始化TD 再进行MD初始化 最后初始化 交易平台 基础思考为获取完账户信息后 再启动行情
-		
-
-		while(true){
-			if(pMdUserSpi->getSatus()){
-				pTradingThread->Init();
-				break;
-			}
-		} // 防止Join无法停住，主线程退出
-
-		//等待线程退出
-		pTraderUserApi->Join();
-		while(true){}
-	}
-	catch( const char* err )
-	{
-		printf( "\n%s\n", err );
-		exit( 1 );
-	}
+        while (global::is_running) {
+            if (global::need_reconnect.load(std::memory_order_relaxed)) {
+                auto result = trader->reConnect();
+                if (result == 0) {
+                    ILOG("Trader reconnect success!");
+                }
+            }
+            using namespace std::chrono_literals;
+            std::this_thread::sleep_for(10s);
+        }
+        ILOG("Trader try stop.");
+        result = trader->stop();
+        logger::releaseLogger();
+        ILOG("Trader stop, exited! Result:{}.", result);
+        system("pause");
+        return result;
+    } catch (exception e) {
+        WLOG("Error:{}.", e.what());
+        exit(1);
+    } catch (...) {
+        WLOG("Error!");
+    }
 }
