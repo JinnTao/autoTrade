@@ -9,7 +9,7 @@
 * 2 codelib:内置几个简单的策略。1，2分开主要保证，运行期间数据收集不会出现断档。
 * 3 回测：目前采用vnpy进行回测。参考地址：https://github.com/vnpy/vnpy/tree/master
 ## 策略管理更加简洁 ##
-<pre><code
+<pre><code>
 #include "cStrategyKingKeltner.h"
 cStrategyKingKeltner::cStrategyKingKeltner(void) : cStrategy() {
     name_ = "KingKeltner";
