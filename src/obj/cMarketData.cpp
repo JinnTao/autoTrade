@@ -1,12 +1,9 @@
 // cMarketData.cpp
 
 #include <time.h>
-#include <cMarketData.h>
-#include <cStringUtils.h>
-#include <cTickTime.h>
-#include <cSystem.h>
 #include <mutex>
 
+#include "cMarketData.h"
 
 cMarketData::cMarketData(string id)
 {

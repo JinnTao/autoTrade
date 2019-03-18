@@ -1,133 +1,114 @@
 #ifndef __CSTRATEGY_H__
 #define __CSTRATEGY_H__
 
-
 #include <map>
-
-#include <Windows.h>
-
-#include <cTick.h>
-#include <cCandle.h>
-#include <cMarketDataCollection.h>
-#include <cTradeCollection.h> 
-#include <cPositionCollection.h>
-#include <cOrderCollection.h>
-#include "autotrade_config.h"
-#include "cthread.h"
-#include "ta_libc.h"
-#include "cTraderSpi.h"
-#include "cMdSpi.h"
-#include "cDateTime.h"
-#include "cSystem.h"
 #include <thread>
 #include <atomic>
+
+#include "ta_libc.h"
+
+#include "cMarketDataCollection.h"
+#include "cTradeCollection.h"
+#include "cPositionCollection.h"
+#include "cOrderCollection.h"
+
+#include "cTraderSpi.h"
+#include "cMdSpi.h"
+
+#include "logger.h"
+#include "common.h"
+#include "global.h"
+
+#include "cObject.h"
+
 class cTraderSpi;
 
+using contextPtr = std::shared_ptr<std::map<std::string, ArrayManager>>;
 
-
-class cStrategy
-{
+class cStrategy {
 private:
     // non-copyable
-    cStrategy( const cStrategy& ) {}
-    cStrategy& operator = ( const cStrategy& ) {}
+    DISALLOW_COPY_AND_ASSIGN(cStrategy);
 
 public:
     cStrategy();
-
     cStrategy(const string&);
-    
     virtual ~cStrategy();
+    virtual void onInit();
+    virtual void onStop();
+    virtual void onTick(CThostFtdcDepthMarketDataField);
+    virtual void onBar(barData);
+    virtual void onOrder(cOrderPtr);
+    virtual void onTrade(CThostFtdcTradeField);
+    virtual void onLoop(contextPtr);
 
-    virtual void init();
+    void buyOpen(std::string inst, double price, double volume, bool stop = false);
+    void buyClose(std::string inst, double price, double volume, bool stop = false);
+    void sellOpen(std::string inst, double price, double volume, bool stop = false);
+    void sellClose(std::string inst, double price, double volume, bool stop = false);
 
-    virtual void unInit();
+    void cancelOrder(int order_id);
+    void cancelAllOrder();
 
     void start();
-
     void stop();
+    void processStopOrder();
 
-    virtual void onOrder(cOrderPtr    ){};
+    void RegisterMarketDataCollection(cMarketDataCollectionPtr p);
+    void RegisterTradeSpi(std::shared_ptr<cTraderSpi> p);
+    void RegisterMdSpi(std::shared_ptr<cMdSpi> p);
+    void RegisterPositionCollectionPtr(cPositionCollectionPtr p);
+    void RegisterOrderCollectionPtr(cOrderCollectionPtr p);
+    void RegisterTradeCollectionPtr(cTradeCollectionPtr p);
+    void RegistreInstrumentInfo(std::string);
 
-    virtual void onTrade(CThostFtdcTradeField ){};
+    bool GetStrategyStatus();
+    void makeStopOrder(std::string inst, double price, double vol, traderTag::DIRECTION, traderTag::OFFSETFLAG);
+    void subscribe(std::vector<std::string> commodity, long long frequncy, int dataCount, STRATEGY_MODE trade_mode);
+    bool update_context();
+    bool isTradeTime(std::string);
+    std::string getName() { return name_; }
+    sTradingAccountInfo getAccount();
+    void                showStopOrders();
 
-    virtual void run(){cerr << this->m_strategyName << " runing" << endl;};
-
-
-    virtual void setInst(string inst) { this->m_inst = inst; }
-    virtual void setlots(int lots) { this->m_lots = lots; }
-    virtual void setTimeMode(int timeMode) { this->m_timeMode = timeMode; }
-    virtual void setCollectionName(string collectionName) { this->m_collectionName = collectionName; }
-    virtual void setInitDate(string startDate, string endDate) { this->m_startDate = startDate; this->m_endDate = endDate; }
-
-    virtual void sendStopOrder(string inst, DIRECTION inDirection,OFFSETFLAG inOffset, double price, UINT volume, string strategy,int slipNum = 1);
-
-    virtual void processStopOrder(string inst, double lastData);
-
-    virtual bool isTradeTime();
-    // ***************************************************************************
-    void RegisterMarketDataCollection( cMarketDataCollectionPtr p ){m_marketData = p;}
-    void RegisterTradeSpi(cTraderSpi *p){m_pTradeSpi = p;}
-    void RegisterMdSpi(cMdSpi *p){m_pMdSpi = p;}
-    void RegisterPositionCollectionPtr(cPositionCollectionPtr p){m_pPositionC = p;};
-    void RegisterOrderCollectionPtr(cOrderCollectionPtr p){m_pOrderC = p;}
-    void RegisterTradeCollectionPtr(cTradeCollectionPtr p){m_pTradeC = p;}
-    void RegisterTxtDir(string tradeDayDir, string oneMinuteDataDir){ m_tradeDayDir = tradeDayDir; m_oneMinuteDataDir = oneMinuteDataDir; }
-    void RegisterAutoSetting(autoSetting *p) { this->m_pAutoSetting = p; }
-//    void RegisterTradePlatForm(cTradingPlatform *p){m_pTradePlatform = p;}
 protected:
-
-    bool mode1();
-    bool mode2();
-    bool mode3();
-    bool mode4();
-    bool mode5();
-
+    bool mode1(int hourMinTime);
+    bool mode2(int hourMinTime);
+    bool mode3(int hourMinTime);
+    bool mode4(int hourMinTime);
+    bool mode5(int hourMinTime);
+    bool mode6(int hourMinTime);
+    bool mode7(int hourMinTime);
     // base collection
-    cMarketDataCollectionPtr m_marketData;
-    // base mdptr tdptr
-    cTraderSpi* m_pTradeSpi;
-    cMdSpi* m_pMdSpi;
+    cMarketDataCollectionPtr marketdata_collection_;
 
-    cPositionCollectionPtr m_pPositionC;
-    cOrderCollectionPtr m_pOrderC;
-    cTradeCollectionPtr m_pTradeC;
+    cPositionCollectionPtr position_collection_;
+    cOrderCollectionPtr    order_collection_;
+    cTradeCollectionPtr    trade_collection_;
 
-    //stop Order List
-    vector<cStopOrder> m_workingStopOrderList;
-    
-    //cTradingPlatform * m_pTradePlatform;
-
-    // run status;
-    bool m_status;
-
-    string m_strategyName;
-
-    int m_timeSpan;
-    //txt database dir
-    string m_tradeDayDir;
-    string m_oneMinuteDataDir;
-
-    string m_inst;
-    int m_lots;
-    int m_timeMode;
-    string m_collectionName;
-
-    string m_startDate;
-    string m_endDate;
-
-    autoSetting *m_pAutoSetting;
-
-
+    // stop Order List
+    std::vector<cStopOrder>               stop_order_list_;
+    std::vector<std::string>              trade_inst_list_;
+    std::map<std::string, std::string>    instrument_info_;
+    int                                   frequency_;
+    int                                   data_length_;
+    std::string                                name_;
+    int                                   sto_order_id_seq_ = 1;
+    contextPtr                            context_ptr_;
+    std::chrono::system_clock::time_point the_previous_;
 
 private:
-    
-    DWORD AutoTrading();
-    std::thread m_thread;
-    std::atomic<bool>    m_isRuning{ ATOMIC_FLAG_INIT };
-    cThread< cStrategy >* m_pTradingThread;
+    void                   autoTrader();
+    std::thread            inner_thread_;
+    std::atomic<bool>      is_running_ = false;
+    shared_ptr<cTraderSpi> trader_spi_;
+    shared_ptr<cMdSpi>     md_spi_;
+
+    int time_span_ms_;
+
+    STRATEGY_MODE mode_;
 };
 
-typedef shared_ptr< cStrategy > cStrategyPtr;
+typedef shared_ptr<cStrategy> cStrategyPtr;
 
 #endif

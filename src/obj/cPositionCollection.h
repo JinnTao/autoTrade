@@ -1,73 +1,41 @@
 #ifndef __CPOSITIONCOLLECTION_H__
 #define __CPOSITIONCOLLECTION_H__
 
-#include <cPosition.h>
 #include <map>
+#include <list>
+#include <string>
 
-//template< class T > class cArray;
-//
-//// instrument string versus array of sPositionDetail, i.e. IF1603 vs. 2 different positions
-//typedef map< cString, cArray< const cPositionDetail* > > positionStore;
-//// trade ID versus cMarketDataPtr, i.e. 44060
-//typedef map< int, cPositionDetailPtr > positionHandle;
-
-
-class cPositionCollection
-{
+#include "cPosition.h"
+#include "global.h"
+// 主要用于实时的持仓量计算，持仓的盈亏计算，因为涉及到持仓的盈亏 手续费 保证金 开仓价格等等 账户汇总信息也在这里处理
+class cPositionCollection {
 public:
     cPositionCollection();
-    virtual ~cPositionCollection();
+    ~cPositionCollection();
+    void PrintDetail();
+    // update position
+    void update(CThostFtdcInvestorPositionField* pInvestorPositionDetail);
+    void update(CThostFtdcTradeField* pTrade, shared_ptr<cTrade> pcTrade);
+    void update(CThostFtdcDepthMarketDataField* pDepthMarket);
+    int  getPosition(string instID, DIRE dire);
+    // dire undefine,return net position
+    int getPosition(string instID);
+    int getYdPosition(string instID, DIRE dire);
+    int getTdPosition(string instID, DIRE dire);
+    // hold position pnl
+    double getPositionPnl(string instId, PNL_TAG pnl_tag,DIRE dire = DIRE::AUTO_UNDEFINE);
+    // hold position price
+    double getPositionPrc(string instId, PRC_TAG prc_tag,DIRE dire);
 
-    //void Clear();
-    //int Count() const;
+        bool               posDireEqual(DIRE, TThostFtdcPosiDirectionType);
+    void                   registerInstFiledMap(cInstrumentFieldMapPtr p);
+    std::list<std::string> getTradeButNotPositionInstList();
 
-    ////
-    ///*Add new position*/
-    //void Add( CThostFtdcInvestorPositionDetailField* pInvestorPositionDetail );
-    //void Add( CThostFtdcTradeField* pTrade );
-    //void Add( cPositionDetailPtr p_element );
-    //void Add( cTrade* pTrade );
-    ////
-    ///*Remove position*/
-    //void Remove( CThostFtdcTradeField* pTrade );
-    //void Remove( cTrade* pTrade );
-    //void Remove( int );
-    //void RemoveTradesList( CThostFtdcTradeField* pTrade, cIvector& tradeIDsToRemove );
-    //void RemoveTradesList( cTrade* pTrade, cIvector& tradeIDsToRemove );
-    ////
-    ///*Get methods*/
-    //cPositionDetail* GetPositionDetail( int );
-    //cPositionDetailPtr GetPositionDetailSharedPtr( int );
-    //cArray< const cPositionDetail* > GetPositionDetailByInstrument( const cString& ) const;
-
-    //void SummaryByInstrument() const;
-    //void SummaryByInstrument( const cString&, int&, int&, int&, int& ) const;
-    void PrintDetail() ;
-    /*update position*/
-    void update( CThostFtdcInvestorPositionField* pInvestorPositionDetail);
-
-    void update( CThostFtdcTradeField* pTrade);
-
-    int getHolding_long(string instID);
-    int getHolding_short(string instID);
-
-    int getYdLong(string instID){return this->m_positionMap[instID]->getYdLong();}
-    int getTdLong(string instID){return this->m_positionMap[instID]->getTdLong();}
-
-    int getYdShort(string instID){return this->m_positionMap[instID]->getYdShort();}
-    int getTdShort(string instID){return this->m_positionMap[instID]->getTdShort();}
 protected:
-    //用最简单的方式实现，如果太多的tyedef 是不是结构过于复杂，还是有新的想法？
-    //mapType _map_position;
-    //mapType::iterator _it;
-    //positionStore _m_position_instrument;
-    //positionHandle _m_position_tradeid;
-    map<string,cPositionDetailPtr> m_positionMap;//持仓记录 
-private:
-    //void AddToMapInternal( shared_ptr< cPositionDetail >& element );
+    std::multimap<string, cPositionDetailPtr> position_map_;
+    cInstrumentFieldMapPtr                    inst_field_map_;  // record instument field
 };
 
-typedef shared_ptr< cPositionCollection > cPositionCollectionPtr;
-
+typedef shared_ptr<cPositionCollection> cPositionCollectionPtr;
 
 #endif

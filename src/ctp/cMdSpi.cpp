@@ -1,271 +1,296 @@
 #include <cMdSpi.h>
 #include <iostream>
-#include <cSystem.h>
 #include <cMarketDataCollection.h>
+//#include "easylogging++.h"
+#include "logger.h"
+#include <future>
+#include <chrono>
+#include "global.h"
 
 using namespace std;
 
-#define _CTP
 
-extern HANDLE g_hEvent;
-#pragma warning(disable : 4996)
 
-cMdSpi::cMdSpi( CThostFtdcMdApi* pUserMdApi, TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog )
-: m_pUserMdApi( pUserMdApi )
-, m_genLog( genLog )
-, m_requestID( 0 )
-, m_outputDirectory( theString )
-, m_logFileFolder( theString )
-, m_logFile( theString )
-{
-    strcpy_s( m_brokerID, sizeof( TThostFtdcBrokerIDType ), brokerID );
-    strcpy_s( m_investorID, sizeof( TThostFtdcInvestorIDType ), investorID );
-    strcpy( m_password, password );
-    m_status = false;
+void cMdSpi::OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) {
+
+    ILOG(" cMdSpi::OnRspError.");
+    IsErrorRspInfo(pRspInfo);
 }
 
-void cMdSpi::OnRspError( CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
-{
-    char message[256];
-    sprintf( message, "%s:called cMdSpi::OnRspError", cSystem::GetCurrentTimeBuffer().c_str() );
-    cout << message << endl;
-    IsErrorRspInfo( pRspInfo );
-    
-    // log info
-    if( m_genLog )
-    {
-        if( m_outputDirectory.IsBlankString() )
-            cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-        else
-        {
-            cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
-            cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
-        }
+void cMdSpi::OnFrontDisconnected(int nReason) {
+
+    ILOG("cMdSpi::OnFrontDisconnected,Reason:{}.", nReason);
+    std::lock_guard<std::mutex> guard(mut_);
+    if (on_disconnected_fun_) {
+        std::invoke(on_disconnected_fun_, nReason);
     }
 }
 
-void cMdSpi::OnFrontDisconnected( int nReason )
-{
-    char message[256];
-    sprintf( message, "%s:called cMdSpi::OnFrontDisconnected. Reason = %d", cSystem::GetCurrentTimeBuffer().c_str(), nReason );
-    cout << message << endl;
-    
-    // log info
-    if( m_genLog )
-    {
-        if( m_outputDirectory.IsBlankString() )
-            cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-        else
-        {
-            cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
-            cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
-        }
+void cMdSpi::OnHeartBeatWarning(int nTimeLapse) {
+
+    ILOG("cMdSpi::OnHeartBeatWarning,timeLapse:{}.", nTimeLapse);
+}
+
+void cMdSpi::OnFrontConnected() {
+
+    std::lock_guard<std::mutex> guard(mut_);
+    ILOG("cMdSpi::OnFrontConnected.");
+    if (on_connected_fun_) {
+        std::invoke(on_connected_fun_);
     }
 }
-        
-void cMdSpi::OnHeartBeatWarning(int nTimeLapse)
-{
-    char message[256];
-    sprintf( message, "%s:called cMdSpi::OnHeartBeatWarning. nTimerLapse = %d", cSystem::GetCurrentTimeBuffer().c_str(), nTimeLapse );
-    cout << message << endl;
 
 
-}
 
-void cMdSpi::OnFrontConnected()
-{
-    char message[256];
-    sprintf( message, "%s:called cMdSpi::OnFrontConnected.", cSystem::GetCurrentTimeBuffer().c_str() );
-    cout << message << endl;
+void cMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin,
+                            CThostFtdcRspInfoField*      pRspInfo,
+                            int                          nRequestID,
+                            bool                         bIsLast) {
+    std::lock_guard<std::mutex> guard(mut_);
+    if (pRspUserLogin && !IsErrorRspInfo(pRspInfo)) {
 
-    // request user login
-    ReqUserLogin();
-}
-
-void cMdSpi::ReqUserLogin()
-{
-    CThostFtdcReqUserLoginField req;
-    memset( &req, 0, sizeof( req ) );
-    strcpy_s( req.BrokerID, sizeof( TThostFtdcBrokerIDType ), m_brokerID );
-    strcpy_s( req.UserID, sizeof( TThostFtdcInvestorIDType ), m_investorID );
-    strcpy( req.Password,  m_password );
-
-    #ifdef _CTP
-
-        int iResult = m_pUserMdApi->ReqUserLogin( &req, ++iRequestID );
-        char message[256];
-        sprintf( message, "%s:called cMdSpi::ReqUserLogin:%s", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
-        cout << message << endl;
-    #else
-        HINSTANCE hInst = LoadLibrary(TEXT("dll_FBI_Release_x64.dll"));
-        DWORD errorID = GetLastError();
-        ccbf_secureApi_LoginMd ccbf_MdFuncInterface = (ccbf_secureApi_LoginMd)GetProcAddress(hInst,"ccbf_secureApi_LoginMd_After_CTP_OnConnected");
-        if(!ccbf_MdFuncInterface){
-            cerr << " DLL Interface Error" << endl;
-        }else{
-            //int ret = m_pUserApi_md->ReqUserLogin(&req, ++requestId);
-            int iResult = ccbf_MdFuncInterface(m_pUserMdApi,req.BrokerID,req.UserID,m_password,iRequestID);
-            char message[256];
-            sprintf( message, "%s:called cMdSpi::ReqUserLogin:%s", cSystem::GetCurrentTimeBuffer().c_str(), ( ( iResult == 0 ) ? "Success" : "Fail") );
-            cout << message << endl;
-            FreeLibrary(hInst);
-            
-        }
-
-    #endif
-    SetEvent(g_hEvent);
-}
-
-void cMdSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
-{
-    
-    if( pRspUserLogin && !IsErrorRspInfo( pRspInfo ) )
-    {
-        char message[256];
-        sprintf( message, "%s:called cMdSpi::OnRspUserLogin.", cSystem::GetCurrentTimeBuffer().c_str() );
-        cout << message << endl;
-
+        ILOG("cMdSpi::OnRspUserLogin,TradeData:{},SessionId:{},FrontID:{}",
+             pRspUserLogin->TradingDay,
+             pRspUserLogin->SessionID,
+             pRspUserLogin->FrontID);
     }
-    if(bIsLast){ 
-        SetEvent(g_hEvent);
-        cerr << cSystem::GetCurrentTimeBuffer() << " Market init Finish" << endl;
-        Sleep(500);
-        
-        this->m_status = true;
+    if (bIsLast) {
+        // using namespace std::chrono_literals;
+        // std::this_thread::sleep_for(500ms);
+        if (on_login_fun_) {
+            std::invoke(on_login_fun_, pRspUserLogin, pRspInfo);
+        }
     };
 }
 
-void cMdSpi::SubscribeMarketData(char *instIdList)
-{
+void cMdSpi::SubscribeMarketData(char* instIdList) {
     vector<char*> list;
 
-    char *token = strtok(instIdList, ",");
+    char* token = strtok(instIdList, ",");
 
-    while( token != NULL ){
+    while (token != NULL) {
 
-        list.push_back(token); 
+        list.push_back(token);
 
         token = strtok(NULL, ",");
-
     }
 
-    unsigned int len = list.size();
+    size_t len = list.size();
 
-    char** pInstId = new char* [len];  
+    char** pInstId = new char*[len];
 
-    for(unsigned int i=0; i<len;i++)  pInstId[i]=list[i]; // vector list 转到 char **
+    for (unsigned int i = 0; i < len; i++) {
+        pInstId[i] = list[i];  // vector list 转到 char **
+    }
 
-    int ret=m_pUserMdApi->SubscribeMarketData(pInstId, len);
-
-    cerr<<"=> Request SubscribeMarketData " << *pInstId <<((ret == 0) ? " success" : " fail")<< endl;
-
-    SetEvent(g_hEvent);
+    int ret = ctpmdapi_->SubscribeMarketData(pInstId, len);
+    ILOG("SubscribeMarketData,Inst:{},result:{}", instIdList, ret);
 }
-void cMdSpi::SubscribeMarketData(string inst)
-{
+void cMdSpi::SubscribeMarketData(string inst) {
     char p[50];
 
-    memset(p,0,50);
-    strcpy_s(p,sizeof(inst),inst.c_str());
+    memset(p, 0, 50);
+    strcpy_s(p, sizeof(inst), inst.c_str());
     SubscribeMarketData(p);
-
 }
 
-void cMdSpi::SubscribeMarketData(shared_ptr<vector<string>> instList)
-{
-    for(auto it = instList->begin();it != instList->end();it++){
+void cMdSpi::SubscribeMarketData(shared_ptr<vector<string>> instList) {
+    for (auto it = instList->begin(); it != instList->end(); it++) {
         char instBuff[50];
-        strcpy(instBuff,it->c_str());
+        strcpy(instBuff, it->c_str());
         this->SubscribeMarketData(instBuff);
     }
 }
-void cMdSpi::SubscribeForQuoteRsp()
-{
+void cMdSpi::SubscribeForQuoteRsp() {
     /*int iResult = m_pUserMdApi->SubscribeForQuoteRsp( ppInstrumentID, m_instrumentIDs.getSize() );
     cout << "--->>> cMdSpi::SubscribeForQuoteRsp: " << ( ( iResult == 0 ) ? "Success" : "Fail") << endl;*/
 }
 
-void cMdSpi::OnRspSubMarketData( CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
-{
-    if( bIsLast && !IsErrorRspInfo( pRspInfo ) )
-    {
-        //char message[256];
-        //sprintf( message, "%s:called cMdSpi::OnRspSubMarketData:%s", cSystem::GetCurrentTimeBuffer().c_str(), pSpecificInstrument->InstrumentID );
-        //cout << message << endl;
-        //if( m_genLog )
+void cMdSpi::OnRspSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument,
+                                CThostFtdcRspInfoField*            pRspInfo,
+                                int                                nRequestID,
+                                bool                               bIsLast) {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
+        // char message[256];
+        // sprintf( message, "%s:called cMdSpi::OnRspSubMarketData:%s", cSystem::GetCurrentTimeBuffer().c_str(),
+        // pSpecificInstrument->InstrumentID );  cout << message << endl;  if( m_genLog )
         //{
         //    if( m_outputDirectory.IsBlankString() )
         //        cSystem::WriteLogFile( m_logFile.c_str(), message, false );
         //    else
         //    {
-        //        cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
+        //        cString folderDir = m_outputDirectory + m_logFileFolder + "//";
         //        cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
         //    }
         //}
     }
-    
 }
 
-void cMdSpi::OnRspSubForQuoteRsp( CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
-{
+void cMdSpi::OnRspSubForQuoteRsp(CThostFtdcSpecificInstrumentField* pSpecificInstrument,
+                                 CThostFtdcRspInfoField*            pRspInfo,
+                                 int                                nRequestID,
+                                 bool                               bIsLast) {
     cout << "--->>> cMdSpi::OnRspSubForQuoteRsp" << endl;
-    if( bIsLast && !IsErrorRspInfo( pRspInfo ) )
-    {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
     }
 }
 
-void cMdSpi::OnRspUnSubMarketData( CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
-{
+void cMdSpi::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument,
+                                  CThostFtdcRspInfoField*            pRspInfo,
+                                  int                                nRequestID,
+                                  bool                               bIsLast) {
     cout << "--->>> cMdSpi::OnRspUnSubMarketData" << endl;
-    if( bIsLast && !IsErrorRspInfo( pRspInfo ) )
-    {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
     }
 }
 
-void cMdSpi::OnRspUnSubForQuoteRsp( CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast )
-{
+void cMdSpi::OnRspUnSubForQuoteRsp(CThostFtdcSpecificInstrumentField* pSpecificInstrument,
+                                   CThostFtdcRspInfoField*            pRspInfo,
+                                   int                                nRequestID,
+                                   bool                               bIsLast) {
     cout << "--->>> cMdSpi::OnRspUnSubForQuoteRsp" << endl;
-    if( bIsLast && !IsErrorRspInfo( pRspInfo ) )
-    {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
     }
 }
 
-void cMdSpi::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField* pDepthMarketData )
-{
-    //copy right Yiran Yang
-    m_pMktDataCollection->OnRtnDepthMarketData( pDepthMarketData );
+void cMdSpi::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField* pDepthMarketData) {
 
+    m_pMktDataCollection->OnRtnDepthMarketData(pDepthMarketData);
+
+    position_collection_->update(pDepthMarketData);
 }
 
-void cMdSpi::OnRtnForQuoteRsp( CThostFtdcForQuoteRspField* pForQuoteRsp )
-{
+void cMdSpi::OnRtnForQuoteRsp(CThostFtdcForQuoteRspField* pForQuoteRsp) {
     cout << "--->>> cMdSpi::OnRtnForQuoteRsp" << endl;
 }
 
-bool cMdSpi::IsErrorRspInfo( CThostFtdcRspInfoField* pRspInfo )
-{
+bool cMdSpi::IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo) {
     // 如果ErrorID != 0, 说明收到了错误的响应
-    bool bResult = ( ( pRspInfo ) && ( pRspInfo->ErrorID != 0 ) );
-    if( bResult )
-    {
-        char message[256];
-        sprintf( message, "%s:ERROR with ErrorID = %d and ErrorMsg = %s.", cSystem::GetCurrentTimeBuffer().c_str(), pRspInfo->ErrorID, pRspInfo->ErrorMsg );
-        cout << message << endl;
-        if( m_genLog )
-        {
-            if( m_outputDirectory.IsBlankString() )
-                cSystem::WriteLogFile( m_logFile.c_str(), message, false );
-            else
-            {
-                cString folderDir = m_outputDirectory + m_logFileFolder + "//"; 
-                cSystem::WriteLogFile( folderDir.c_str(), m_logFile.c_str(), message, false );
-            }
-        }
+    bool bResult = ((pRspInfo) && (pRspInfo->ErrorID != 0));
+    if (bResult) {
+        ILOG("cMdSpi:IsErrorRspInfo, ErrorId:{},ErrorMsg:{}.", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
     }
     return bResult;
 }
 
-void cMdSpi::RegisterMarketDataCollection( cMarketDataCollection* pMktDataCollection )
-{
+void cMdSpi::RegisterMarketDataCollection(cMarketDataCollection* pMktDataCollection) {
     m_pMktDataCollection = pMktDataCollection;
+
+}
+
+void cMdSpi::RegisterPositionCollection(cPositionCollectionPtr p) {
+    if (position_collection_.get()) {
+        position_collection_.reset();
+    }
+    position_collection_ = p;
+}
+
+int32 cMdSpi::init(const ctpConfig& ctp_config) {
+    using namespace std::chrono_literals;
+    // 1.create md api instance
+    {
+
+        auto mdapi = CThostFtdcMdApi::CreateFtdcMdApi(ctp_config.md_flow_path_);
+        if (mdapi == nullptr) {
+            WLOG("CreateFtdcMdApi instance failed!");
+            return -1;
+        }
+        // unique_ptr->ctp's document release call Release api,maybe release then join 2018/07/11 JinnTao
+        ctpmdapi_ = {mdapi, [](CThostFtdcMdApi* mdapi) {
+                         if (mdapi != nullptr) {
+                             mdapi->RegisterSpi(NULL);
+                             mdapi->Release();
+                         }
+                         WLOG("Release mdapi.");
+                     }};
+        ctpmdapi_->RegisterSpi(this);
+        ILOG("CreateFtdcMdApi instance success!");
+    }
+
+    // 2.connect to md Front
+    {
+        this->clearCallBack();
+        ctpmdapi_->RegisterFront(const_cast<char*>(ctp_config.mdAddress));
+        std::promise<bool> connect_result;
+        std::future<bool>  is_connected = connect_result.get_future();
+        on_connected_fun_               = [&connect_result] { connect_result.set_value(true); };
+        ctpmdapi_->Init();
+        auto wait_result = is_connected.wait_for(3s);
+        if (wait_result != std::future_status::ready || is_connected.get() != true) {
+            return -2;
+        }
+        ILOG("Md connect front success!");
+    }
+
+    // 3.login to md.
+    {
+        this->clearCallBack();
+        std::promise<bool> login_result;
+        std::future<bool>  is_logined = login_result.get_future();
+        on_login_fun_ = [&login_result](CThostFtdcRspUserLoginField* login, CThostFtdcRspInfoField* info) {
+            if (info->ErrorID == 0) {
+                login_result.set_value(true);
+            } else {
+                login_result.set_value(false);
+            }
+        };
+        CThostFtdcReqUserLoginField req;
+
+        memset(&req, 0, sizeof(req));
+        strcpy_s(req.BrokerID, sizeof(TThostFtdcBrokerIDType), ctp_config.brokerId);
+        strcpy_s(req.UserID, sizeof(TThostFtdcInvestorIDType), ctp_config.userId);
+        strcpy_s(req.Password, sizeof TThostFtdcPasswordType, ctp_config.passwd);
+        ctp_config_ = ctp_config;
+
+        // Try login
+        auto req_login_result = ctpmdapi_->ReqUserLogin(&req, ++request_id_);
+        if (req_login_result != 0) {
+            WLOG("Md request login failed!");
+            return -3;
+        }
+        auto wait_result = is_logined.wait_for(5s);
+        if (wait_result != std::future_status::ready || is_logined.get() != true) {
+            return -3;
+        }
+        ILOG(" Md login success !");
+    }
+
+    // 4.set callback
+    {
+        this->clearCallBack();
+        //global::need_reconnect.store(false,
+        //                             std::memory_order_release);  // current write/read cannot set this store back;
+        on_disconnected_fun_ = [](int32 reason) {
+            WLOG("Md disconnect,try reconnect! reason:{}." ,reason);
+            global::need_reconnect.store(true, std::memory_order_release);
+        };
+    }
+    return 0;
+}
+int32 cMdSpi::stop() {
+    if (ctpmdapi_) {
+        ctpmdapi_.reset(nullptr);
+    }
+
+    return 0;
+}
+
+int32 cMdSpi::reConnect(const ctpConfig& ctp_config) {
+    return 0;
+}
+int32 cMdSpi::start() {
+    ILOG("Md start success!");
+    return 0;
+}
+
+void cMdSpi::clearCallBack() {
+    std::lock_guard<std::mutex> guard(mut_);
+    on_connected_fun_    = {};
+    on_disconnected_fun_ = {};
+    on_login_fun_        = {};
+}
+void cMdSpi::clear() {
+    if (ctpmdapi_) {
+        ctpmdapi_.reset(nullptr);
+    }
 }

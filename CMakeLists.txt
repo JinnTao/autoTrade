@@ -1,34 +1,31 @@
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
-project(autoTrade)
+project(autoTrade LANGUAGES C CXX)
 
-find_package(Boost REQUIRED COMPONENTS
-             program_options filesystem system)
-message(${Boost_INCLUDE_DIRS})
-message(${Boost_LIBRARIES})
+#prepare
+set(CMAKE_PREFIX_PATH "src/utility/spdlog" "mongo-cxx-driver" "mongo-c-driver" "C:/boost_1_67_0/boost_1_67_0")
 
-find_package(libmongoc-static-1.0 REQUIRED)
-message(${MONGOC_STATIC_INCLUDE_DIRS})
-message(${MONGOC_STATIC_LIBRARIES})
-message(${MONGOC_STATIC_DEFINITIONS})
+# Enforce the C++ standard, and disable extensions.
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 11)
+endif()
 
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+endif()
+# NOTE: For this to work, the CMAKE_PREFIX_PATH variable must be set to point to the directory that
+# was used as the argument to CMAKE_INSTALL_PREFIX when building libmongocxx.
 find_package(libmongocxx REQUIRED)
-message(${LIBMONGOCXX_INCLUDE_DIRS})
-message(${LIBMONGOCXX_LIBRARY_DIRS})
-message(${LIBMONGOCXX_LIBRARIES})
 
-find_package(libbsoncxx REQUIRED)
-message(${LIBBSONCXX_INCLUDE_DIRS})
-message(${LIBBSONCXX_LIBRARY_DIRS})
-message(${LIBBSONCXX_LIBRARIES})
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    find_package(Boost 1.56.0 REQUIRED)
+endif()
 
-include_directories(${MONGOC_STATIC_INCLUDE_DIRS})
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${LIBMONGOCXX_INCLUDE_DIRS})
-include_directories(${LIBBSONCXX_INCLUDE_DIRS})
 
-link_directories(${LIBMONGOCXX_LIBRARY_DIRS})
-link_directories(${LIBBSONCXX_LIBRARY_DIRS})
+# spdlog package
+ find_package(spdlog CONFIG REQUIRED)
 
 add_subdirectory(src)

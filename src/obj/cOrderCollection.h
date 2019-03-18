@@ -1,12 +1,13 @@
 #ifndef __CORDERCOLLECTION_H__
 #define __CORDERCOLLECTION_H__
 
-#include <cOrder.h>
 
-template< class T > class cArray;
+#include <vector>
+#include <map>
+#include "cOrder.h"
 
-typedef map< cString, cArray< const cOrder* > > orderStore;
-typedef map< int, cOrderPtr > orderHandle;
+typedef std::map< std::string, std::vector< const cOrder* > > orderStore;
+typedef std::map< int, cOrderPtr > orderHandle;
 
 class cOrderCollection
 {
@@ -19,27 +20,26 @@ public:
     void Add( CThostFtdcOrderField* );
     void Add( cOrderPtr p_element );
     int Count() const;
-    void GetInstrumentIDs( cArray< cString >& instrumentIDs ) const;
-    void GetOrderIDs( cIvector& orderIDs ) const;
-
-    bool getOrderByNo(int,shared_ptr<cOrder>& );
+    void GetInstrumentIDs( std::vector< std::string >& instrumentIDs ) const;
+    void GetOrderIDs( std::vector<int>& orderIDs ) const;
+    bool      getOrderByNo(TThostFtdcSequenceNoType orderSequenceNo, std::shared_ptr<cOrder>& pOrder);
     cOrder* GetOrderHandle( int );
     cOrderPtr GetOrderHandleSharedPtr( int );
-    cArray< const cOrder* > GetOrderByInstrument( const cString& ) const;
+    std::vector< const cOrder* > GetOrderByInstrument( const std::string& ) const;
     //
     void PrintPendingOrders() const;
     void PrintCancelledOrders() const;
     void PrintAllOrders() const;
 
     // 
-    vector< cOrderPtr > GetAllOrder( ) const;
+    std::vector< cOrderPtr > GetAllOrder( ) const;
     //
     /*
     functions used for demo-trading, i.e. cTraderApi/cTraderSpi is not needed
         */
     void Remove( int orderID );
 
-    typedef map< int, cOrderPtr > mapType;
+    typedef std::map< int, cOrderPtr > mapType;
 
 protected:
     mapType _map_order;
@@ -48,10 +48,9 @@ protected:
     orderHandle _m_order_handle;
 
 private:
-    void AddToMapInternal( shared_ptr< cOrder >& element );
+    void AddToMapInternal( std::shared_ptr< cOrder >& element );
 
 };
-
-typedef shared_ptr< cOrderCollection > cOrderCollectionPtr;
+typedef std::shared_ptr< cOrderCollection > cOrderCollectionPtr;
 
 #endif

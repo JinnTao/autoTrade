@@ -1,5 +1,5 @@
-#include <cTrade.h>
-#include <cOrder.h>
+#include "cTrade.h"
+#include "cOrder.h"
 
 cTrade::cTrade()
 :m_tradeID( -1 )
@@ -19,16 +19,16 @@ cTrade::cTrade( CThostFtdcTradeField* pTrade )
 {
     m_tradeID = atoi( pTrade->TradeID );
     m_orderID = atoi( pTrade->OrderSysID );
-    m_instrumentID = string( pTrade->InstrumentID );
-    m_accountID = string( pTrade->InvestorID );
+    m_instrumentID = std::string( pTrade->InstrumentID );
+    m_accountID = std::string( pTrade->InvestorID );
     m_direction = pTrade->Direction;
     m_offsetFlag = pTrade->OffsetFlag;
     m_price = pTrade->Price;
     m_volume = pTrade->Volume;
-    m_tradeDate = string( pTrade->TradeDate);
-    m_tradeTime = string( pTrade->TradeTime );
+    m_tradeDate = std::string( pTrade->TradeDate);
+    m_tradeTime = std::string( pTrade->TradeTime );
     m_commission = 0;
-    m_exchange = string (pTrade->ExchangeID);
+    m_exchange = std::string (pTrade->ExchangeID);
 }
 
 
@@ -47,7 +47,6 @@ cTrade::cTrade( CThostFtdcTradeField* pTrade )
 
 cTrade::cTrade( const cTrade& in )
 {
-    yr_assert( this != & in );
     m_tradeID = in.m_tradeID;
     m_orderID = in.m_orderID;
     m_instrumentID = in.m_instrumentID;
@@ -83,6 +82,7 @@ cTrade& cTrade::operator = ( const cTrade& in )
 
 void cTrade::Print() const
 {
+    using namespace std;
     printf( "TradeID:%d ", m_tradeID );
     cerr << "InstrumentID:  " << m_instrumentID ;
     printf( " Direction:%s ", m_direction == '0' ? "B" : "S" );

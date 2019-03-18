@@ -2,27 +2,24 @@
 #define __CTRADERSPI_H__
 
 #include <map>
-#include <yr_structs.h>
-#include <cPositionCollection.h>
-#include <cTradeCollection.h>
-#include <cOrderCollection.h>
-#include <cMdSpi.h>
-#include <regex> // ÕýÔò
-#include <cMarketDataCollection.h>
+#include <regex>  // ï¿½ï¿½ï¿½ï¿½
+
+#include "cPositionCollection.h"
+#include "cTradeCollection.h"
+#include "cOrderCollection.h"
+#include "cMarketDataCollection.h"
+#include "cMdSpi.h"
 #include "cStrategy.h"
 
-using namespace std;
-extern int iRequestID;
-class cString;
-template< class T > class cArray;
-
 class cStrategy;
+
+using namespace std;
 
 class cTraderSpi : public CThostFtdcTraderSpi
 {
 public:
-    cTraderSpi( CThostFtdcTraderApi* pUserTraderApi, cMdSpi* pUserMdSpi,CThostFtdcMdApi* pUserMdApi,TThostFtdcBrokerIDType brokerID, TThostFtdcInvestorIDType investorID, TThostFtdcPasswordType password, bool genLog = false );
-    
+    cTraderSpi();
+
     ~cTraderSpi();
 
     // After making a succeed connection with the CTP server, the client should send the login request to the CTP server.
@@ -44,13 +41,19 @@ public:
     virtual void OnRspQryTradingAccount( CThostFtdcTradingAccountField* pTradingAccount, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
 
     // After receiving the investor position request, the CTP server will send the following response to notify the client whether the request success or not
-    //virtual void OnRspQryInvestorPosition( CThostFtdcInvestorPositionField* pInvestorPosition, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
+    virtual void OnRspQryInvestorPosition( CThostFtdcInvestorPositionField* pInvestorPosition, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
     
     // After receiving the investor position detail request, the CTP server will send the following response to notify the client whether the request success or not
     virtual void OnRspQryInvestorPositionDetail( CThostFtdcInvestorPositionDetailField* pInvestorPositionDetail, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
 
     // order insertion response
     virtual void OnRspOrderInsert( CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast );
+
+	///ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½
+    virtual void OnErrRtnOrderInsert(CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo);
+
+    ///ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½
+    virtual void OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo);
 
     // order action response
     virtual void OnRspOrderAction( CThostFtdcInputOrderActionField* pInputOrderAction, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast ); 
@@ -63,10 +66,7 @@ public:
 
     virtual void OnHeartBeatWarning( int nTimeLapse );
 
-    virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
-
-
-    ///ÇëÇó²éÑ¯³É½»ÏìÓ¦
+    ///ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¯ï¿½É½ï¿½ï¿½ï¿½Ó¦
     virtual void OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
     // order insertion return
@@ -74,21 +74,37 @@ public:
 
     virtual void OnRtnTrade( CThostFtdcTradeField* pTrade);
 
-    //ÇëÇó²éÑ¯ºÏÔ¼ÊÖÐø·ÑÂÊÏìÓ¦
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¯ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦
     virtual void OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) ;
 
+    void         ReqQrySettlementInfoConfirm();
+
+    virtual void OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField* pSettlementInfoConfirm,
+                                               CThostFtdcRspInfoField*               pRspInfo,
+                                               int                                   nRequestID,
+                                               bool                                  bIsLast);
+
+    void ReqSettlementInfoConfirm();
+
+    bool IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo);
+
+    bool IsMyOrder(CThostFtdcOrderField* pOrder);
 
     void RegisterPositionCollection( cPositionCollectionPtr p );
+
     void RegisterOrderCollection( cOrderCollectionPtr p );
+
     void RegisterTradeCollection( cTradeCollectionPtr p );
+
     void RegisterSubscribeInstList(shared_ptr<vector<string>> p);
-    void RegisterInstMessageMap( map<string, CThostFtdcInstrumentField*>* p );
-    void RegisterInstCommissionMap(map<string,shared_ptr< CThostFtdcInstrumentCommissionRateField>> *p);
-    void ReqQryInstrument();
+
+    void RegisterInstMessageMap( map<string, std::shared_ptr<CThostFtdcInstrumentField>>* p );
+
+    void RegisterInstCommissionMap(map<string, std::shared_ptr<CThostFtdcInstrumentCommissionRateField>> *p);
 
     void ReqQryInstrument_all();
 
-    void ReqQryTradingAccount();
+    void ReqQryTradingAccount(bool isShow,std::function<void(sTradingAccountInfo)> obtain_account = {});
 
     void ReqQryInvestorPosition_all();
 
@@ -103,25 +119,21 @@ public:
 
     void ReqOrderAction( shared_ptr<cOrder> pOrder );
 
-    void ReqQryInstrumentCommissionRate(bool qryTrade = false);
+    void ReqQryInstrumentCommissionRate(std::string inst = "");
 
-    void Close();
-
-    void Init();
-
-    void GetInstrumentIDs( cArray< cString >& ) const;
-
-    const sInstrumentInfo* GetInstrumentInfo( const cString& ) const;
 
     const sTradingAccountInfo* GetTradingAccountInfo() const { return m_accountInfo; }
-
-    void saveInstrumentField(CThostFtdcInstrumentField* instField);
 
     void showPositionDetail();
 
     void ReqOrderInsert(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir, TThostFtdcCombOffsetFlagType kpp,TThostFtdcPriceType price,   TThostFtdcVolumeType vol);
 
-    void insertOrder(string inst, DIRECTION dire, OFFSETFLAG flag, int vol, double orderPrice, string tag = "");
+    void insertOrder(string             inst,
+                     traderTag::DIRECTION dire,
+                     traderTag::OFFSETFLAG  flag,
+                     int                vol,
+                     double             orderPrice,
+                     string             tag = "");
 
     void StraitClose(TThostFtdcInstrumentIDType instId,TThostFtdcDirectionType dir,TThostFtdcPriceType price,TThostFtdcVolumeType vol,string tag = "");
 
@@ -133,105 +145,101 @@ public:
 
     bool isValidInsturment(string inst,string& instName);
 
-
     void cancleAllPendingOrder();
 
     void cancleMyPendingOrder();
 
-    void RegisterMarketDataEngine(cMarketDataCollectionPtr p){ this->m_pMarketDataEngine = p;}
+    void cancelOrderById(int order_id);
+
+    void RegisterMarketDataCollection(cMarketDataCollectionPtr p) { this->m_pMarketDataEngine = p; }
+
+    void RegisterCtpMdSpi(cMdSpi*p) { ctp_md_spi_ = p; }
 
     void RegisterStrategy(cStrategy *p) { m_strategyList.push_back(p); };
+    
+    int32 init(const ctpConfig& ctp_config);
+
+    int32 stop();
+
+    int32 reConnect(const ctpConfig& ctp_config);
+
+    int32 start();
+
+    void clearCallBack();
+
+    void clear();
+
+    bool IsFlowControl(int iResult);
+
+    void onFreshTrade(CThostFtdcTradeField Trade);
+
 private:
-    CThostFtdcTraderApi* m_pUserTraderApi;
-    cArray< cString > m_instrumentIDs;
+ 
 
     TThostFtdcOrderRefType    m_ORDER_REF;
     TThostFtdcFrontIDType    m_FRONT_ID;
     TThostFtdcSessionIDType    m_SESSION_ID;
     
-    sTradingAccountInfo* m_accountInfo;
-    map< cString, sInstrumentInfo* > m_instrumentInfo;        // useful trading information for traded instruments
-    //
+    sTradingAccountInfo* m_accountInfo = nullptr;
+   //
     /* postions */
-    /*cPositionCollection* m_positionCollection;*/
     cPositionCollectionPtr m_positionCollection;
     // 
     /* orders */
-    /*cOrderCollection* m_orderCollection;*/
     cOrderCollectionPtr m_orderCollection;
 
     vector<int> m_allOrderRef;                                            // list of all orderRef
     //
     /* trades */
-    /*cTradeCollection* m_tradeCollection;*/
     cTradeCollectionPtr m_tradeCollection;
 
     //subscribe inst
     shared_ptr<vector<string>> m_pSubscribeInst;
-
+    // marketData
+    cMarketDataCollectionPtr m_pMarketDataEngine;
+    //cMarketDataHelloWorld    ets;
     // Instrument detail Message Map    
-    map<string, CThostFtdcInstrumentField*>* m_InstMeassageMap;
+    map<string, std::shared_ptr<CThostFtdcInstrumentField>>* m_InstMeassageMap = nullptr;
 
     // strategy List
     std::list<cStrategy*> m_strategyList;
 
+    fstream m_output;
     //
-    map<string,shared_ptr<CThostFtdcInstrumentCommissionRateField>>*m_pInstCommissionMap;
-
-    void ReqUserLogin();
-    void ReqSettlementInfoConfirm();
-    bool IsErrorRspInfo( CThostFtdcRspInfoField* pRspInfo );
-    bool IsMyOrder( CThostFtdcOrderField* pOrder );
-
-    TThostFtdcBrokerIDType    m_brokerID;
-    TThostFtdcInvestorIDType m_investorID;
-    char m_password[252];
-
-    bool m_genLog;
-    cString m_logFile;
+    map<string,std::shared_ptr<CThostFtdcInstrumentCommissionRateField>>*m_pInstCommissionMap;
 
     //=======================20170828==================
-    bool m_first_inquiry_order;//ÊÇ·ñÊ×´Î²éÑ¯±¨µ¥
-    bool m_first_inquiry_trade;//ÊÇ·ñÊ×´Î²éÑ¯³É½»
-    bool m_firs_inquiry_Detail;//ÊÇ·ñÊ×´Î²éÑ¯³Ö²ÖÃ÷Ï¸
-    bool m_firs_inquiry_TradingAccount;//ÊÇ·ñÊ×´Î²éÑ¯×Ê½ðÕËºÅ
-    bool m_firs_inquiry_Position;//ÊÇ·ñÊ×´Î²éÑ¯Í¶×ÊÕß³Ö²Ö
-    bool m_first_inquiry_Instrument;//ÊÇ·ñÊ×´Î²éÑ¯ºÏÔ¼
-    bool m_first_inquiry_commissionRate;//ÊÇ·ñÊ×´Î²éÑ¯ÊÖÐø·Ñ
+    bool m_first_inquiry_order = true;//ï¿½Ç·ï¿½ï¿½×´Î²ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½
+    bool m_first_inquiry_trade = true;//ï¿½Ç·ï¿½ï¿½×´Î²ï¿½Ñ¯ï¿½É½ï¿½
+    bool m_firs_inquiry_Detail = true;//ï¿½Ç·ï¿½ï¿½×´Î²ï¿½Ñ¯ï¿½Ö²ï¿½ï¿½ï¿½Ï¸
+    bool m_firs_inquiry_TradingAccount = true;//ï¿½Ç·ï¿½ï¿½×´Î²ï¿½Ñ¯ï¿½Ê½ï¿½ï¿½Ëºï¿½
+    bool m_firs_inquiry_Position = true;//ï¿½Ç·ï¿½ï¿½×´Î²ï¿½Ñ¯Í¶ï¿½ï¿½ï¿½ß³Ö²ï¿½
+    bool m_first_inquiry_Instrument = true;//ï¿½Ç·ï¿½ï¿½×´Î²ï¿½Ñ¯ï¿½ï¿½Ô¼
+    bool m_first_inquiry_commissionRate = true;//ï¿½Ç·ï¿½ï¿½×´Î²ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     
-    vector<CThostFtdcOrderField*> m_orderList;//Î¯ÍÐ¼ÇÂ¼£¬È«²¿ºÏÔ¼
-    vector<CThostFtdcOrderField*> m_pendOrderList;//¹Òµ¥¼ÇÂ¼£¬È«²¿ºÏÔ¼
-    vector<CThostFtdcTradeField*> m_tradeList;//³É½»¼ÇÂ¼£¬È«²¿ºÏÔ¼
 
-    vector<CThostFtdcTradeField*> m_tradeListNotClosedAccount;//Î´Æ½²Ö¼ÇÂ¼
-
-    map<string,cPositionDetailPtr> m_position_message_map;//³Ö²Ö¼ÇÂ¼ 
-
-    double m_closeProfit;//Æ½²ÖÓ¯¿÷£¬ËùÓÐºÏÔ¼Ò»ÆðËãºóµÄÖµ£¬ÁíÍâÔÚm_trade_message_mapÓÐµ¥¶À¼ÆËãÃ¿¸öºÏÔ¼µÄÆ½²ÖÓ¯¿÷Öµ
-    
-    double m_OpenProfit;//¸¡¶¯Ó¯¿÷£¬ËùÓÐºÏÔ¼Ò»ÆðËãºóµÄÖµ£¬ÁíÍâÔÚm_trade_message_mapÓÐµ¥¶À¼ÆËãÃ¿¸öºÏÔ¼µÄ¸¡¶¯Ó¯¿÷Öµ
-
-    //map<string, CThostFtdcInstrumentField*> m_instMessage_map;//±£´æºÏÔ¼ÐÅÏ¢µÄmap
-    
-    cMdSpi* m_pMdSpi;//ÐÐÇéAPIÖ¸Õë£¬¹¹Ôìº¯ÊýÀï¸³Öµ
-
-    CThostFtdcMdApi* m_pMDUserApi_td;
-    double m_accountMargin;
-
-    fstream m_output;
     string m_tradeDay;
     string m_actionDay;
-    bool m_qryStatus;
-
-
-
     ///
-    map<string,CThostFtdcInstrumentField*>::iterator m_itMap;// ÓÃÓÚ²éÑ¯ºÏÔ¼
-    /// marketData
-    cMarketDataCollectionPtr m_pMarketDataEngine;
-};
+    map<string,std::shared_ptr<CThostFtdcInstrumentField>>::iterator m_itMap;// ï¿½ï¿½ï¿½Ú²ï¿½Ñ¯ï¿½ï¿½Ô¼
 
-typedef int (*ccbf_secureApi_LoginTrader)(CThostFtdcTraderApi* ctp_futures_pTraderApi, TThostFtdcBrokerIDType brokeId, TThostFtdcUserIDType userId, char* pChar_passwd, int& ctp_futures_requestId);
+    using CtpTdApiPtr = std::unique_ptr<CThostFtdcTraderApi, std::function<void(CThostFtdcTraderApi*)>>;
+    CtpTdApiPtr ctpTdApi_;
+    int32       request_id_ = 0;
+    std::function<void()> on_connected_fun_;
+    std::function<void(CThostFtdcRspUserLoginField*,CThostFtdcRspInfoField*)> on_login_fun_;
+    std::function<void(int32)>                                                on_disconnected_fun_;
+    std::function<void()>                                                     on_started_fun_;
+    std::function<void()>                                                     on_obtain_commssion_fun_;
+    std::function<void(sTradingAccountInfo)>                                  on_obtain_account_;
+    std::mutex                                                                mut_;
+    ctpConfig                                                                 ctp_config_;
+    cMdSpi*                                                                   ctp_md_spi_;
+    std::list<std::string>                                                    trade_not_in_position_list_ = {};
+    bool                                                                      is_show_account_info_;
+
+
+};
 
 #endif
 

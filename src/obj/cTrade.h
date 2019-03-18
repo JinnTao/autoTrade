@@ -1,13 +1,12 @@
 #ifndef __CTRADE_H__
 #define __CTRADE_H__
 
-#include <cString.h>
-#include "ThostFtdcUserApiDataType.h"
-#include <ThostFtdcUserApiStruct.h>
 #include <memory>
-using std::shared_ptr;
+#include <string>
+#include <iostream>
 
-
+#include "ThostFtdcUserApiDataType.h"
+#include "ThostFtdcUserApiStruct.h"
 
 class cTrade
 {
@@ -25,14 +24,14 @@ public:
     /* Get Method */
     int GetTradeID() const { return m_tradeID; }
     int GetOrderID() const { return m_orderID; }
-    string GetInstrumentID() const { return m_instrumentID; }
-    string GetAccountID() const { return m_accountID; }
+    std::string GetInstrumentID() const { return m_instrumentID; }
+    std::string GetAccountID() const { return m_accountID; }
     char GetDirection() const { return m_direction; }
     char GetOffsetFlag() const { return m_offsetFlag; }
     double GetPrice() const { return m_price; }
     int GetVolume() const { return m_volume; }
-    string GetTradeTime() const { return m_tradeTime; }
-    string GetTradeDate() const { return m_tradeDate; }
+    std::string GetTradeTime() const { return m_tradeTime; }
+    std::string GetTradeDate() const { return m_tradeDate; }
     double GetCommission() const {return m_commission;}
     void setCommission(CThostFtdcInstrumentCommissionRateField*,CThostFtdcInstrumentField*);
     
@@ -42,8 +41,8 @@ public:
 private:
     int m_tradeID;
     int m_orderID;
-    string m_instrumentID;
-    string m_accountID;
+    std::string m_instrumentID;
+    std::string m_accountID;
 
     char m_direction;
     char m_offsetFlag;
@@ -51,12 +50,12 @@ private:
     double m_price;
     double m_commission;
     int    m_volume;
-    string m_tradeDate;
-    string m_tradeTime;
-    string m_exchange;// exchange
+    std::string m_tradeDate;
+    std::string m_tradeTime;
+    std::string m_exchange;// exchange
 };
 
-typedef shared_ptr< cTrade > cTradePtr;
+typedef std::shared_ptr< cTrade > cTradePtr;
 
 
 #endif
