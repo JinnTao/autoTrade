@@ -66,7 +66,7 @@ void cTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin,
     }
 }
 void cTraderSpi::ReqQrySettlementInfoConfirm(){
-    std::lock_guard<std::mutex>          guard(mut_);
+    //std::lock_guard<std::mutex>          guard(mut_);
     CThostFtdcQrySettlementInfoConfirmField req;
     memset(&req, 0, sizeof(req));
     strcpy_s(req.BrokerID, sizeof(TThostFtdcBrokerIDType), ctp_config_.brokerId);
@@ -1108,12 +1108,12 @@ int32 cTraderSpi::start() {
     std::future<bool>  is_started = start_result.get_future();
     on_started_fun_               = [&start_result]() { start_result.set_value(true); };
     this->ReqQrySettlementInfoConfirm();
-    auto wait_result = is_started.wait_for(20min);
+    auto wait_result = is_started.wait_for(2min);
     if (wait_result == std::future_status::timeout) {
         ELOG("Td start timeout.");
         return -1;
     } else if (wait_result != std::future_status::ready || is_started.get() != true) {
-        ELOG("Td start failed,but not timeout with 20min");
+        ELOG("Td start failed,but not timeout with 2min");
         return -2;
     }
 
@@ -1131,6 +1131,14 @@ void cTraderSpi::clear() {
 }
 
 bool cTraderSpi::IsFlowControl(int iResult) {
+    //      0，代表成功。
+
+    //    - 1，表示网络连接失败；
+
+    //    - 2，表示未处理请求超过许可数；
+
+    //    - 3，表示每秒发送请求数超过许可数。
+
     return ((iResult == -2) || (iResult == -3));
 }
 

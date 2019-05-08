@@ -5,7 +5,7 @@
 #include <regex>
 
 cStrategy::cStrategy() {
-    time_span_ms_ = 1000;
+    time_span_ms_ = 1000; // 间隔毫秒
     name_         = "undefine_name";
     context_ptr_  = std::make_shared<std::map<std::string, ArrayManager>>();
 
@@ -41,7 +41,7 @@ void cStrategy::autoTrader() {
 
     onInit();
 
-    // do loop
+    // core loop logic
     while (is_running_) {
 
         if (update_context()) {
@@ -196,7 +196,7 @@ void cStrategy::subscribe(std::vector<std::string> commodity_list,
 
     mode_            = trade_mode;
     trade_inst_list_ = commodity_list;
-    frequency_       = frequency;
+    frequency_       = frequency; // 暂时无效，默认载入对应数据库集合内，长度为data_length的数据
     data_length_     = data_length;
     the_previous_    = std::chrono::time_point_cast<std::chrono::minutes>(std::chrono::system_clock::now());
 
