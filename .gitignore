@@ -3,3 +3,5 @@
 build
 #rar files
 *.rar
+
+analysis/\.idea/
