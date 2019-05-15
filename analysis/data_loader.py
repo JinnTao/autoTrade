@@ -6,7 +6,7 @@ from tqsdk import TqApi, TqSim
 from tqsdk.tools import DataDownloader
 from datetime import datetime, date
 from contextlib import closing
-
+import pandas as pd
 api = TqApi(TqSim())
 
 download_tasks = {}
@@ -17,6 +17,24 @@ download_tasks["rb_1min"] = DataDownloader(api, symbol_list="KQ.m@SHFE.rb", dur_
 
 download_tasks["i_1min"] = DataDownloader(api, symbol_list="KQ.m@DCE.i", dur_sec=60,
                     start_dt=date(2019, 1, 1), end_dt=date(2019, 5, 13), csv_file_name="i_1min.csv")
+
+
+download_tasks["ic1906_1min"] = DataDownloader(api, symbol_list="CFFEX.IC1906", dur_sec=60,
+                    start_dt=date(2019, 3, 29), end_dt=date(2019, 5, 13), csv_file_name="ic1906_1min.csv")
+
+download_tasks["ic1905_1min"] = DataDownloader(api, symbol_list="CFFEX.IC1905", dur_sec=60,
+                    start_dt=date(2019, 3, 29), end_dt=date(2019, 5, 13), csv_file_name="ic1905_1min.csv")
+
+
+download_tasks["ic1906_1min"] = DataDownloader(api, symbol_list="CFFEX.IC1906", dur_sec=60,
+                    start_dt=date(2019, 3, 29), end_dt=date(2019, 5, 13), csv_file_name="ic1906_1min.csv")
+
+download_tasks["ic1905_1min"] = DataDownloader(api, symbol_list="CFFEX.IC1905", dur_sec=60,
+                    start_dt=date(2019, 3, 29), end_dt=date(2019, 5, 13), csv_file_name="ic1905_1min.csv")
+
+
+
+
 
 with closing(api):
     while not all([v.is_finished() for v in download_tasks.values()]):
