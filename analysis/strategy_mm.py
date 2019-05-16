@@ -60,7 +60,9 @@ def apply_sticky_prc(quote, quote_market, spread, dire):
         val = quote_market
     else:
         val = quote
-    val = val + dire * val % PRICE_TICK
+    if dire > 0:
+        val = val + PRICE_TICK
+    val = val -  val % PRICE_TICK
     return val
 
 
@@ -78,6 +80,49 @@ def near_close_pos_time_point(now):
             pass
         api.close()
     return
+
+def make_order(dire,volume,limit_prc):
+    global  buy_order,sell_order
+    if dire == "BUY":
+        if position["volume_short"] > 0:
+            buy_order = api.insert_order(symbol=TRADE_SYMBOL,
+                                         direction="BUY", offset="CLOSETODAY", volume=volume, limit_price=limit_prc)
+        else:
+            buy_order = api.insert_order(symbol=TRADE_SYMBOL,
+                                         direction="BUY", offset="OPEN", volume=volume, limit_price=limit_prc)
+    elif dire == "SELL":
+        if position["volume_long"] > 0:
+            sell_order = api.insert_order(symbol=TRADE_SYMBOL,
+                                         direction="SELL", offset="CLOSETODAY", volume=volume, limit_price=limit_prc)
+        else:
+            sell_order = api.insert_order(symbol=TRADE_SYMBOL,
+                                         direction="SELL", offset="OPEN", volume=volume, limit_price=limit_prc)
+def update_buy_order(bid_size,bid):
+    global  buy_order
+    if buy_order :
+        # 全部成交
+        if buy_order["volume_left"] == 0:
+            make_order("BUY",bid_size,bid)
+        # 部分成交
+        elif abs(buy_order['limit_price'] - bid) > 2 * PRICE_TICK:
+            api.cancel_order(buy_order)
+            make_order( "BUY", bid_size, bid)
+
+    else:
+        make_order("BUY",bid_size,bid)
+
+def update_sell_order(ask_size,ask):
+    global  sell_order
+    if sell_order:
+        # 全部成交
+        if sell_order["volume_left"] == 0:
+            make_order("SELL", ask_size, ask)
+        # 部分成交
+        elif abs(sell_order['limit_price'] - ask) > 2 * PRICE_TICK:
+            api.cancel_order(sell_order)
+            make_order("SELL", ask_size, ask)
+    else:
+        make_order("SELL", ask_size, ask)
 
 
 with closing(api):
@@ -97,7 +142,7 @@ with closing(api):
             risk = obtain_position_risk()
 
             ask_spread = max(0.0, ask_spread + alpha + risk)
-            bid_spread = max(0.0, bid_spread - alpha - risk)
+            bid_spread = max(0.0, bid_spread + alpha + risk)
 
             bid = max(0.0, mid - bid_spread)
             ask = max(0.0, mid + ask_spread)
@@ -112,17 +157,26 @@ with closing(api):
             # to do
 
             # size
-            ask_size = min(MAX_QUOTE_POS, max(0, MAX_POS + pos))
-            bid_size = min(MAX_QUOTE_POS, max(0, MAX_POS - pos))
+            if position['volume_long'] > 0 and position['volume_long'] < MAX_QUOTE_POS:
+                ask_size = position['volume_long']
+            else:
+                ask_size = min(MAX_QUOTE_POS, max(0, MAX_POS + pos))
+            if position['volume_short'] > 0 and position['volume_short'] < MAX_QUOTE_POS:
+                bid_size = position['volume_short']
+            else:
+                bid_size = min(MAX_QUOTE_POS, max(0, MAX_POS - pos))
             now = dt.datetime.fromtimestamp(int(last_tick.datetime / 1e9))
-            print("Datetime:{},account:{},float_profit:{},close_profit:{}".format(now, account['static_balance'],
-                                                                                  account['float_profit'],
-                                                                                  account['close_profit']))
+            #print("Datetime:{},account:{},float_profit:{},close_profit:{}".format(now, account['static_balance'],
+            #                                                                      account['float_profit'],
+            #                                                                      account['close_profit']))
             print("long:",position["volume_long"], "short:",position["volume_short"])
-            if buy_order:
-                print(buy_order['direction'],buy_order['offset'],buy_order['volume_orign'],buy_order['limit_price'])
             if sell_order:
-                print(sell_order['direction'], sell_order['offset'], sell_order['volume_orign'], sell_order['limit_price'])
+                print(sell_order['direction'], sell_order['offset'], sell_order['volume_orign'],
+                      sell_order['volume_left'], sell_order['limit_price'])
+            if buy_order:
+                print(buy_order['direction'],buy_order['offset'],buy_order['volume_orign'],
+                      buy_order['volume_left'],buy_order['limit_price'])
+
 
             # print("datetime:{},bid:{},bid_spread:{},bid_size:{},ask:{},ask_spread:{},ask_size:{}".format(
             #     now,
@@ -130,21 +184,24 @@ with closing(api):
             # print("m_bid:{},m_ask:{}".format(
             #     last_tick.bid_price1,last_tick.ask_price1))
 
-            # clear order
-            clear_order()
-
-            if position["volume_short"] > 0:
-                buy_order = api.insert_order(symbol=TRADE_SYMBOL,
-                                             direction="BUY", offset="CLOSE", volume=bid_size, limit_price=bid)
+            #clear_order()
+            if bid_size > 0:
+                update_buy_order(bid_size,bid)
             else:
-                buy_order = api.insert_order(symbol=TRADE_SYMBOL,
-                                             direction="BUY", offset="OPEN", volume=bid_size, limit_price=bid)
-
-            if position["volume_long"] > 0:
-                sell_order = api.insert_order(symbol=TRADE_SYMBOL,
-                                              direction="SELL", offset="CLOSE", volume=ask_size, limit_price=ask)
+                api.cancel_order(buy_order)
+                buy_order = {}
+            if ask_size > 0 :
+                update_sell_order(ask_size,ask)
             else:
-                sell_order = api.insert_order(symbol=TRADE_SYMBOL,
-                                              direction="SELL", offset="OPEN", volume=ask_size, limit_price=ask)
+                api.cancel_order(sell_order)
+                sell_order = {}
+
 
             near_close_pos_time_point(now)
+
+            # risk stop Loss
+            if account['float_profit'] < -5000:
+                api.cancel_order(buy_order)
+                buy_order = {}
+                api.cancel_order(sell_order)
+                sell_order = {}
